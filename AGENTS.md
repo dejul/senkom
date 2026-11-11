@@ -7,6 +7,14 @@
 - Verify acceptance before marking `VERIFIED`; mark unrun checks `NOT RUN`. Never mark phase `COMPLETE` without final acceptance.
 - Update `docs/phase-2-verification.md` and `docs/phase-2-checkpoint.md` as applicable. Record branch, commit SHA when one exists, commands, exits, counts, and skips.
 - Review diff and secret hygiene before staging. Never commit credentials, `.env`, private keys, local DB data, dependencies, logs, or build output.
-- Ask explicit user approval before commit, push, merge, or tag. Never force push, auto merge, destructive reset/clean, or rewrite shared history without approval.
+- Never commit or push directly to `main` automatically. Merge to `main` and creation/push of release tags require explicit user approval. Never force push, auto merge, destructive reset/clean, or rewrite shared history.
 - Local PASS is not CI PASS. Require actual successful CI execution for CI acceptance.
 - Follow [Git workflow](docs/git-workflow.md) for branch, PR, failure, and release procedures.
+
+## Git Automation Policy — VERIFIED Micro-Batches
+
+- Automatic commit and push to the correct feature branch are authorized for VERIFIED micro-batches and parent gates without extra approval. For COMPLETE phase final acceptance, the same rule covers final evidence on the feature branch; it never authorizes a merge.
+- First verify every mandatory acceptance criterion and required test, lint, build, and relevant smoke check; no mandatory skip. Update verification evidence and checkpoint. `NOT RUN` is not PASS.
+- Check branch, status, upstream, official remote, conflicts/divergence, and ownership of existing changes. Review the diff and audit every staged file for secrets. Stage only in-scope paths; never include unrelated user work, credentials, `.env`, private keys, local DB data, dependencies, logs, or build output.
+- If any gate fails, status is WIP/INCOMPLETE/BLOCKED, branch is `main`, or Git/secret review is unsafe, preserve local changes and stop automatic commit/push. Never use force push or destructive Git commands to make a gate pass.
+- Use Conventional Commits; push only to the feature branch without force. Verify and report branch, local/remote SHA, and push status. Do not advance to the next batch automatically.
