@@ -1,0 +1,67 @@
+:root {
+  font-family: 'Bahnschrift', 'Trebuchet MS', sans-serif;
+  color: #183133;
+  background: #f3f2e9;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  background: radial-gradient(circle at 95% 0%, #cbded2, transparent 65%);
+}
+main {
+  max-width: 1000px;
+  min-height: 100vh;
+  margin: auto;
+  padding: clamp(24px, 6vw, 80px);
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 90px;
+}
+header span,
+.eyebrow,
+footer {
+  font-size: 12px;
+  letter-spacing: 0.09em;
+}
+.eyebrow {
+  color: #386452;
+}
+h1 {
+  font-family: 'Georgia', serif;
+  font-weight: 400;
+  font-size: clamp(36px, 5vw, 58px);
+  line-height: 1.15;
+}
+p {
+  max-width: 650px;
+  line-height: 1.8;
+  color: #46605c;
+}
+aside {
+  border-left: 4px solid #527b62;
+  padding: 20px 24px;
+  background: #fffdf4b3;
+  margin: 40px 0;
+}
+aside strong {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+aside p {
+  margin-bottom: 0;
+}
+footer {
+  border-top: 1px solid #b7c6b7;
+  padding-top: 22px;
+}

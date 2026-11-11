@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.artifacts
+apps/api/vendor
+apps/api/bootstrap/cache
+apps/api/storage
+package-lock.json
+apps/api/composer.lock
+SENKOM_V1_Technical_Specification.md
+SENKOM_V1_VSCode_Codegen_Prompt.md

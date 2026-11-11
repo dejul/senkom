@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php" colors="true" cacheDirectory=".phpunit.cache">
+  <testsuites><testsuite name="Foundation"><directory>tests</directory></testsuite></testsuites>
+  <php>
+    <env name="APP_ENV" value="testing" force="true"/>
+    <env name="APP_DEBUG" value="false" force="true"/>
+    <env name="SENKOM_INFRASTRUCTURE_ENABLED" value="false" force="true"/>
+  </php>
+</phpunit>

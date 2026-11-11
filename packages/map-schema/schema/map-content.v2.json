@@ -1,0 +1,755 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.senkom.invalid/map-content.v2.json",
+  "title": "SENKOM editable map content v2",
+  "description": "Public snapshot only. No credentials, playback tokens, management IPs, or inferred connectivity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "dataOrigin",
+    "layout",
+    "layers",
+    "sites",
+    "devices",
+    "ports",
+    "cables",
+    "fiberCores",
+    "fiberTerminations",
+    "fiberSplices",
+    "logicalLinks",
+    "powerCircuits",
+    "routes",
+    "cameras"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 2
+    },
+    "dataOrigin": {
+      "type": "string",
+      "enum": ["demo", "production"]
+    },
+    "demoLabel": {
+      "type": "string",
+      "pattern": "^DEMO",
+      "maxLength": 200
+    },
+    "layout": {
+      "$ref": "#/$defs/Layout"
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/Layer"
+      }
+    },
+    "sites": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "$ref": "#/$defs/Site"
+      }
+    },
+    "devices": {
+      "type": "array",
+      "maxItems": 50000,
+      "items": {
+        "$ref": "#/$defs/Device"
+      }
+    },
+    "ports": {
+      "type": "array",
+      "maxItems": 100000,
+      "items": {
+        "$ref": "#/$defs/Port"
+      }
+    },
+    "cables": {
+      "type": "array",
+      "maxItems": 50000,
+      "items": {
+        "$ref": "#/$defs/Cable"
+      }
+    },
+    "fiberCores": {
+      "type": "array",
+      "maxItems": 200000,
+      "items": {
+        "$ref": "#/$defs/FiberCore"
+      }
+    },
+    "fiberTerminations": {
+      "type": "array",
+      "maxItems": 200000,
+      "items": {
+        "$ref": "#/$defs/FiberTermination"
+      }
+    },
+    "fiberSplices": {
+      "type": "array",
+      "maxItems": 200000,
+      "items": {
+        "$ref": "#/$defs/FiberSplice"
+      }
+    },
+    "logicalLinks": {
+      "type": "array",
+      "maxItems": 50000,
+      "items": {
+        "$ref": "#/$defs/LogicalLink"
+      }
+    },
+    "powerCircuits": {
+      "type": "array",
+      "maxItems": 50000,
+      "items": {
+        "$ref": "#/$defs/PowerCircuit"
+      }
+    },
+    "routes": {
+      "type": "array",
+      "maxItems": 50000,
+      "items": {
+        "$ref": "#/$defs/RouteCorridor"
+      }
+    },
+    "cameras": {
+      "type": "array",
+      "maxItems": 10000,
+      "items": {
+        "$ref": "#/$defs/Camera"
+      }
+    }
+  },
+  "if": {
+    "properties": {
+      "dataOrigin": {
+        "const": "demo"
+      }
+    },
+    "required": ["dataOrigin"]
+  },
+  "then": {
+    "properties": {
+      "demoLabel": {}
+    },
+    "required": ["demoLabel"]
+  },
+  "$defs": {
+    "Id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$"
+    },
+    "Name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "Layer": {
+      "type": "string",
+      "enum": ["fo_ring_a", "fo_ring_b", "power_main", "power_backup"]
+    },
+    "InventoryStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "source"],
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": ["active", "inactive", "maintenance", "unknown"]
+        },
+        "source": {
+          "type": "string",
+          "enum": ["inventory", "manual"]
+        }
+      }
+    },
+    "Site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "code", "name", "type", "status"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "code": {
+          "$ref": "#/$defs/Id"
+        },
+        "name": {
+          "$ref": "#/$defs/Name"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["control_center", "field_site", "substation"]
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "status": {
+          "$ref": "#/$defs/InventoryStatus"
+        },
+        "geography": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["latitude", "longitude"],
+          "properties": {
+            "latitude": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "longitude": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
+          }
+        },
+        "metadata": {
+          "$ref": "#/$defs/Metadata"
+        }
+      }
+    },
+    "Device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "siteId", "code", "type", "status"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "siteId": {
+          "$ref": "#/$defs/Id"
+        },
+        "code": {
+          "$ref": "#/$defs/Id"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "router",
+            "switch",
+            "otb",
+            "odf",
+            "splice_closure",
+            "power_panel",
+            "ups",
+            "source",
+            "junction",
+            "pdu",
+            "other"
+          ]
+        },
+        "model": {
+          "$ref": "#/$defs/Name"
+        },
+        "status": {
+          "$ref": "#/$defs/InventoryStatus"
+        }
+      }
+    },
+    "Port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "deviceId", "name", "type", "status"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "deviceId": {
+          "$ref": "#/$defs/Id"
+        },
+        "name": {
+          "$ref": "#/$defs/Name"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["sfp", "fiber", "terminal"]
+        },
+        "status": {
+          "$ref": "#/$defs/InventoryStatus"
+        }
+      }
+    },
+    "Cable": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/FiberCable"
+        },
+        {
+          "$ref": "#/$defs/PowerCable"
+        }
+      ]
+    },
+    "FiberCable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "code",
+        "kind",
+        "fromSiteId",
+        "toSiteId",
+        "lengthM",
+        "status",
+        "totalCores",
+        "fiberType"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "code": {
+          "$ref": "#/$defs/Id"
+        },
+        "kind": {
+          "type": "string",
+          "const": "fiber"
+        },
+        "fromSiteId": {
+          "$ref": "#/$defs/Id"
+        },
+        "toSiteId": {
+          "$ref": "#/$defs/Id"
+        },
+        "lengthM": {
+          "type": "number",
+          "minimum": 0
+        },
+        "status": {
+          "$ref": "#/$defs/InventoryStatus"
+        },
+        "totalCores": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6912
+        },
+        "fiberType": {
+          "type": "string",
+          "enum": ["single_mode", "multi_mode", "unknown"]
+        }
+      }
+    },
+    "PowerCable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "code",
+        "kind",
+        "fromSiteId",
+        "toSiteId",
+        "lengthM",
+        "status",
+        "conductorCount",
+        "crossSectionMm2",
+        "voltageV"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "code": {
+          "$ref": "#/$defs/Id"
+        },
+        "kind": {
+          "type": "string",
+          "const": "power"
+        },
+        "fromSiteId": {
+          "$ref": "#/$defs/Id"
+        },
+        "toSiteId": {
+          "$ref": "#/$defs/Id"
+        },
+        "lengthM": {
+          "type": "number",
+          "minimum": 0
+        },
+        "status": {
+          "$ref": "#/$defs/InventoryStatus"
+        },
+        "conductorCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "crossSectionMm2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "voltageV": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "FiberCore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "cableId", "coreNumber", "status"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "cableId": {
+          "$ref": "#/$defs/Id"
+        },
+        "coreNumber": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": ["unallocated", "allocated", "faulty", "unknown"]
+        }
+      }
+    },
+    "FiberTermination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "fiberCoreId", "portId", "endSide"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "fiberCoreId": {
+          "$ref": "#/$defs/Id"
+        },
+        "portId": {
+          "$ref": "#/$defs/Id"
+        },
+        "endSide": {
+          "type": "string",
+          "enum": ["a", "b"]
+        }
+      }
+    },
+    "FiberSplice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "fromFiberCoreId", "toFiberCoreId", "closureDeviceId"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "fromFiberCoreId": {
+          "$ref": "#/$defs/Id"
+        },
+        "toFiberCoreId": {
+          "$ref": "#/$defs/Id"
+        },
+        "closureDeviceId": {
+          "$ref": "#/$defs/Id"
+        }
+      }
+    },
+    "LogicalLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "code",
+        "fromPortId",
+        "toPortId",
+        "routeName",
+        "coreSegments"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "code": {
+          "$ref": "#/$defs/Id"
+        },
+        "fromPortId": {
+          "$ref": "#/$defs/Id"
+        },
+        "toPortId": {
+          "$ref": "#/$defs/Id"
+        },
+        "routeName": {
+          "type": "string",
+          "enum": ["fo_ring_a", "fo_ring_b"]
+        },
+        "coreSegments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Id"
+          },
+          "description": "Ordered fiber core IDs, never a computed availability guarantee."
+        }
+      }
+    },
+    "PowerCircuit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "code",
+        "sourcePortId",
+        "destinationPortId",
+        "supplyType",
+        "cableIds",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "code": {
+          "$ref": "#/$defs/Id"
+        },
+        "sourcePortId": {
+          "$ref": "#/$defs/Id"
+        },
+        "destinationPortId": {
+          "$ref": "#/$defs/Id"
+        },
+        "supplyType": {
+          "type": "string",
+          "enum": ["pln", "ups", "backup"]
+        },
+        "cableIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Id"
+          }
+        },
+        "status": {
+          "$ref": "#/$defs/InventoryStatus"
+        }
+      }
+    },
+    "RouteCorridor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "code", "name", "cableIds"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "code": {
+          "$ref": "#/$defs/Id"
+        },
+        "name": {
+          "$ref": "#/$defs/Name"
+        },
+        "cableIds": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/Id"
+          }
+        }
+      }
+    },
+    "Camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "code", "siteId", "name", "enabled"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "code": {
+          "$ref": "#/$defs/Id"
+        },
+        "siteId": {
+          "$ref": "#/$defs/Id"
+        },
+        "name": {
+          "$ref": "#/$defs/Name"
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "MapNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "entityType", "entityId", "x", "y"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "entityType": {
+          "type": "string",
+          "enum": ["site", "device"]
+        },
+        "entityId": {
+          "$ref": "#/$defs/Id"
+        },
+        "x": {
+          "type": "number",
+          "minimum": 0
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0
+        },
+        "label": {
+          "$ref": "#/$defs/Name"
+        },
+        "zIndex": {
+          "type": "integer",
+          "minimum": -1000,
+          "maximum": 1000
+        },
+        "metadata": {
+          "$ref": "#/$defs/Metadata"
+        },
+        "symbol": {
+          "type": "string",
+          "enum": [
+            "site",
+            "router",
+            "switch",
+            "otb",
+            "odf",
+            "splice_closure",
+            "power_panel",
+            "ups",
+            "source",
+            "junction",
+            "pdu",
+            "other"
+          ]
+        }
+      }
+    },
+    "MapEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "connectionType",
+        "connectionId",
+        "fromNodeId",
+        "toNodeId",
+        "layer",
+        "points"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Id"
+        },
+        "connectionId": {
+          "$ref": "#/$defs/Id"
+        },
+        "connectionType": {
+          "type": "string",
+          "enum": [
+            "fiber_cable_segment",
+            "fiber_core_connection",
+            "logical_link",
+            "power_cable_segment",
+            "power_circuit"
+          ]
+        },
+        "fromNodeId": {
+          "$ref": "#/$defs/Id"
+        },
+        "toNodeId": {
+          "$ref": "#/$defs/Id"
+        },
+        "layer": {
+          "$ref": "#/$defs/Layer"
+        },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 1000,
+          "items": {
+            "$ref": "#/$defs/Point"
+          }
+        },
+        "label": {
+          "$ref": "#/$defs/Name"
+        },
+        "zIndex": {
+          "type": "integer",
+          "minimum": -1000,
+          "maximum": 1000
+        },
+        "metadata": {
+          "$ref": "#/$defs/Metadata"
+        }
+      }
+    },
+    "Layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "nodes", "edges"],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000
+        },
+        "nodes": {
+          "type": "array",
+          "maxItems": 50000,
+          "items": {
+            "$ref": "#/$defs/MapNode"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "maxItems": 100000,
+          "items": {
+            "$ref": "#/$defs/MapEdge"
+          }
+        }
+      }
+    },
+    "Metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "notes": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "assetTag": {
+          "type": "string",
+          "maxLength": 100
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,395 @@
+{
+  "schemaVersion": 1,
+  "revision": "demo-map-001",
+  "publishedAt": "2026-11-03T07:00:00Z",
+  "status": "published",
+  "dataOrigin": "demo",
+  "demoLabel": "DEMO - sintetis, bukan topologi atau status infrastruktur aktual",
+  "layers": ["fo_ring_a", "fo_ring_b", "power_main", "power_backup"],
+  "sites": [
+    {
+      "id": "demo-site-01",
+      "code": "DEMO-01",
+      "name": "DEMO Site 01",
+      "type": "control_center",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-site-02",
+      "code": "DEMO-02",
+      "name": "DEMO Site 02",
+      "type": "field_site",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-site-03",
+      "code": "DEMO-03",
+      "name": "DEMO Site 03",
+      "type": "field_site",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-site-04",
+      "code": "DEMO-04",
+      "name": "DEMO Site 04",
+      "type": "field_site",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-site-05",
+      "code": "DEMO-05",
+      "name": "DEMO Site 05",
+      "type": "substation",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-site-06",
+      "code": "DEMO-06",
+      "name": "DEMO Site 06",
+      "type": "field_site",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-site-07",
+      "code": "DEMO-07",
+      "name": "DEMO Site 07",
+      "type": "field_site",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-site-08",
+      "code": "DEMO-08",
+      "name": "DEMO Site 08",
+      "type": "field_site",
+      "status": { "state": "unknown", "source": "inventory" }
+    }
+  ],
+  "devices": [
+    {
+      "id": "demo-switch-01",
+      "siteId": "demo-site-01",
+      "code": "DEMO-SW-01",
+      "type": "switch",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-switch-04",
+      "siteId": "demo-site-04",
+      "code": "DEMO-SW-04",
+      "type": "switch",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-closure-02",
+      "siteId": "demo-site-02",
+      "code": "DEMO-SC-02",
+      "type": "splice_closure",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-closure-03",
+      "siteId": "demo-site-03",
+      "code": "DEMO-SC-03",
+      "type": "splice_closure",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-source-01",
+      "siteId": "demo-site-01",
+      "code": "DEMO-PWR-01",
+      "type": "source",
+      "status": { "state": "unknown", "source": "manual" }
+    },
+    {
+      "id": "demo-ups-04",
+      "siteId": "demo-site-04",
+      "code": "DEMO-UPS-04",
+      "type": "ups",
+      "status": { "state": "unknown", "source": "manual" }
+    }
+  ],
+  "ports": [
+    {
+      "id": "demo-sfp-01",
+      "deviceId": "demo-switch-01",
+      "name": "DEMO SFP 01",
+      "type": "sfp",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-sfp-04",
+      "deviceId": "demo-switch-04",
+      "name": "DEMO SFP 04",
+      "type": "sfp",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-terminal-01",
+      "deviceId": "demo-source-01",
+      "name": "DEMO Output",
+      "type": "terminal",
+      "status": { "state": "unknown", "source": "manual" }
+    },
+    {
+      "id": "demo-terminal-04",
+      "deviceId": "demo-ups-04",
+      "name": "DEMO Input",
+      "type": "terminal",
+      "status": { "state": "unknown", "source": "manual" }
+    }
+  ],
+  "cables": [
+    {
+      "id": "demo-fo-01",
+      "code": "DEMO-FO-01",
+      "kind": "fiber",
+      "fromSiteId": "demo-site-01",
+      "toSiteId": "demo-site-02",
+      "lengthM": 100,
+      "totalCores": 12,
+      "fiberType": "single_mode",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-fo-02",
+      "code": "DEMO-FO-02",
+      "kind": "fiber",
+      "fromSiteId": "demo-site-02",
+      "toSiteId": "demo-site-03",
+      "lengthM": 120,
+      "totalCores": 12,
+      "fiberType": "single_mode",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-fo-03",
+      "code": "DEMO-FO-03",
+      "kind": "fiber",
+      "fromSiteId": "demo-site-03",
+      "toSiteId": "demo-site-04",
+      "lengthM": 80,
+      "totalCores": 12,
+      "fiberType": "single_mode",
+      "status": { "state": "unknown", "source": "inventory" }
+    },
+    {
+      "id": "demo-power-01",
+      "code": "DEMO-PWR-01",
+      "kind": "power",
+      "fromSiteId": "demo-site-01",
+      "toSiteId": "demo-site-04",
+      "lengthM": 320,
+      "conductorCount": 3,
+      "crossSectionMm2": 10,
+      "voltageV": 230,
+      "status": { "state": "unknown", "source": "manual" }
+    }
+  ],
+  "fiberCores": [
+    {
+      "id": "demo-core-01",
+      "cableId": "demo-fo-01",
+      "coreNumber": 1,
+      "status": "allocated"
+    },
+    {
+      "id": "demo-core-02",
+      "cableId": "demo-fo-02",
+      "coreNumber": 1,
+      "status": "allocated"
+    },
+    {
+      "id": "demo-core-03",
+      "cableId": "demo-fo-03",
+      "coreNumber": 1,
+      "status": "allocated"
+    }
+  ],
+  "fiberTerminations": [
+    {
+      "id": "demo-term-01",
+      "fiberCoreId": "demo-core-01",
+      "portId": "demo-sfp-01",
+      "endSide": "a"
+    },
+    {
+      "id": "demo-term-04",
+      "fiberCoreId": "demo-core-03",
+      "portId": "demo-sfp-04",
+      "endSide": "b"
+    }
+  ],
+  "fiberSplices": [
+    {
+      "id": "demo-splice-02",
+      "fromFiberCoreId": "demo-core-01",
+      "toFiberCoreId": "demo-core-02",
+      "closureDeviceId": "demo-closure-02"
+    },
+    {
+      "id": "demo-splice-03",
+      "fromFiberCoreId": "demo-core-02",
+      "toFiberCoreId": "demo-core-03",
+      "closureDeviceId": "demo-closure-03"
+    }
+  ],
+  "logicalLinks": [
+    {
+      "id": "demo-link-a",
+      "code": "DEMO-LINK-A",
+      "fromPortId": "demo-sfp-01",
+      "toPortId": "demo-sfp-04",
+      "routeName": "fo_ring_a",
+      "coreSegments": ["demo-core-01", "demo-core-02", "demo-core-03"]
+    }
+  ],
+  "powerCircuits": [
+    {
+      "id": "demo-circuit-01",
+      "code": "DEMO-CIRCUIT-01",
+      "sourcePortId": "demo-terminal-01",
+      "destinationPortId": "demo-terminal-04",
+      "supplyType": "pln",
+      "cableIds": ["demo-power-01"],
+      "status": { "state": "unknown", "source": "manual" }
+    }
+  ],
+  "routes": [
+    {
+      "id": "demo-corridor-01",
+      "code": "DEMO-ROUTE-01",
+      "name": "DEMO shared corridor",
+      "cableIds": ["demo-fo-01", "demo-power-01"]
+    }
+  ],
+  "cameras": [
+    {
+      "id": "demo-camera-01",
+      "code": "DEMO-CAM-01",
+      "siteId": "demo-site-01",
+      "name": "DEMO Camera 01 - no stream",
+      "enabled": false
+    },
+    {
+      "id": "demo-camera-04",
+      "code": "DEMO-CAM-04",
+      "siteId": "demo-site-04",
+      "name": "DEMO Camera 04 - no stream",
+      "enabled": false
+    }
+  ],
+  "layout": {
+    "width": 1600,
+    "height": 900,
+    "nodes": [
+      {
+        "id": "demo-node-01",
+        "entityType": "site",
+        "entityId": "demo-site-01",
+        "x": 200,
+        "y": 250
+      },
+      {
+        "id": "demo-node-02",
+        "entityType": "site",
+        "entityId": "demo-site-02",
+        "x": 600,
+        "y": 250
+      },
+      {
+        "id": "demo-node-03",
+        "entityType": "site",
+        "entityId": "demo-site-03",
+        "x": 1000,
+        "y": 250
+      },
+      {
+        "id": "demo-node-04",
+        "entityType": "site",
+        "entityId": "demo-site-04",
+        "x": 1400,
+        "y": 250
+      },
+      {
+        "id": "demo-node-05",
+        "entityType": "site",
+        "entityId": "demo-site-05",
+        "x": 200,
+        "y": 650
+      },
+      {
+        "id": "demo-node-06",
+        "entityType": "site",
+        "entityId": "demo-site-06",
+        "x": 600,
+        "y": 650
+      },
+      {
+        "id": "demo-node-07",
+        "entityType": "site",
+        "entityId": "demo-site-07",
+        "x": 1000,
+        "y": 650
+      },
+      {
+        "id": "demo-node-08",
+        "entityType": "site",
+        "entityId": "demo-site-08",
+        "x": 1400,
+        "y": 650
+      }
+    ],
+    "edges": [
+      {
+        "id": "demo-edge-01",
+        "connectionType": "fiber_cable_segment",
+        "connectionId": "demo-fo-01",
+        "fromNodeId": "demo-node-01",
+        "toNodeId": "demo-node-02",
+        "layer": "fo_ring_a",
+        "points": [
+          { "x": 200, "y": 250 },
+          { "x": 600, "y": 250 }
+        ]
+      },
+      {
+        "id": "demo-edge-02",
+        "connectionType": "fiber_cable_segment",
+        "connectionId": "demo-fo-02",
+        "fromNodeId": "demo-node-02",
+        "toNodeId": "demo-node-03",
+        "layer": "fo_ring_a",
+        "points": [
+          { "x": 600, "y": 250 },
+          { "x": 1000, "y": 250 }
+        ]
+      },
+      {
+        "id": "demo-edge-03",
+        "connectionType": "fiber_cable_segment",
+        "connectionId": "demo-fo-03",
+        "fromNodeId": "demo-node-03",
+        "toNodeId": "demo-node-04",
+        "layer": "fo_ring_a",
+        "points": [
+          { "x": 1000, "y": 250 },
+          { "x": 1400, "y": 250 }
+        ]
+      },
+      {
+        "id": "demo-edge-power",
+        "connectionType": "power_cable_segment",
+        "connectionId": "demo-power-01",
+        "fromNodeId": "demo-node-01",
+        "toNodeId": "demo-node-04",
+        "layer": "power_main",
+        "points": [
+          { "x": 200, "y": 250 },
+          { "x": 200, "y": 100 },
+          { "x": 1400, "y": 100 },
+          { "x": 1400, "y": 250 }
+        ]
+      }
+    ]
+  }
+}
