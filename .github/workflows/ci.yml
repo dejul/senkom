@@ -18,6 +18,8 @@ jobs:
           tools: composer:2.11.1
           coverage: none
       - run: npm ci
+      - name: Auto-merge policy self-check
+        run: node --test scripts/auto-merge.test.mjs
       - run: composer --working-dir apps/api install --no-interaction --prefer-dist
       - run: composer --working-dir apps/api validate --strict
       - run: npm run check

@@ -5,8 +5,14 @@ Baseline produk yang selesai tetap Phase 1. Recovery tidak berarti seluruh Phase
 diterima. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11; gate akhir Phase 2A tetap terbuka.
 
-Next executable: **persetujuan eksplisit initial commit dan push**, lalu literal clean checkout; CI Windows tetap blocker terpisah. Phase 2A tetap WIP.
+Next executable: review dan merge manual PR setup auto-merge, lalu selesaikan Composer audit dan CI disposable MySQL dalam batch terpisah. Phase 2A tetap WIP.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2B/2C belum dimulai.
+
+## Full Git Automation setup (2026-11-11)
+
+- Branch `chore/phase-auto-merge` dari `main` remote `13f0ab89b6656d74456c2b023fa13f97c8590319`; PR #1 merged. Repo private; GitHub CLI authenticated. Branch protection API untuk private GitHub Free mengembalikan HTTP 403. `main` tidak diubah oleh setup ini.
+- Trusted `workflow_run` dari `main` dan `scripts/auto-merge.mjs` memeriksa CI lengkap, head SHA, evidence COMPLETE, internal PR, konflik, dan diff/secret sebelum API merge. PR yang mengubah workflow/policy tidak eligible. PR setup ini memerlukan review dan merge manual sekali untuk aktivasi.
+- CI saat ini masih gagal Composer audit dan belum menyediakan MySQL disposable/zero-skip serta semua named mandatory steps. Live auto-merge **NOT VERIFIED**; semua phase PR tetap blocked sampai CI diperbaiki. Next: review/merge manual PR setup, lalu perbaiki Composer audit dan CI dalam batch terpisah. Phase 2A tetap WIP; Phase 2B tidak dimulai.
 
 ## GitHub integration dan workflow permanen
 
