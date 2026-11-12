@@ -1,12 +1,19 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-12. Status: **Phase 2A COMPLETE**.
-Phase 2B: **2B-01a VERIFIED; parent 2B-01 WIP**.
+Phase 2B: **2B-01a VERIFIED; 2B-01b local acceptance PASS, CI PR pending; parent 2B-01 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: **2B-01b** hanya atas permintaan terpisah; stop setelah 2B-01a.
+Next executable: selesaikan CI/PR 2B-01b; stop sebelum parent 2B-01 acceptance dan 2B-02a.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## 2B-01b — shell dan role states (2026-11-12)
+
+- Preflight: PR #5 MERGED pada `eb178b432beebaaeff6280a3f382bbf23bc257d1`; `git fetch origin --prune` exit 0; `main` lokal fast-forward ke `origin/main`. Auto-Merge V2 terpasang. `feature/phase-2b` mempertahankan commit 2B-01a `b7c4f72` dan evidence `302c60b`; merge `origin/main` pada `82fda5c96d391bb95f036cd2e8e8a03ca3f69f3a` tanpa reset/force push. Konflik dokumentasi diselesaikan dengan mempertahankan kedua bagian.
+- Shell Web Admin berisi sidebar, kanvas/properti kosong, navigasi anchor, label role, state guest/401/403, dan pesan akses map melalui API. Tidak memuat atau mengubah map pada batch ini. [Bukti](phase-2-verification.md#2b-01b).
+- Lokal: tes shell+auth 8 PASS; seluruh frontend 96/0 skip; policy 51/0 skip; lint, contract, typecheck/build, Electron smoke, audit npm produksi PASS. CI PR dan commit 2B-01b belum tersedia saat catatan ini; akan diverifikasi setelah push. Parent 2B-01 tetap WIP.
+- Precheck auto-merge PR kumulatif: diff dari `main` masih memuat `apps/admin-web/src/api.ts`, `apps/admin-web/vite.config.ts`, dan `scripts/electron-smoke.cjs` dari 2B-01a. Ketiganya security-sensitive menurut V2; merge PR memerlukan review manual. Tidak mengubah policy atau evidence untuk menghindari gate.
 
 ## 2B-01a — Typed API client, session/CSRF, error mapping (2026-11-12)
 

@@ -1,6 +1,7 @@
 import { StrictMode, useEffect, useState, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { adminApi, ApiError, type AdminSession } from './api';
+import { accessView, AccessDenied, Workspace } from './workspace';
 import './style.css';
 
 function App() {
@@ -8,13 +9,19 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
 
   useEffect(() => {
     let active = true;
     adminApi
       .session()
       .then((value) => active && setSession(value))
-      .catch((cause: unknown) => active && setError(message(cause)))
+      .catch((cause: unknown) => {
+        if (active) {
+          setError(message(cause));
+          setErrorStatus(cause instanceof ApiError ? cause.status : null);
+        }
+      })
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
@@ -24,11 +31,13 @@ function App() {
   async function refresh() {
     setLoading(true);
     setError('');
+    setErrorStatus(null);
     try {
       setSession(await adminApi.session());
     } catch (cause) {
       setSession(null);
       setError(message(cause));
+      setErrorStatus(cause instanceof ApiError ? cause.status : null);
     } finally {
       setLoading(false);
     }
@@ -40,6 +49,7 @@ function App() {
     const input = new FormData(form);
     setBusy(true);
     setError('');
+    setErrorStatus(null);
     try {
       setSession(
         await adminApi.login({
@@ -50,6 +60,7 @@ function App() {
       form.reset();
     } catch (cause) {
       setError(message(cause));
+      setErrorStatus(cause instanceof ApiError ? cause.status : null);
     } finally {
       setBusy(false);
     }
@@ -58,42 +69,52 @@ function App() {
   async function logout() {
     setBusy(true);
     setError('');
+    setErrorStatus(null);
     try {
       setSession(await adminApi.logout());
     } catch (cause) {
       setError(message(cause));
+      setErrorStatus(cause instanceof ApiError ? cause.status : null);
+      if (cause instanceof ApiError && [401, 403].includes(cause.status))
+        setSession(null);
     } finally {
       setBusy(false);
     }
   }
 
+  const view = accessView(session, errorStatus);
+
   return (
-    <main>
+    <main className={view === 'workspace' && !loading ? 'app-wide' : undefined}>
       <header>
         SENKOM <span>WEB ADMIN</span>
       </header>
-      <section className="panel" aria-busy={loading || busy}>
-        <p className="eyebrow">PENGELOLAAN INFRASTRUKTUR</p>
-        <h1>{session?.user ? 'Sesi aktif' : 'Masuk'}</h1>
-        {error && (
-          <p role="alert" className="error">
-            {error}
-          </p>
-        )}
-        {loading ? (
-          <p role="status">Memuat sesi…</p>
-        ) : session ? (
-          session.user ? (
-            <>
-              <p>
-                Masuk sebagai <strong>{session.user.name}</strong>.
-              </p>
-              <p>Editor visual tersedia pada micro-batch berikutnya.</p>
-              <button type="button" disabled={busy} onClick={logout}>
-                Keluar
-              </button>
-            </>
-          ) : (
+      {view === 'workspace' && !loading && session?.user ? (
+        <Workspace
+          user={session.user}
+          busy={busy}
+          error={error}
+          onLogout={logout}
+        />
+      ) : (
+        <section className="panel" aria-busy={loading || busy}>
+          <p className="eyebrow">PENGELOLAAN INFRASTRUKTUR</p>
+          <h1>{view === 'forbidden' ? 'Akses ditolak' : 'Masuk'}</h1>
+          {error && (
+            <p role="alert" className="error">
+              {error}
+            </p>
+          )}
+          {loading ? (
+            <p role="status">Memuat sesi…</p>
+          ) : view === 'forbidden' ? (
+            <AccessDenied
+              busy={busy}
+              signedIn={Boolean(session?.user)}
+              onRefresh={refresh}
+              onLogout={logout}
+            />
+          ) : view === 'login' ? (
             <form onSubmit={login}>
               <label htmlFor="email">Email</label>
               <input
@@ -119,13 +140,13 @@ function App() {
                 Masuk
               </button>
             </form>
-          )
-        ) : (
-          <button type="button" onClick={refresh}>
-            Muat ulang sesi
-          </button>
-        )}
-      </section>
+          ) : (
+            <button type="button" onClick={refresh} disabled={busy}>
+              Muat ulang sesi
+            </button>
+          )}
+        </section>
+      )}
     </main>
   );
 }
