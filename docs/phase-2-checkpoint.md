@@ -5,8 +5,28 @@ Baseline produk yang selesai tetap Phase 1. Recovery tidak berarti seluruh Phase
 diterima. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11; gate akhir Phase 2A tetap terbuka.
 
-Next executable: review dan merge manual PR setup auto-merge, lalu selesaikan Composer audit dan CI disposable MySQL dalam batch terpisah. Phase 2A tetap WIP.
+Next executable: review/merge manual perubahan CI pada PR terpisah, lalu Phase 2A Final Acceptance hanya atas permintaan baru; Phase 2A tetap WIP.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2B/2C belum dimulai.
+
+## Phase 2A Final-Fix-03 — Windows CI disposable MySQL (2026-11-12)
+
+- Status **VERIFIED untuk Final-Fix-03**, Phase 2A tetap WIP. Branch `fix/phase-2a-final-acceptance` dari `c53a8058187a5f49082d5e6e6c71cefd84034913`, awal bersih. [Gap, uji, dan gate](phase-2-verification.md#phase-2a-final-fix-03--windows-ci-disposable-mysql-dan-mandatory-gates).
+- Windows CI sekarang menyiapkan MySQL 8.4.11 ZIP berchecksum, loopback, datadir/DB disposable, user acak terbatas; migration/DEMO seed, PHPUnit `--fail-on-skipped`, HTTP smoke, 16 named mandatory steps, dan shutdown `always()`. Auto-merge policy trusted tidak diubah.
+- Lokal: migration/seed PASS; PHPUnit **141 tes/4.133 asersi/0 skip**, HTTP smoke PASS; frontend 88, schema 33, auto-merge 19 tes PASS; lint/typecheck/build/Electron/contract/audit PASS. Probes negatif untuk DB, migration, PHPUnit, HTTP, Composer audit, dan required check menghasilkan kegagalan yang diharapkan.
+- GitHub [run `43141274133`](https://github.com/dejul/senkom/actions/runs/43141274133) pada commit provisional `ee060ddadedbade17c5a84fcc08d1220fcf744b7`: **SUCCESS**, Windows Server 2025, MySQL 8.4.11, migration/seed, PHPUnit 141/4.133/0 skip, HTTP smoke, frontend 88, schema 33, Electron, Composer audit, dan cleanup PASS; 16/16 required steps success, 0 skipped step. PR berisi perubahan workflow/test policy ini tidak eligible untuk auto-merge dan perlu review/merge manual terpisah. Phase 2A tetap WIP, Phase 2B belum dimulai.
+
+## Phase 2A Final-Fix-02 — Composer security (2026-11-12)
+
+- Branch `fix/phase-2a-final-acceptance` dari `main`/`origin/main` `ffe99135675ff85e765cd495fd2216fa6dcff02e`. Perubahan rekonsiliasi GitHub pada checkpoint dipertahankan. Composer 2.11.1 terisolasi dengan PHP 8.4.26; `composer.json` dan Laravel `v13.39.0` tidak berubah.
+- Audit awal: **6 advisory / 3 paket** (`symfony/http-foundation`, `symfony/http-kernel`, `symfony/routing`), semua pada `v8.1.10`. Targeted solver hanya menaikkan tiga paket transitive tersebut ke patch `v8.1.11` dalam `apps/api/composer.lock`; tidak ada paket lain berubah. [Detail advisory dan perintah](phase-2-verification.md#phase-2a-final-fix-02--composer-security-audit-remediation).
+- Lokal: Composer audit 0 advisory, validate strict dan install dari lockfile PASS; PHP lint, OpenAPI/generated contract, PHPUnit **141 tes/4.133 asersi/0 skip**, HTTP smoke dan integritas DB disposable PASS. `npm run lint` dan GitHub CI dicatat pada laporan verifikasi; Phase 2A tetap **WIP**, bukan COMPLETE.
+- GitHub CI run `43136152964` pada commit `ef4013ff472a979364358eab6e96fb404711493b` **PASS**, termasuk Composer install, validate, dan audit. Blocker fase tersisa: CI disposable MySQL/zero-skip dan named mandatory steps belum tersedia. Live eligible auto-merge **NOT VERIFIED**. Jangan mulai Phase 2B.
+
+## Rekonsiliasi GitHub (2026-11-12)
+
+- PR #1 **MERGED** (`13f0ab89b6656d74456c2b023fa13f97c8590319`); commit kebijakan `d3f65651cbf37e7fe84cc19d99d0629dc4522d5f` ada pada `origin/main`. PR #2 **MERGED** (`ffe99135675ff85e765cd495fd2216fa6dcff02e`). Remote resmi `https://github.com/dejul/senkom.git`.
+- Setelah `git fetch origin --prune` dan `git pull --ff-only origin main` (exit 0), local `main` dan `origin/main` sama: `ffe99135675ff85e765cd495fd2216fa6dcff02e`. Branch `fix/phase-2a-final-acceptance` dibuat dari SHA tersebut. Kebijakan pada `AGENTS.md` dan `docs/git-workflow.md`, serta `.github/workflows/auto-merge.yml`, tersedia pada baseline ini.
+- Workflow auto-merge terpasang, tetapi run `43133318053` berstatus **skipped** untuk CI event push; live eligible auto-merge **NOT VERIFIED**. CI run `43132927262` pada SHA terbaru gagal di `composer audit`. CI disposable MySQL/zero-skip dan named mandatory steps masih terbuka. Final-Fix-02 belum dijalankan; dependency tidak diubah. Phase 2A tetap WIP.
 
 ## Full Git Automation setup (2026-11-11)
 
