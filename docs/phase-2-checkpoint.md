@@ -12,7 +12,8 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 
 - Preflight: PR #5 MERGED pada `eb178b432beebaaeff6280a3f382bbf23bc257d1`; `git fetch origin --prune` exit 0; `main` lokal fast-forward ke `origin/main`. Auto-Merge V2 terpasang. `feature/phase-2b` mempertahankan commit 2B-01a `b7c4f72` dan evidence `302c60b`; merge `origin/main` pada `82fda5c96d391bb95f036cd2e8e8a03ca3f69f3a` tanpa reset/force push. Konflik dokumentasi diselesaikan dengan mempertahankan kedua bagian.
 - Shell Web Admin berisi sidebar, kanvas/properti kosong, navigasi anchor, label role, state guest/401/403, dan pesan akses map melalui API. Tidak memuat atau mengubah map pada batch ini. [Bukti](phase-2-verification.md#2b-01b).
-- Lokal: tes shell+auth 8 PASS; seluruh frontend 96/0 skip; policy 51/0 skip; lint, contract, typecheck/build, Electron smoke, audit npm produksi PASS. CI PR dan commit 2B-01b belum tersedia saat catatan ini; akan diverifikasi setelah push. Parent 2B-01 tetap WIP.
+- Lokal: tes shell+auth 8 PASS; seluruh frontend 96/0 skip; policy 51/0 skip; lint, contract, typecheck/build, Electron smoke, audit npm produksi PASS. CI PR NOT RUN sebelum push. Parent 2B-01 tetap WIP.
+- Commit implementasi `a5ea76b44c818310cadcaea7342daaffedeb315f` pushed ke `origin/feature/phase-2b` tanpa force; SHA lokal dan remote sama. PR CI pada head dokumentasi final masih pending.
 - Precheck auto-merge PR kumulatif: diff dari `main` masih memuat `apps/admin-web/src/api.ts`, `apps/admin-web/vite.config.ts`, dan `scripts/electron-smoke.cjs` dari 2B-01a. Ketiganya security-sensitive menurut V2; merge PR memerlukan review manual. Tidak mengubah policy atau evidence untuk menghindari gate.
 
 ## 2B-01a — Typed API client, session/CSRF, error mapping (2026-11-12)
