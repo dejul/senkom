@@ -7,6 +7,12 @@ bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 Next executable: **2B-01a** pada `feature/phase-2b`; stop sebelum 2B-01b.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
+## Auto-Merge V2 policy fix (2026-11-12)
+
+- Branch/worktree terpisah `fix/auto-merge-v2` di `D:\BSD\Project\Web\www\senkom-auto-merge-v2`, dari `origin/main` `24ae92738933ed6d847616234a8d0d89ee630b35`; branch `feature/phase-2b` tidak diubah.
+- Local policy 51 tes PASS/0 skip; frontend 88 PASS; lint, contract, typecheck, build, Electron smoke, npm production audit PASS. Backend disposable MySQL lokal NOT RUN; CI PR belum dijalankan sebelum push. [Bukti](phase-2-verification.md#verified-fix-auto-merge-v2).
+- Verified fix/micro-batch dapat eligible setelah CI head SHA dan evidence lolos. Perubahan policy/security-sensitive tetap manual merge tanpa independent approval automation; PR ini tidak boleh auto-merge. Stop setelah setup/verifikasi, tanpa perubahan Phase 2B.
+
 ## Phase 2A Final Acceptance — closure (2026-11-12)
 
 - PR #3 MERGED pada `34f3986be27a2602f1a227bbc6870d9c34eacb5d`; local `main` fast-forward ke SHA yang sama. Final-Fix-02/03 terintegrasi.

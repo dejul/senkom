@@ -1,5 +1,16 @@
 # Verifikasi Phase 2
 
+## Verified Fix: auto-merge-v2
+
+Status: **VERIFIED** untuk policy dan regresi lokal; CI PR **NOT RUN** sebelum push.
+Branch/worktree: `fix/auto-merge-v2`, `D:\BSD\Project\Web\www\senkom-auto-merge-v2`; baseline `origin/main` `24ae92738933ed6d847616234a8d0d89ee630b35`.
+Scope: pisahkan verified fix/micro-batch dari Phase Final Acceptance COMPLETE. Semua jalur tetap memerlukan CI PR pada head SHA, 16 mandatory step sukses tanpa skip, evidence sesuai branch/SHA, diff lengkap, secret audit, dan PR internal yang mergeable. File policy, workflow, CI harness, auth, dependency, kontrak, dan tes existing memerlukan merge manual; PR ini sendiri tidak eligible auto-merge.
+
+- `node --test scripts/auto-merge.test.mjs`: exit 0, 51 tes PASS, 0 gagal/skip. Positif: fix, micro-batch, final acceptance. Negatif: WIP/BLOCKED, CI gagal/pending/skipped, stale SHA, fork, secret, docs-only, bukti lama, file sensitif, rename workflow, dan auth baru.
+- `npm run lint`: exit 0; ESLint, Prettier, OpenAPI contract PASS. `npm test`: exit 0, 88 tes PASS. `npm run build`: exit 0, contract/typecheck/build desktop dan admin PASS. `npm audit --omit=dev --audit-level=high`: exit 0, 0 vulnerability produksi. `npm run smoke:desktop` setelah build: exit 0, skenario utama/offline/corrupt/empty PASS.
+- Smoke Electron pertama dijalankan paralel dengan build, gagal karena output build belum ada; rerun berurutan PASS. Backend disposable MySQL dan PHP lint lokal **NOT RUN** di worktree ini; mandatory Windows CI menjalankannya pada PR.
+- Commit SHA, PR URL, dan CI run dicatat sesudah push. Aktivasi memerlukan review dan merge manual independen; tidak ada auto-merge untuk perubahan policy ini.
+
 ## 2A-00 - WIP recovery
 
 Tanggal: 2026-11-04, Asia/Jakarta. Mulai 14:42:50 WIB.
