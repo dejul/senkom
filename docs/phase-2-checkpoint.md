@@ -5,14 +5,15 @@ Baseline produk yang selesai tetap Phase 1. Recovery tidak berarti seluruh Phase
 diterima. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11; gate akhir Phase 2A tetap terbuka.
 
-Next executable: verifikasi GitHub CI Final-Fix-03 pada commit feature branch; Phase 2A tetap WIP.
+Next executable: review/merge manual perubahan CI pada PR terpisah, lalu Phase 2A Final Acceptance hanya atas permintaan baru; Phase 2A tetap WIP.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2B/2C belum dimulai.
 
 ## Phase 2A Final-Fix-03 — Windows CI disposable MySQL (2026-11-12)
 
-- Status **INCOMPLETE sampai successful GitHub CI pada HEAD**. Branch `fix/phase-2a-final-acceptance` dari `c53a8058187a5f49082d5e6e6c71cefd84034913`, awal bersih. [Gap, uji, dan gate](phase-2-verification.md#phase-2a-final-fix-03--windows-ci-disposable-mysql-dan-mandatory-gates).
+- Status **VERIFIED untuk Final-Fix-03**, Phase 2A tetap WIP. Branch `fix/phase-2a-final-acceptance` dari `c53a8058187a5f49082d5e6e6c71cefd84034913`, awal bersih. [Gap, uji, dan gate](phase-2-verification.md#phase-2a-final-fix-03--windows-ci-disposable-mysql-dan-mandatory-gates).
 - Windows CI sekarang menyiapkan MySQL 8.4.11 ZIP berchecksum, loopback, datadir/DB disposable, user acak terbatas; migration/DEMO seed, PHPUnit `--fail-on-skipped`, HTTP smoke, 16 named mandatory steps, dan shutdown `always()`. Auto-merge policy trusted tidak diubah.
-- Lokal: migration/seed PASS; PHPUnit **141 tes/4.133 asersi/0 skip**, HTTP smoke PASS; frontend 88, schema 33, auto-merge 19 tes PASS; lint/typecheck/build/Electron/contract/audit PASS. Probes negatif untuk DB, migration, PHPUnit, HTTP, Composer audit, dan required check menghasilkan kegagalan yang diharapkan. CI aktual untuk perubahan ini masih **NOT RUN**. PR berisi perubahan workflow/test policy ini tidak eligible untuk auto-merge dan perlu review/merge manual terpisah; Phase 2A tetap WIP, Phase 2B belum dimulai.
+- Lokal: migration/seed PASS; PHPUnit **141 tes/4.133 asersi/0 skip**, HTTP smoke PASS; frontend 88, schema 33, auto-merge 19 tes PASS; lint/typecheck/build/Electron/contract/audit PASS. Probes negatif untuk DB, migration, PHPUnit, HTTP, Composer audit, dan required check menghasilkan kegagalan yang diharapkan.
+- GitHub [run `43141274133`](https://github.com/dejul/senkom/actions/runs/43141274133) pada commit provisional `ee060ddadedbade17c5a84fcc08d1220fcf744b7`: **SUCCESS**, Windows Server 2025, MySQL 8.4.11, migration/seed, PHPUnit 141/4.133/0 skip, HTTP smoke, frontend 88, schema 33, Electron, Composer audit, dan cleanup PASS; 16/16 required steps success, 0 skipped step. PR berisi perubahan workflow/test policy ini tidak eligible untuk auto-merge dan perlu review/merge manual terpisah. Phase 2A tetap WIP, Phase 2B belum dimulai.
 
 ## Phase 2A Final-Fix-02 — Composer security (2026-11-12)
 
