@@ -1,4 +1,4 @@
-name: Phase final acceptance merge
+name: Verified work merge
 on:
   workflow_run:
     workflows: [Desktop Phase 1]
@@ -8,7 +8,7 @@ permissions:
   contents: write
   pull-requests: read
 concurrency:
-  group: phase-merge-${{ github.event.workflow_run.head_branch }}
+  group: verified-merge-${{ github.event.workflow_run.head_branch }}
   cancel-in-progress: false
 jobs:
   merge:
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v7.1.0
         with:
           node-version: '24'
-      - name: Evaluate trusted final acceptance gate
+      - name: Evaluate trusted merge gate
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/auto-merge.mjs

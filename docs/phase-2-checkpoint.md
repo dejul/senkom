@@ -16,6 +16,13 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 - Commit implementasi `b7c4f727c9f67b4bb60e43475715012d230bd423` dipush ke `origin/feature/phase-2b`; SHA remote sama. GitHub [run `43168520667`](https://github.com/dejul/senkom/actions/runs/43168520667) pada SHA tersebut **SUCCESS**: 16/16 mandatory steps, 0 skipped; PHPUnit 141/4.133/0 skip, HTTP auth/CSRF smoke, frontend 94, schema 33, build/Electron/contract/audit/cleanup PASS.
 - Status micro-batch **VERIFIED**. Phase 2B parent 2B-01 tetap WIP; PR ke `main` belum dibuat karena Final Acceptance Phase 2B belum tercapai. Next 2B-01b hanya atas permintaan baru. [Bukti rinci](phase-2-verification.md#2b-01a--typed-api-client-sessioncsrf-dan-error-mapping).
 
+## Auto-Merge V2 policy fix (2026-11-12)
+
+- Branch/worktree terpisah `fix/auto-merge-v2` di `D:\BSD\Project\Web\www\senkom-auto-merge-v2`, dari `origin/main` `24ae92738933ed6d847616234a8d0d89ee630b35`; branch `feature/phase-2b` tidak diubah.
+- Local policy 51 tes PASS/0 skip; frontend 88 PASS; lint, contract, typecheck, build, Electron smoke, npm production audit PASS. Backend disposable MySQL lokal NOT RUN; CI PR belum dijalankan sebelum push. [Bukti](phase-2-verification.md#verified-fix-auto-merge-v2).
+- Implementasi commit `79a3bdf6905081311458c6e9e3fa03baa0ff1fa3` pushed; PR #5 OPEN. Windows PR CI `43172959382` SUCCESS pada SHA itu: 16/16 mandatory, 0 skipped; PHPUnit 141/4.133/0 skip, frontend 88, schema 33. Follow-up dokumentasi memerlukan CI head baru.
+- Verified fix/micro-batch dapat eligible setelah CI head SHA dan evidence lolos. Perubahan policy/security-sensitive tetap manual merge tanpa independent approval automation; PR ini tidak boleh auto-merge. Stop setelah setup/verifikasi, tanpa perubahan Phase 2B.
+
 ## Phase 2A Final Acceptance — closure (2026-11-12)
 
 - PR #3 MERGED pada `34f3986be27a2602f1a227bbc6870d9c34eacb5d`; local `main` fast-forward ke SHA yang sama. Final-Fix-02/03 terintegrasi.
