@@ -2267,3 +2267,38 @@ Trusted `.github/workflows/auto-merge.yml` hanya menerima `workflow_run` CI PR s
 | Live auto-merge                           | Belum dapat diuji sebelum aktivasi manual; CI saat ini tidak memenuhi gate                                                                                                          | NOT VERIFIED |
 
 Current CI `.github/workflows/ci.yml` masih kurang named mandatory steps dan MySQL disposable, sehingga auto-merge gagal tertutup. Composer audit masih gagal pada run `42992532043`; perbaikan advisory di luar scope setup ini. Tidak ada klaim CI PASS atau Phase 2A COMPLETE. Rollback dan penghentian workflow tercatat di `docs/git-workflow.md`.
+
+## Phase 2A Final-Fix-02 — Composer security audit remediation
+
+Status: **local VERIFIED; GitHub CI NOT VERIFIED** (2026-11-12). Branch `fix/phase-2a-final-acceptance`, baseline `main`/`origin/main` `ffe99135675ff85e765cd495fd2216fa6dcff02e`. Perubahan rekonsiliasi GitHub yang sudah ada pada checkpoint dipertahankan. PHP 8.4.26 dan Composer 2.11.1 terisolasi digunakan; PHP default 8.3.13 dan Composer default 2.4.1 tidak dipakai untuk lockfile.
+
+Audit awal dari `composer --working-dir apps/api audit --format=json` (exit 1): 6 advisory pada tiga paket transitive `v8.1.10`. Range di bawah ialah bagian 8.1 yang relevan untuk lockfile; seluruh seri 8.1 `<8.1.11` terdampak. Fixed patch `v8.1.11` dikonfirmasi dari affected range dan Composer solver.
+
+| Paket                     | Advisory ID                               | Affected 8.1      | Fixed    |
+| ------------------------- | ----------------------------------------- | ----------------- | -------- |
+| `symfony/http-foundation` | `PKSA-24ph-xkrh-y79j` / `CVE-2026-118514` | `>=8.1.0,<8.1.11` | `8.1.11` |
+| `symfony/http-foundation` | `PKSA-pr6q-2w5s-kzzf`                     | `>=8.1.0,<8.1.11` | `8.1.11` |
+| `symfony/http-foundation` | `PKSA-nxjs-s6hn-vb6m`                     | `>=8.1.0,<8.1.11` | `8.1.11` |
+| `symfony/http-foundation` | `PKSA-b2gg-vk1g-6d5q`                     | `>=8.1.0,<8.1.11` | `8.1.11` |
+| `symfony/http-kernel`     | `PKSA-3gxv-7xhq-mgmz` / `CVE-2026-123339` | `>=8.1.0,<8.1.11` | `8.1.11` |
+| `symfony/routing`         | `PKSA-y8c5-1b7f-r1gj` / `CVE-2026-118516` | `>=8.1.0,<8.1.11` | `8.1.11` |
+
+`composer.json` langsung mewajibkan `laravel/framework ^13.39.0`; Laravel `v13.39.0` mewajibkan ketiga Symfony `^7.4.0 || ^8.0.0`. `fruitcake/php-cors v1.4.0` juga mewajibkan `http-foundation ^5.4|^6.4|^7.3|^8`, dan `http-kernel` mewajibkan `http-foundation ^7.4|^8.0`. Solver dry-run (exit 0) memilih **tepat tiga update** `v8.1.10` ke `v8.1.11`, 0 install/removal. `composer.json`, versi Laravel, dan paket lain tetap. Update awal menulis lockfile dan memasang paket tetapi dihentikan saat optimasi autoload lokal berjalan lama (exit 1); `composer install` ulang dari lockfile menyelesaikan autoload dan package discovery (exit 0). Tidak ada audit ignore atau major update.
+
+Perintah solver: `php .artifacts/final-fix-02/composer.phar --working-dir apps/api update symfony/http-foundation symfony/http-kernel symfony/routing --dry-run --no-interaction --no-scripts` (exit 0), lalu perintah yang sama tanpa `--dry-run --no-scripts` dengan `--prefer-dist` (interrupted exit 1 setelah lockfile ditulis). Notasi `php8.4` pada tabel berarti `C:\laragon\bin\php\php-8.4.26-Win32-vs17-x64\php.exe`; `composer.phar` berarti salinan Composer 2.11.1 di `.artifacts/final-fix-02/composer.phar` yang diabaikan Git.
+
+| Pemeriksaan            | Perintah / hasil                                                                                                                                                                                                             | Exit |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| Composer validate      | `php8.4 composer.phar --working-dir apps/api validate --strict` — valid                                                                                                                                                      | 0    |
+| Composer audit sesudah | `php8.4 composer.phar --working-dir apps/api audit --format=json` — 0 advisory                                                                                                                                               | 0    |
+| Install lockfile       | `php8.4 composer.phar --working-dir apps/api install --no-interaction --prefer-dist -vvv` — 0 operasi paket; autoload dan package discovery selesai                                                                          | 0    |
+| PHP lint               | `php8.4 apps/api/tools/lint.php` — seluruh file target tanpa syntax error                                                                                                                                                    | 0    |
+| OpenAPI/contract       | `node scripts/contracts.mjs --check` — generated types match                                                                                                                                                                 | 0    |
+| Backend PHPUnit        | `SENKOM_TEST_DB_PORT=59870`, DB `senkom_final_fix_02_unit_test`, `php8.4 apps/api/vendor/phpunit/phpunit/phpunit -c apps/api/phpunit.xml --fail-on-skipped --no-progress --colors=never` — **141 tes, 4.133 asersi, 0 skip** | 0    |
+| HTTP smoke             | DB terpisah `senkom_final_fix_02_http_test`, `SENKOM_PHP_BINARY=php8.4`, `node scripts/phase2-smoke.mjs --api-only` — auth, CSRF, CORS, RBAC, draft/publish/rollback, concurrency, viewer/cache/schema/corruption PASS       | 0    |
+| DB integrity           | SQL: unit 0 map; HTTP 1 map/4 revisi; 0 orphan pointer, 0 checksum mismatch                                                                                                                                                  | 0    |
+| Full lint              | `npm run lint` — awal exit 1 karena format dokumen baru; setelah Prettier hanya pada file verifikasi, ESLint/Prettier/contract PASS                                                                                          | 0    |
+
+MySQL portable 8.4.11 executable dari `%TEMP%/senkom-mysql-8.4.11-parent/mysql-8.4.11-winx64/bin`, instance baru loopback `127.0.0.1:59870`, datadir `.artifacts/final-fix-02/mysql-data` diverifikasi lewat `@@version`, `@@port`, dan `@@datadir` sebelum dua DB `*_test` dibuat. Kedua DB tidak memakai server production/development. `mysqladmin shutdown` exit 0; listener dan proses hilang. Satu probe SELECT awal setelah dua CREATE DATABASE gagal karena quoting PowerShell (exit 1); `SHOW DATABASES` ulang memastikan kedua DB ada (exit 0). Tidak memengaruhi tes.
+
+GitHub CI terakhir sebelum perubahan: run `43132927262` pada `ffe99135675ff85e765cd495fd2216fa6dcff02e` gagal di Composer audit. CI untuk lockfile baru **NOT RUN** sampai branch dipush; local PASS bukan CI PASS. Workflow masih belum menyediakan MySQL disposable/zero-skip dan semua named mandatory steps untuk phase auto-merge. Phase 2A tetap WIP, bukan COMPLETE; Phase 2B tidak dimulai.
