@@ -1,11 +1,28 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-12. Status: **Phase 2A COMPLETE**.
+Phase 2B: **2B-01a VERIFIED; 2B-01b local acceptance PASS, CI PR pending; parent 2B-01 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: **2B-01a** pada `feature/phase-2b`; stop sebelum 2B-01b.
+Next executable: selesaikan CI/PR 2B-01b; stop sebelum parent 2B-01 acceptance dan 2B-02a.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## 2B-01b — shell dan role states (2026-11-12)
+
+- Preflight: PR #5 MERGED pada `eb178b432beebaaeff6280a3f382bbf23bc257d1`; `git fetch origin --prune` exit 0; `main` lokal fast-forward ke `origin/main`. Auto-Merge V2 terpasang. `feature/phase-2b` mempertahankan commit 2B-01a `b7c4f72` dan evidence `302c60b`; merge `origin/main` pada `82fda5c96d391bb95f036cd2e8e8a03ca3f69f3a` tanpa reset/force push. Konflik dokumentasi diselesaikan dengan mempertahankan kedua bagian.
+- Shell Web Admin berisi sidebar, kanvas/properti kosong, navigasi anchor, label role, state guest/401/403, dan pesan akses map melalui API. Tidak memuat atau mengubah map pada batch ini. [Bukti](phase-2-verification.md#2b-01b).
+- Lokal: tes shell+auth 8 PASS; seluruh frontend 96/0 skip; policy 51/0 skip; lint, contract, typecheck/build, Electron smoke, audit npm produksi PASS. CI PR NOT RUN sebelum push. Parent 2B-01 tetap WIP.
+- Commit implementasi `a5ea76b44c818310cadcaea7342daaffedeb315f` pushed ke `origin/feature/phase-2b` tanpa force; SHA lokal dan remote sama. PR CI pada head dokumentasi final masih pending.
+- Precheck auto-merge PR kumulatif: diff dari `main` masih memuat `apps/admin-web/src/api.ts`, `apps/admin-web/vite.config.ts`, dan `scripts/electron-smoke.cjs` dari 2B-01a. Ketiganya security-sensitive menurut V2; merge PR memerlukan review manual. Tidak mengubah policy atau evidence untuk menghindari gate.
+
+## 2B-01a — Typed API client, session/CSRF, error mapping (2026-11-12)
+
+- Branch `feature/phase-2b` dari integrated `main` `24ae92738933ed6d847616234a8d0d89ee630b35` (PR #4 Phase 2A closure MERGED); working tree awal bersih. Scope tepat V2 2B-01a; 2B-01b/sidebar/canvas/properties belum dimulai.
+- Web Admin memakai generated OpenAPI operation types untuk session/login, cookie same-origin, Laravel `X-CSRF-TOKEN` hanya di memori, error envelope/status konsisten, dan login/logout ke `/api/v1/auth/*`. Vite dev proxy `/api/v1` ke API loopback; deployment perlu same-origin reverse proxy dan HTTPS. Tidak ada token admin di localStorage atau perubahan backend/API contract/dependency.
+- Lokal: tes fokus **6 PASS**, seluruh Vitest **94 PASS/0 skip**, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run smoke:desktop` PASS; smoke desktop view-only empat skenario PASS. `npm audit --omit=dev` 0 vulnerability. Diff/staged paths dan secret audit PASS; string password/token pada tes sintetis saja.
+- Commit implementasi `b7c4f727c9f67b4bb60e43475715012d230bd423` dipush ke `origin/feature/phase-2b`; SHA remote sama. GitHub [run `43168520667`](https://github.com/dejul/senkom/actions/runs/43168520667) pada SHA tersebut **SUCCESS**: 16/16 mandatory steps, 0 skipped; PHPUnit 141/4.133/0 skip, HTTP auth/CSRF smoke, frontend 94, schema 33, build/Electron/contract/audit/cleanup PASS.
+- Status micro-batch **VERIFIED**. Phase 2B parent 2B-01 tetap WIP; PR ke `main` belum dibuat karena Final Acceptance Phase 2B belum tercapai. Next 2B-01b hanya atas permintaan baru. [Bukti rinci](phase-2-verification.md#2b-01a--typed-api-client-sessioncsrf-dan-error-mapping).
 
 ## Auto-Merge V2 policy fix (2026-11-12)
 
