@@ -1,11 +1,18 @@
 # Checkpoint Phase 2
 
-Tanggal: 2026-11-12. Status: **Phase 2A COMPLETE**.
+Tanggal: 2026-11-12. Status: **Phase 2A COMPLETE; 2B-01a VERIFIED lokal, CI branch pending**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: **2B-01a** pada `feature/phase-2b`; stop sebelum 2B-01b.
+Next executable: **2B-01b** hanya atas permintaan terpisah; stop setelah 2B-01a.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## 2B-01a — Typed API client, session/CSRF, error mapping (2026-11-12)
+
+- Branch `feature/phase-2b` dari integrated `main` `24ae92738933ed6d847616234a8d0d89ee630b35` (PR #4 Phase 2A closure MERGED); working tree awal bersih. Scope tepat V2 2B-01a; 2B-01b/sidebar/canvas/properties belum dimulai.
+- Web Admin memakai generated OpenAPI operation types untuk session/login, cookie same-origin, Laravel `X-CSRF-TOKEN` hanya di memori, error envelope/status konsisten, dan login/logout ke `/api/v1/auth/*`. Vite dev proxy `/api/v1` ke API loopback; deployment perlu same-origin reverse proxy dan HTTPS. Tidak ada token admin di localStorage atau perubahan backend/API contract/dependency.
+- Lokal: tes fokus **6 PASS**, seluruh Vitest **94 PASS/0 skip**, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run smoke:desktop` PASS; smoke desktop view-only empat skenario PASS. Backend auth/CSRF positive/negative dan MySQL disposable terakhir PASS pada CI PR #4 `43146965869` (backend sama); CI pada head Phase 2B **pending** sampai push. [Bukti rinci](phase-2-verification.md#2b-01a--typed-api-client-sessioncsrf-dan-error-mapping).
+- Status micro-batch **VERIFIED lokal**; commit/SHA, push, CI branch dan audit staged akan dicatat setelah gate Git. Phase 2B parent 2B-01 tetap WIP. Next 2B-01b hanya atas permintaan baru.
 
 ## Phase 2A Final Acceptance — closure (2026-11-12)
 

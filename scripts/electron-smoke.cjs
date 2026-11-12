@@ -57,10 +57,16 @@ app.once('browser-window-created', (_event, window) => {
         },
       });
       await admin.loadURL(process.env.SENKOM_ADMIN_SMOKE_URL);
-      assert.match(
-        await admin.webContents.executeJavaScript('document.body.innerText'),
-        /DEMO \/ BELUM OPERASIONAL/,
-      );
+      const adminText = await admin.webContents
+        .executeJavaScript(`(async () => {
+        for (let attempt = 0; attempt < 100; attempt++) {
+          if (document.querySelector('[role="alert"]')) break;
+          await new Promise(resolve => setTimeout(resolve, 25));
+        }
+        return document.body.innerText;
+      })()`);
+      assert.match(adminText, /WEB ADMIN/);
+      assert.match(adminText, /API tidak dapat dijangkau/);
       await writeFile(
         resolve(artifacts, 'admin.png'),
         (await admin.webContents.capturePage()).toPNG(),
