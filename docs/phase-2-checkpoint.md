@@ -1,6 +1,7 @@
 # Checkpoint Phase 2
 
-Tanggal: 2026-11-12. Status: **Phase 2A COMPLETE; 2B-01a VERIFIED lokal, CI branch pending**.
+Tanggal: 2026-11-12. Status: **Phase 2A COMPLETE**.
+Phase 2B: **2B-01a VERIFIED; parent 2B-01 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
@@ -11,8 +12,9 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 
 - Branch `feature/phase-2b` dari integrated `main` `24ae92738933ed6d847616234a8d0d89ee630b35` (PR #4 Phase 2A closure MERGED); working tree awal bersih. Scope tepat V2 2B-01a; 2B-01b/sidebar/canvas/properties belum dimulai.
 - Web Admin memakai generated OpenAPI operation types untuk session/login, cookie same-origin, Laravel `X-CSRF-TOKEN` hanya di memori, error envelope/status konsisten, dan login/logout ke `/api/v1/auth/*`. Vite dev proxy `/api/v1` ke API loopback; deployment perlu same-origin reverse proxy dan HTTPS. Tidak ada token admin di localStorage atau perubahan backend/API contract/dependency.
-- Lokal: tes fokus **6 PASS**, seluruh Vitest **94 PASS/0 skip**, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run smoke:desktop` PASS; smoke desktop view-only empat skenario PASS. Backend auth/CSRF positive/negative dan MySQL disposable terakhir PASS pada CI PR #4 `43146965869` (backend sama); CI pada head Phase 2B **pending** sampai push. [Bukti rinci](phase-2-verification.md#2b-01a--typed-api-client-sessioncsrf-dan-error-mapping).
-- Status micro-batch **VERIFIED lokal**; commit/SHA, push, CI branch dan audit staged akan dicatat setelah gate Git. Phase 2B parent 2B-01 tetap WIP. Next 2B-01b hanya atas permintaan baru.
+- Lokal: tes fokus **6 PASS**, seluruh Vitest **94 PASS/0 skip**, `npm run typecheck`, `npm run lint`, `npm run build`, `npm run smoke:desktop` PASS; smoke desktop view-only empat skenario PASS. `npm audit --omit=dev` 0 vulnerability. Diff/staged paths dan secret audit PASS; string password/token pada tes sintetis saja.
+- Commit implementasi `b7c4f727c9f67b4bb60e43475715012d230bd423` dipush ke `origin/feature/phase-2b`; SHA remote sama. GitHub [run `43168520667`](https://github.com/dejul/senkom/actions/runs/43168520667) pada SHA tersebut **SUCCESS**: 16/16 mandatory steps, 0 skipped; PHPUnit 141/4.133/0 skip, HTTP auth/CSRF smoke, frontend 94, schema 33, build/Electron/contract/audit/cleanup PASS.
+- Status micro-batch **VERIFIED**. Phase 2B parent 2B-01 tetap WIP; PR ke `main` belum dibuat karena Final Acceptance Phase 2B belum tercapai. Next 2B-01b hanya atas permintaan baru. [Bukti rinci](phase-2-verification.md#2b-01a--typed-api-client-sessioncsrf-dan-error-mapping).
 
 ## Phase 2A Final Acceptance — closure (2026-11-12)
 
