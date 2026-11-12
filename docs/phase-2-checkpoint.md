@@ -1,12 +1,19 @@
 # Checkpoint Phase 2
 
-Tanggal: 2026-11-11. Status: **Phase 2A WIP; 2A-00 VERIFIED; 2A-01a/b/c dan parent 2A-01 VERIFIED; 2A-02a/b/c/d dan parent 2A-02 VERIFIED; 2A-03a/b/c dan parent 2A-03 VERIFIED; 2A-04a/b/c dan parent 2A-04 VERIFIED; 2A-05a/b/c dan parent 2A-05 VERIFIED; 2A-06a/b/c/d dan parent 2A-06 VERIFIED; 2A-07a/b dan parent 2A-07 VERIFIED; 2A-08a/b dan parent 2A-08 VERIFIED; 2A-09a/b dan parent 2A-09 VERIFIED; 2A-10a/b/c dan parent 2A-10 VERIFIED; 2A-11a/b dan parent 2A-11 VERIFIED**.
-Baseline produk yang selesai tetap Phase 1. Recovery tidak berarti seluruh Phase 2A
-diterima. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
-bukti gate parent 2A-01 sampai 2A-11; gate akhir Phase 2A tetap terbuka.
+Tanggal: 2026-11-12. Status: **Phase 2A COMPLETE**.
+Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
+bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: review/merge manual perubahan CI pada PR terpisah, lalu Phase 2A Final Acceptance hanya atas permintaan baru; Phase 2A tetap WIP.
-Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2B/2C belum dimulai.
+Next executable: **2B-01a** pada `feature/phase-2b`; stop sebelum 2B-01b.
+Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## Phase 2A Final Acceptance — closure (2026-11-12)
+
+- PR #3 MERGED pada `34f3986be27a2602f1a227bbc6870d9c34eacb5d`; local `main` fast-forward ke SHA yang sama. Final-Fix-02/03 terintegrasi.
+- Parent 2A-01–11 VERIFIED; literal checkout GitHub, install dari lockfile, build, MySQL 8.4.11 disposable, migration/DEMO seed, dan cleanup PASS.
+- GitHub [run `43145937937`](https://github.com/dejul/senkom/actions/runs/43145937937) pada integrated `main`: `checks` SUCCESS; 16/16 mandatory steps success, 0 skipped. PHPUnit **141 tes/4.133 asersi/0 skip**; frontend **88**, schema **33** tes; HTTP auth/CSRF/CORS/RBAC/publish/rollback/viewer PASS. Composer audit 0 advisory; npm production audit 0 vulnerability.
+- PHP lint, ESLint, Prettier, typecheck, build, Electron smoke, OpenAPI contract PASS pada run yang sama. Security/integritas: session/CSRF, RBAC map, viewer read-only, secret/private metadata, atomic publish/rollback, If-Match, checksum, immutable trigger dan FK dibuktikan suite serta smoke. UAT empat monitor fisik pending; origin/TLS dan grant user existing prasyarat deployment.
+- Status Phase 2A **COMPLETE**; Phase 2B dimulai hanya pada 2B-01a. Bukti rinci di [verifikasi](phase-2-verification.md#phase-2a-final-acceptance--database-dan-api).
 
 ## Phase 2A Final-Fix-03 — Windows CI disposable MySQL (2026-11-12)
 

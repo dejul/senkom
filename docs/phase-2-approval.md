@@ -5,18 +5,25 @@ pada 2026-11-04. Pengguna kemudian meminta pemecahan scope agar setiap sesi sele
 sebelum limit lima jam. Persetujuan fitur tetap berlaku; eksekusi memakai satu batch
 per sesi menurut [rencana batch](codegen-plan.md), dengan batas internal empat jam.
 
-Status: **Phase 2A WIP, belum diterima; recovery 2A-00 VERIFIED**.
-Batch berikutnya **2A-01** menunggu permintaan baru. Baca
-[checkpoint](phase-2-checkpoint.md) dan [matriks WIP](phase-2-wip-audit.md).
-Phase 2B/2C belum dimulai.
+Status: **Phase 2A COMPLETE**
+
+Final Acceptance 2026-11-12: parent 2A-01–11 VERIFIED; integrated `main`
+`34f3986be27a2602f1a227bbc6870d9c34eacb5d` lulus clean checkout,
+install/build, MySQL disposable, backend 141 tes/4.133 asersi/0 skip, HTTP
+smoke, frontend 88 tes, schema 33 tes, lint/typecheck/build/Electron/contract,
+Composer audit 0 advisory, dan npm production audit 0 vulnerability. GitHub
+run `43145937937` berhasil dengan 16/16 mandatory steps, 0 skipped. Detail:
+[verifikasi](phase-2-verification.md#phase-2a-final-acceptance--database-dan-api).
+UAT empat monitor fisik tetap pending; bukan gate DB/API Phase 2A. Phase 2B
+disetujui untuk micro-batch 2B-01a; Phase 2C belum dimulai.
 
 - [x] Repository, spesifikasi, kontrak dan laporan Phase 0/1 diperiksa.
 - [x] Baseline lokal: lint, typecheck, build, 84 tes TypeScript dan 3 tes Laravel lulus.
 - [x] 2A-00: WIP diaudit, akar HTTP 500 diperbaiki, HTTP smoke dan Composer strict lulus.
 - [x] Regresi 2A-00: lint/typecheck/build, 87 tes TS, 25 tes PHP/312 assertions tanpa skip dan Electron smoke lulus; lihat [verifikasi](phase-2-verification.md).
-- [ ] Tutup gap per batch pada matriks WIP, termasuk kontrak `CablePatch` (2A-06).
-- [ ] Phase 2A: database, API, authorization, draft/validate/publish, history/rollback.
-- [ ] Gate 2A-11: seluruh batch 2A, pengujian MySQL/HTTP/kontrak dan laporan selesai.
+- [x] Tutup gap per batch pada matriks WIP, termasuk kontrak `CablePatch` (2A-06).
+- [x] Phase 2A: database, API, authorization, draft/validate/publish, history/rollback.
+- [x] Gate 2A-11: seluruh batch 2A, pengujian MySQL/HTTP/kontrak dan laporan selesai.
 - [ ] Phase 2B: editor visual, undo/redo, concurrency dan workflow publikasi.
 - [ ] Gate 2B-09: seluruh batch 2B, pengujian UI/API dan laporan selesai.
 - [ ] Phase 2C: sinkronisasi published map, cache atomik, offline dan penolakan payload.
