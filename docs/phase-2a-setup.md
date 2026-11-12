@@ -116,3 +116,25 @@ node scripts/phase2-smoke.mjs --api-only
 terpilih. Jangan arahkan ke DB yang perlu dipertahankan. Setelah tes, cek
 jumlah fixture, pointer/revision, dan trigger immutable; hentikan MySQL
 disposable secara normal. Gate regresi penuh 2A-11b tetap terpisah.
+
+## Windows GitHub Actions disposable MySQL
+
+`.github/workflows/ci.yml` berjalan di `windows-latest` dengan PHP 8.4.26,
+Composer 2.11.1, dan Node dari `.nvmrc`. `scripts/ci-mysql.ps1 -Action start`
+mengunduh ZIP resmi MySQL 8.4.11 dari
+`https://cdn.mysql.com/Downloads/MySQL-8.4/mysql-8.4.11-winx64.zip`, memeriksa
+SHA-256 `A492371D687D2BAB088B0062581144A0044B8964BAEFDF4FAA579292B423D25C`,
+lalu membuat datadir baru di `.artifacts/ci-mysql/data`. Script menolak datadir
+existing, hanya membuka loopback pada port kosong, dan membuktikan executable,
+versi, port, serta datadir lewat SQL sebelum membuat database.
+
+Database `senkom_ci_setup_test`, `senkom_ci_unit_test`, dan
+`senkom_ci_http_test` terpisah. User `senkom_ci` mendapat password acak per
+runner dan akses hanya ke tiga database itu. Secret masuk `GITHUB_ENV` dan
+dimask di log GitHub Actions; tidak ada credential produksi atau Laragon.
+`Migration and DEMO seed` menguji migrasi serta `DemoSeeder` pada DB setup.
+PHPUnit memakai DB unit dengan `--fail-on-skipped` dan ringkasan 0 skip wajib.
+`phase2-smoke.mjs --api-only` memigrasi DB HTTP, membuat fixture DEMO, menunggu
+server Laravel sehat, menguji respons HTTP/kontrak, lalu menghentikan server.
+Step `Stop disposable MySQL` memakai `if: always()` untuk shutdown normal dan
+menghapus hanya direktori disposable yang ditandai milik script.

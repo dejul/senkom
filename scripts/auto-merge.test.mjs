@@ -1,6 +1,20 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { URL } from 'node:url';
 import { ciCurrent, denial, requiredSteps } from './auto-merge.mjs';
+
+test('Windows CI declares every trusted required step once', () => {
+  const workflow = readFileSync(
+    new URL('../.github/workflows/ci.yml', import.meta.url),
+    'utf8',
+  );
+  const names = [...workflow.matchAll(/^\s+- name: (.+)$/gm)].map((match) =>
+    match[1].trim(),
+  );
+  for (const name of requiredSteps)
+    assert.equal(names.filter((entry) => entry === name).length, 1, name);
+});
 
 const eligible = () => ({
   event: { repository: { id: 1, full_name: 'dejul/senkom' } },
@@ -81,6 +95,19 @@ for (const [name, change] of [
       x.jobs[0].steps[0].conclusion = 'skipped';
     },
   ],
+  [
+    'mandatory step pending',
+    (x) => {
+      x.jobs[0].steps[0].conclusion = null;
+    },
+  ],
+  ...['Backend PHPUnit', 'HTTP smoke', 'Composer audit'].map((step) => [
+    step + ' failure',
+    (x) => {
+      x.jobs[0].steps.find((entry) => entry.name === step).conclusion =
+        'failure';
+    },
+  ]),
   [
     'final acceptance WIP',
     (x) => {
