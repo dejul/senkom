@@ -1,18 +1,18 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01, 2B-02, dan 2B-03 VERIFIED/terintegrasi; 2B-04a menunggu CI/merge; parent 2B-04 WIP**.
+Phase 2B: **parent 2B-01, 2B-02, dan 2B-03 VERIFIED/terintegrasi; 2B-04a GATE PASSED - AWAITING MERGE; parent 2B-04 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan CI dan PR 2B-04a; parent 2B-04 tetap WIP. Jangan mulai 2B-04b tanpa instruksi.
+Next executable: tunggu CI exact-head dokumentasi dan merge manual PR #17; parent 2B-04 tetap WIP. Jangan mulai 2B-04b tanpa instruksi.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
 ## 2B-04a - create edge, orthogonal route, endpoint binding (2026-11-16)
 
 - Preflight: PR #16 MERGED manual pada `e4ac8c41858a9c3eb1ea74af87850577b15d07cd`; head final `bcf37914e1efd9f9e79c4f07ee33b66235412b1d` ancestor `origin/main`. [CI PR final `43875398717`](https://github.com/dejul/senkom/actions/runs/43875398717) dan [CI integrated main `43877182140`](https://github.com/dejul/senkom/actions/runs/43877182140) SUCCESS, exact SHA, 16/16 mandatory, 0 skip. `main` fast-forward ke merge SHA, worktree awal bersih, branch `feature/phase-2b-04a` dibuat. **Parent 2B-03 VERIFIED**; catatan WIP di bawah historis.
 - Scope V2: buat edge visual dari koneksi inventory yang ada, rute ortogonal, ikat waypoint ujung ke node saat drag. Validasi node, koneksi, layer dan pasangan site mengikuti kontrak. Tidak mengubah konektivitas kabel/core atau API/DB. Waypoint edit, delete dan undo/redo khusus edge milik 2B-04b; parent 2B-04 WIP.
-- Implementasi: `apps/admin-web/src/map-canvas.tsx`; tes baru `tests/admin-map-edge-create.test.ts`, penyesuaian regresi `tests/admin-map-site-edit.test.ts`. `docs/phase-2-verification.md` memuat bukti lengkap. Lokal: fokus 9/9, frontend 113/113, role/schema 37/37, lint/kontrak/typecheck/build, Electron smoke, Composer install/validate/audit, npm production audit PASS. Preview Electron + API mock: create, undo/redo, publisher read-only, narrow, 0 write/console error PASS; real API preview NOT RUN. [PR #17](https://github.com/dejul/senkom/pull/17) OPEN; [CI PR awal `43879735070`](https://github.com/dejul/senkom/actions/runs/43879735070) pada SHA `3ed9d2a3c81fd94eb43257ef231065daec254bcc` SUCCESS 16/16, 0 skip. Perbaikan penjagaan waypoint dan dokumen memerlukan CI head final; merge manual karena tes existing berubah.
+- Implementasi: `apps/admin-web/src/map-canvas.tsx`; tes baru `tests/admin-map-edge-create.test.ts`, penyesuaian regresi `tests/admin-map-site-edit.test.ts`. `docs/phase-2-verification.md` memuat bukti lengkap. Lokal: fokus 9/9, frontend 113/113, role/schema 37/37, lint/kontrak/typecheck/build, Electron smoke, Composer install/validate/audit, npm production audit PASS. Preview Electron + API mock: create, undo/redo, publisher read-only, narrow, 0 write/console error PASS; real API preview NOT RUN. [PR #17](https://github.com/dejul/senkom/pull/17) OPEN; [CI PR awal `43879735070`](https://github.com/dejul/senkom/actions/runs/43879735070) pada SHA `3ed9d2a3c81fd94eb43257ef231065daec254bcc` SUCCESS 16/16, 0 skip. [CI PR source final `43884438224`](https://github.com/dejul/senkom/actions/runs/43884438224) pada SHA `38b156362bb9f0f9f252f222f5fd5a94d0fa3ece` SUCCESS 16/16, 0 skip. Commit dokumentasi ini memerlukan CI exact-head ulang; merge manual karena tes existing berubah. **2B-04a GATE PASSED - AWAITING MERGE**.
 
 ## Parent 2B-02 gate (2026-11-16)
 
