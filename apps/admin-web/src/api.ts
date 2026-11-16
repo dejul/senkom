@@ -78,7 +78,9 @@ export class AdminApi {
   private csrfToken: string | undefined;
   private pendingSession: Promise<AdminSession> | undefined;
 
-  constructor(private readonly fetcher: typeof fetch = fetch) {}
+  constructor(
+    private readonly fetcher: typeof fetch = fetch.bind(globalThis),
+  ) {}
 
   private async request(
     path: '/auth/session' | '/auth/login' | '/auth/logout',
