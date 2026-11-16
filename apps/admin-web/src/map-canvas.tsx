@@ -6,6 +6,7 @@ type View = { x: number; y: number; width: number; height: number };
 type Layer = MapContentV2['layers'][number];
 type Node = MapContentV2['layout']['nodes'][number];
 type Edge = MapContentV2['layout']['edges'][number];
+type Point = Edge['points'][number];
 export type Selection = { kind: 'node' | 'edge'; id: string };
 const grid = 40;
 
@@ -202,6 +203,133 @@ export function addMapEdge(
         ...map.layout.edges,
         { ...edge, points: orthogonalRoute(from, to) },
       ],
+    },
+  };
+}
+
+function routeThrough(points: Point[]): Point[] {
+  const routed = [points[0]!];
+  for (const point of points.slice(1))
+    for (const step of orthogonalRoute(routed.at(-1)!, point).slice(1))
+      if (step.x !== routed.at(-1)!.x || step.y !== routed.at(-1)!.y)
+        routed.push(step);
+  return routed;
+}
+
+function setEdgePoints(map: MapContentV2, id: string, points: Point[]) {
+  const edge = map.layout.edges.find((item) => item.id === id);
+  const from = map.layout.nodes.find((node) => node.id === edge?.fromNodeId);
+  const to = map.layout.nodes.find((node) => node.id === edge?.toNodeId);
+  if (
+    !edge ||
+    !from ||
+    !to ||
+    points.length < 2 ||
+    points.length > 1000 ||
+    points[0]?.x !== from.x ||
+    points[0]?.y !== from.y ||
+    points.at(-1)?.x !== to.x ||
+    points.at(-1)?.y !== to.y ||
+    points.some(
+      (point, index) =>
+        !Number.isFinite(point.x) ||
+        !Number.isFinite(point.y) ||
+        point.x < 0 ||
+        point.x > map.layout.width ||
+        point.y < 0 ||
+        point.y > map.layout.height ||
+        (index > 0 &&
+          point.x !== points[index - 1]!.x &&
+          point.y !== points[index - 1]!.y),
+    ) ||
+    JSON.stringify(points) === JSON.stringify(edge.points)
+  )
+    return map;
+  return {
+    ...map,
+    layout: {
+      ...map.layout,
+      edges: map.layout.edges.map((item) =>
+        item.id === id ? { ...item, points } : item,
+      ),
+    },
+  };
+}
+
+export function insertEdgeWaypoint(
+  map: MapContentV2,
+  id: string,
+  segment: number,
+) {
+  const edge = map.layout.edges.find((item) => item.id === id);
+  if (!edge || segment < 0 || segment >= edge.points.length - 1) return map;
+  const from = edge.points[segment]!;
+  const to = edge.points[segment + 1]!;
+  const point = snapPoint(
+    (from.x + to.x) / 2,
+    (from.y + to.y) / 2,
+    map.layout.width,
+    map.layout.height,
+  );
+  if (
+    (point.x === from.x && point.y === from.y) ||
+    (point.x === to.x && point.y === to.y)
+  )
+    return map;
+  const points = [...edge.points];
+  points.splice(segment + 1, 0, point);
+  return setEdgePoints(map, id, routeThrough(points));
+}
+
+export function moveEdgeWaypoint(
+  map: MapContentV2,
+  id: string,
+  index: number,
+  x: number,
+  y: number,
+) {
+  const edge = map.layout.edges.find((item) => item.id === id);
+  if (!edge || index < 1 || index >= edge.points.length - 1) return map;
+  const point = snapPoint(x, y, map.layout.width, map.layout.height);
+  if (edge.points[index]!.x === point.x && edge.points[index]!.y === point.y)
+    return map;
+  const points = [...edge.points];
+  points[index] = point;
+  return setEdgePoints(map, id, routeThrough(points));
+}
+
+export function removeEdgeWaypoint(
+  map: MapContentV2,
+  id: string,
+  index: number,
+) {
+  const edge = map.layout.edges.find((item) => item.id === id);
+  if (!edge || index < 1 || index >= edge.points.length - 1) return map;
+  const before = edge.points[index - 1]!;
+  const after = edge.points[index + 1]!;
+  const removed = edge.points[index]!;
+  const bend =
+    before.x === after.x || before.y === after.y
+      ? []
+      : [
+          removed.x === after.x && removed.y === before.y
+            ? { x: before.x, y: after.y }
+            : { x: after.x, y: before.y },
+        ];
+  return setEdgePoints(map, id, [
+    ...edge.points.slice(0, index),
+    ...bend,
+    ...edge.points.slice(index + 1),
+  ]);
+}
+
+export function deleteMapEdge(map: MapContentV2, id: string) {
+  if (!map.layout.edges.some((edge) => edge.id === id)) return map;
+  return {
+    ...map,
+    layout: {
+      ...map.layout,
+      edges: map.layout.edges.filter((edge) => edge.id !== id),
     },
   };
 }
@@ -448,6 +576,7 @@ export function MapDrawing({
   selected,
   onSelect,
   onNodePointerDown,
+  onWaypointPointerDown,
 }: {
   layout: MapContentV2['layout'];
   view: View;
@@ -462,6 +591,13 @@ export function MapDrawing({
   onSelect?: (selection: Selection) => void;
   onNodePointerDown?:
     ((node: Node, event: PointerEvent<SVGGElement>) => void) | undefined;
+  onWaypointPointerDown?:
+    | ((
+        edge: Edge,
+        index: number,
+        event: PointerEvent<SVGCircleElement>,
+      ) => void)
+    | undefined;
 }) {
   return (
     <svg
@@ -550,6 +686,24 @@ export function MapDrawing({
                 {edge.label}
               </text>
             )}
+            {onWaypointPointerDown &&
+              selected?.kind === 'edge' &&
+              selected.id === edge.id &&
+              edge.points
+                .slice(1, -1)
+                .map((point, index) => (
+                  <circle
+                    key={index}
+                    className="map-waypoint"
+                    cx={point.x}
+                    cy={point.y}
+                    r="9"
+                    aria-label={`Waypoint ${index + 1} koneksi ${edge.connectionId}`}
+                    onPointerDown={(event) =>
+                      onWaypointPointerDown(edge, index + 1, event)
+                    }
+                  />
+                ))}
           </g>
         ))}
       {layout.nodes.map((node) => {
@@ -666,6 +820,16 @@ export function MapCanvas({
     x: number;
     y: number;
   } | null>(null);
+  const [waypointDrag, setWaypointDrag] = useState<{
+    id: string;
+    index: number;
+    offsetX: number;
+    offsetY: number;
+    startX: number;
+    startY: number;
+    x: number;
+    y: number;
+  } | null>(null);
   const [siteId, setSiteId] = useState('');
   const [edgeChoice, setEdgeChoice] = useState('');
   const [edgeLayer, setEdgeLayer] = useState<Layer | ''>('');
@@ -727,7 +891,15 @@ export function MapCanvas({
           };
           return { ...preview, edges: bindEdges(preview, nodeDrag.id) };
         })()
-      : layout;
+      : map && waypointDrag
+        ? moveEdgeWaypoint(
+            map,
+            waypointDrag.id,
+            waypointDrag.index,
+            waypointDrag.x,
+            waypointDrag.y,
+          ).layout
+        : layout;
   const empty = layout?.nodes.length === 0 && layout.edges.length === 0;
   const names = useMemo(
     () =>
@@ -793,6 +965,29 @@ export function MapCanvas({
     );
   }
   function pointerMove(event: PointerEvent<SVGSVGElement>) {
+    if (waypointDrag && layout) {
+      const point = pointerPoint(
+        event.currentTarget,
+        event.clientX,
+        event.clientY,
+      );
+      if (
+        !point ||
+        Math.hypot(
+          point.x - waypointDrag.startX,
+          point.y - waypointDrag.startY,
+        ) < 3
+      )
+        return;
+      const snapped = snapPoint(
+        point.x + waypointDrag.offsetX,
+        point.y + waypointDrag.offsetY,
+        layout.width,
+        layout.height,
+      );
+      setWaypointDrag({ ...waypointDrag, ...snapped });
+      return;
+    }
     if (nodeDrag && layout) {
       const point = pointerPoint(
         event.currentTarget,
@@ -845,18 +1040,21 @@ export function MapCanvas({
                 (event.shiftKey ? redoEdit(current) : undoEdit(current)),
             );
             setNodeDrag(null);
+            setWaypointDrag(null);
             return;
           }
           if (event.key.toLowerCase() === 'y') {
             event.preventDefault();
             setHistory((current) => current && redoEdit(current));
             setNodeDrag(null);
+            setWaypointDrag(null);
             return;
           }
         }
         if (event.key === 'Escape') {
           setSelected(null);
           setNodeDrag(null);
+          setWaypointDrag(null);
         }
       }}
     >
@@ -1200,6 +1398,41 @@ export function MapCanvas({
             }}
             onPointerMove={pointerMove}
             onPointerUp={(event) => {
+              if (waypointDrag && layout) {
+                const point = pointerPoint(
+                  event.currentTarget,
+                  event.clientX,
+                  event.clientY,
+                );
+                if (
+                  point &&
+                  Math.hypot(
+                    point.x - waypointDrag.startX,
+                    point.y - waypointDrag.startY,
+                  ) >= 3
+                ) {
+                  const position = snapPoint(
+                    point.x + waypointDrag.offsetX,
+                    point.y + waypointDrag.offsetY,
+                    layout.width,
+                    layout.height,
+                  );
+                  setHistory((current) =>
+                    current
+                      ? commitEdit(current, (value) =>
+                          moveEdgeWaypoint(
+                            value,
+                            waypointDrag.id,
+                            waypointDrag.index,
+                            position.x,
+                            position.y,
+                          ),
+                        )
+                      : current,
+                  );
+                }
+                setWaypointDrag(null);
+              }
               if (nodeDrag && layout) {
                 const point = pointerPoint(
                   event.currentTarget,
@@ -1260,8 +1493,33 @@ export function MapCanvas({
                   }
                 : undefined
             }
+            onWaypointPointerDown={
+              canEdit
+                ? (edge, index, event) => {
+                    if (event.button !== 0) return;
+                    const svg = event.currentTarget.ownerSVGElement;
+                    const point =
+                      svg && pointerPoint(svg, event.clientX, event.clientY);
+                    if (!point) return;
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                    const waypoint = edge.points[index]!;
+                    setSelected({ kind: 'edge', id: edge.id });
+                    setWaypointDrag({
+                      id: edge.id,
+                      index,
+                      offsetX: waypoint.x - point.x,
+                      offsetY: waypoint.y - point.y,
+                      startX: point.x,
+                      startY: point.y,
+                      x: waypoint.x,
+                      y: waypoint.y,
+                    });
+                  }
+                : undefined
+            }
             onPointerCancel={() => {
               setNodeDrag(null);
+              setWaypointDrag(null);
               setDrag(null);
             }}
           />
@@ -1274,9 +1532,139 @@ export function MapCanvas({
               .{' '}
               {canEdit && selectedNode?.entityType === 'site'
                 ? 'Geser site untuk mengubah posisi lokal.'
-                : 'Hanya baca.'}{' '}
+                : canEdit && selectedEdge
+                  ? 'Edit waypoint atau hapus edge visual di bawah.'
+                  : 'Hanya baca.'}{' '}
               Tekan Escape untuk batal.
             </p>
+          )}
+          {canEdit && selectedEdge && (
+            <section
+              className="edge-properties"
+              aria-label="Edit koneksi visual"
+            >
+              <h3>Waypoint koneksi {selectedEdge.connectionId}</h3>
+              <p>
+                Endpoint mengikuti node. Waypoint tengah dapat digeser atau
+                diubah pada grid 40.
+              </p>
+              {selectedEdge.points.slice(0, -1).map((_point, segment) => (
+                <button
+                  key={`segment-${segment}`}
+                  type="button"
+                  disabled={selectedEdge.points.length >= 997}
+                  onClick={() =>
+                    setHistory((current) =>
+                      current
+                        ? commitEdit(current, (value) =>
+                            insertEdgeWaypoint(value, selectedEdge.id, segment),
+                          )
+                        : current,
+                    )
+                  }
+                >
+                  Tambah waypoint segmen {segment + 1}
+                </button>
+              ))}
+              <ol>
+                {selectedEdge.points.slice(1, -1).map((point, offset) => {
+                  const index = offset + 1;
+                  return (
+                    <li
+                      key={`${selectedEdge.id}:${index}:${point.x}:${point.y}`}
+                    >
+                      <form
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          const fields = new FormData(event.currentTarget);
+                          const x = Number(fields.get('x'));
+                          const y = Number(fields.get('y'));
+                          setHistory((current) =>
+                            current
+                              ? commitEdit(current, (value) =>
+                                  moveEdgeWaypoint(
+                                    value,
+                                    selectedEdge.id,
+                                    index,
+                                    x,
+                                    y,
+                                  ),
+                                )
+                              : current,
+                          );
+                        }}
+                      >
+                        <span>
+                          Waypoint {index}: {point.x}, {point.y}
+                        </span>
+                        <label>
+                          X
+                          <input
+                            name="x"
+                            type="number"
+                            min="0"
+                            max={layout.width}
+                            defaultValue={point.x}
+                            required
+                          />
+                        </label>
+                        <label>
+                          Y
+                          <input
+                            name="y"
+                            type="number"
+                            min="0"
+                            max={layout.height}
+                            defaultValue={point.y}
+                            required
+                          />
+                        </label>
+                        <button type="submit">Pindah waypoint {index}</button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setHistory((current) =>
+                              current
+                                ? commitEdit(current, (value) =>
+                                    removeEdgeWaypoint(
+                                      value,
+                                      selectedEdge.id,
+                                      index,
+                                    ),
+                                  )
+                                : current,
+                            )
+                          }
+                        >
+                          Hapus waypoint {index}
+                        </button>
+                      </form>
+                    </li>
+                  );
+                })}
+              </ol>
+              <button
+                type="button"
+                onClick={() => {
+                  if (
+                    !window.confirm(
+                      `Hapus edge visual ${selectedEdge.connectionId} dari kanvas?`,
+                    )
+                  )
+                    return;
+                  setHistory((current) =>
+                    current
+                      ? commitEdit(current, (value) =>
+                          deleteMapEdge(value, selectedEdge.id),
+                        )
+                      : current,
+                  );
+                  setSelected(null);
+                }}
+              >
+                Hapus edge visual
+              </button>
+            </section>
           )}
           {canEdit && selectedNode?.entityType === 'site' && (
             <form
