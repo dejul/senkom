@@ -5,6 +5,7 @@ import { loadMap, type MapSource } from './map-api';
 type View = { x: number; y: number; width: number; height: number };
 type Layer = MapContentV2['layers'][number];
 type Node = MapContentV2['layout']['nodes'][number];
+type Edge = MapContentV2['layout']['edges'][number];
 export type Selection = { kind: 'node' | 'edge'; id: string };
 const grid = 40;
 
@@ -15,7 +16,7 @@ export type EditHistory = {
   future: MapContentV2[];
 };
 
-// ponytail: Keep 50 local node edits; use compact commands if maps or sessions outgrow this ceiling.
+// ponytail: Keep 50 local map edits; use compact commands if maps or sessions outgrow this ceiling.
 const historyLimit = 50;
 
 export function commitEdit(
@@ -59,9 +60,150 @@ export function redoEdit(history: EditHistory): EditHistory {
 
 export function isDirty(history: EditHistory): boolean {
   return (
-    JSON.stringify(history.present.layout.nodes) !==
-    JSON.stringify(history.baseline.layout.nodes)
+    JSON.stringify(history.present.layout) !==
+    JSON.stringify(history.baseline.layout)
   );
+}
+
+export function orthogonalRoute(
+  from: Pick<Node, 'x' | 'y'>,
+  to: Pick<Node, 'x' | 'y'>,
+): Edge['points'] {
+  return from.x === to.x || from.y === to.y
+    ? [
+        { x: from.x, y: from.y },
+        { x: to.x, y: to.y },
+      ]
+    : [
+        { x: from.x, y: from.y },
+        { x: to.x, y: from.y },
+        { x: to.x, y: to.y },
+      ];
+}
+
+function boundRoute(edge: Edge, from: Node, to: Node): Edge['points'] {
+  if (edge.points.length === 2) return orthogonalRoute(from, to);
+  const points = edge.points.map((point) => ({ ...point }));
+  const first = points[1]!;
+  const last = points[points.length - 2]!;
+  if (edge.points[0]!.x === first.x) first.x = from.x;
+  else first.y = from.y;
+  if (edge.points.at(-1)!.x === last.x) last.x = to.x;
+  else last.y = to.y;
+  points[0] = { x: from.x, y: from.y };
+  points[points.length - 1] = { x: to.x, y: to.y };
+  return points.every(
+    (point, index) =>
+      index === 0 ||
+      point.x === points[index - 1]!.x ||
+      point.y === points[index - 1]!.y,
+  )
+    ? points
+    : orthogonalRoute(from, to);
+}
+
+function bindEdges(layout: MapContentV2['layout'], movedId: string) {
+  const nodes = new Map(layout.nodes.map((node) => [node.id, node]));
+  return layout.edges.map((edge) => {
+    if (edge.fromNodeId !== movedId && edge.toNodeId !== movedId) return edge;
+    const from = nodes.get(edge.fromNodeId);
+    const to = nodes.get(edge.toNodeId);
+    return from && to ? { ...edge, points: boundRoute(edge, from, to) } : edge;
+  });
+}
+
+function nodeSite(map: MapContentV2, node: Node): string | undefined {
+  return node.entityType === 'site'
+    ? node.entityId
+    : map.devices.find((device) => device.id === node.entityId)?.siteId;
+}
+
+function portSite(map: MapContentV2, portId: string): string | undefined {
+  const port = map.ports.find((item) => item.id === portId);
+  return map.devices.find((device) => device.id === port?.deviceId)?.siteId;
+}
+
+export function addMapEdge(
+  map: MapContentV2,
+  edge: Omit<Edge, 'points'>,
+): MapContentV2 {
+  const from = map.layout.nodes.find((node) => node.id === edge.fromNodeId);
+  const to = map.layout.nodes.find((node) => node.id === edge.toNodeId);
+  if (
+    !from ||
+    !to ||
+    from.id === to.id ||
+    (from.x === to.x && from.y === to.y) ||
+    map.layout.edges.length >= 100000 ||
+    map.layout.edges.some((item) => item.id === edge.id) ||
+    !map.layers.includes(edge.layer) ||
+    !edge.layer.startsWith(
+      edge.connectionType.startsWith('power_') ? 'power_' : 'fo_',
+    )
+  )
+    return map;
+  let sites: [string | undefined, string | undefined] | undefined;
+  switch (edge.connectionType) {
+    case 'fiber_cable_segment':
+    case 'power_cable_segment': {
+      const cable = map.cables.find((item) => item.id === edge.connectionId);
+      if (
+        cable?.kind !==
+        (edge.connectionType === 'fiber_cable_segment' ? 'fiber' : 'power')
+      )
+        return map;
+      sites = [cable.fromSiteId, cable.toSiteId];
+      break;
+    }
+    case 'logical_link': {
+      const link = map.logicalLinks.find(
+        (item) => item.id === edge.connectionId,
+      );
+      if (!link || link.routeName !== edge.layer) return map;
+      sites = [portSite(map, link.fromPortId), portSite(map, link.toPortId)];
+      break;
+    }
+    case 'power_circuit': {
+      const circuit = map.powerCircuits.find(
+        (item) => item.id === edge.connectionId,
+      );
+      if (!circuit) return map;
+      sites = [
+        portSite(map, circuit.sourcePortId),
+        portSite(map, circuit.destinationPortId),
+      ];
+      break;
+    }
+    case 'fiber_core_connection':
+      if (
+        !map.fiberSplices.some((item) => item.id === edge.connectionId) &&
+        !map.fiberTerminations.some((item) => item.id === edge.connectionId)
+      )
+        return map;
+      break;
+  }
+  if (sites) {
+    const actual = [nodeSite(map, from), nodeSite(map, to)];
+    if (
+      !sites[0] ||
+      !sites[1] ||
+      !(
+        (actual[0] === sites[0] && actual[1] === sites[1]) ||
+        (actual[0] === sites[1] && actual[1] === sites[0])
+      )
+    )
+      return map;
+  }
+  return {
+    ...map,
+    layout: {
+      ...map.layout,
+      edges: [
+        ...map.layout.edges,
+        { ...edge, points: orthogonalRoute(from, to) },
+      ],
+    },
+  };
 }
 
 export function snapPoint(x: number, y: number, width: number, height: number) {
@@ -125,13 +267,15 @@ export function moveSiteNode(
   if (!node) return map;
   const point = snapPoint(x, y, map.layout.width, map.layout.height);
   if (node.x === point.x && node.y === point.y) return map;
+  const nodes = map.layout.nodes.map((item) =>
+    item.id === id ? { ...item, ...point } : item,
+  );
+  const layout = { ...map.layout, nodes };
   return {
     ...map,
     layout: {
-      ...map.layout,
-      nodes: map.layout.nodes.map((item) =>
-        item.id === id ? { ...item, ...point } : item,
-      ),
+      ...layout,
+      edges: bindEdges(layout, id),
     },
   };
 }
@@ -523,6 +667,11 @@ export function MapCanvas({
     y: number;
   } | null>(null);
   const [siteId, setSiteId] = useState('');
+  const [edgeChoice, setEdgeChoice] = useState('');
+  const [edgeLayer, setEdgeLayer] = useState<Layer | ''>('');
+  const [fromNodeId, setFromNodeId] = useState('');
+  const [toNodeId, setToNodeId] = useState('');
+  const [edgeError, setEdgeError] = useState('');
   const [loading, setLoading] = useState(true);
   const [hiddenLayers, setHiddenLayers] = useState<Set<Layer>>(new Set());
   const [query, setQuery] = useState('');
@@ -567,14 +716,17 @@ export function MapCanvas({
     ) ?? [];
   const drawnLayout =
     layout && nodeDrag
-      ? {
-          ...layout,
-          nodes: layout.nodes.map((node) =>
-            node.id === nodeDrag.id
-              ? { ...node, x: nodeDrag.x, y: nodeDrag.y }
-              : node,
-          ),
-        }
+      ? (() => {
+          const preview = {
+            ...layout,
+            nodes: layout.nodes.map((node) =>
+              node.id === nodeDrag.id
+                ? { ...node, x: nodeDrag.x, y: nodeDrag.y }
+                : node,
+            ),
+          };
+          return { ...preview, edges: bindEdges(preview, nodeDrag.id) };
+        })()
       : layout;
   const empty = layout?.nodes.length === 0 && layout.edges.length === 0;
   const names = useMemo(
@@ -588,6 +740,30 @@ export function MapCanvas({
     [map],
   );
   const matches = map ? searchMap(map, query, hiddenLayers, names) : [];
+  const edgeChoices = map
+    ? [
+        ...map.cables.map((item) => ({
+          key: `${item.kind === 'fiber' ? 'fiber_cable_segment' : 'power_cable_segment'}:${item.id}`,
+          label: `Kabel ${item.code}`,
+        })),
+        ...map.logicalLinks.map((item) => ({
+          key: `logical_link:${item.id}`,
+          label: `Link ${item.code}`,
+        })),
+        ...map.powerCircuits.map((item) => ({
+          key: `power_circuit:${item.id}`,
+          label: `Sirkuit ${item.code}`,
+        })),
+        ...map.fiberSplices.map((item) => ({
+          key: `fiber_core_connection:${item.id}`,
+          label: `Splice ${item.id}`,
+        })),
+        ...map.fiberTerminations.map((item) => ({
+          key: `fiber_core_connection:${item.id}`,
+          label: `Terminasi ${item.id}`,
+        })),
+      ]
+    : [];
   const selectedNode =
     selected?.kind === 'node'
       ? layout?.nodes.find((node) => node.id === selected.id)
@@ -728,6 +904,145 @@ export function MapCanvas({
           </button>
           {availableSites.length === 0 && <p>Semua site sudah di kanvas.</p>}
         </div>
+      )}
+      {canEdit && map && (
+        <form
+          className="edge-create"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const [connectionType, connectionId] = edgeChoice.split(':') as [
+              Edge['connectionType'],
+              string,
+            ];
+            if (
+              !edgeChoices.some((item) => item.key === edgeChoice) ||
+              !edgeLayer
+            )
+              return;
+            const id = crypto.randomUUID();
+            const next = addMapEdge(map, {
+              id,
+              connectionType,
+              connectionId,
+              fromNodeId,
+              toNodeId,
+              layer: edgeLayer,
+            });
+            if (next === map) {
+              setEdgeError(
+                'Koneksi, layer, atau endpoint tidak sesuai inventory.',
+              );
+              return;
+            }
+            setHistory((current) =>
+              current
+                ? commitEdit(current, (value) =>
+                    addMapEdge(value, {
+                      id,
+                      connectionType,
+                      connectionId,
+                      fromNodeId,
+                      toNodeId,
+                      layer: edgeLayer,
+                    }),
+                  )
+                : current,
+            );
+            setEdgeError('');
+            setSelected({ kind: 'edge', id });
+          }}
+        >
+          <h3>Tambah koneksi visual</h3>
+          <p>
+            Pilih koneksi inventory dan kedua node endpoint. Perubahan hanya
+            lokal.
+          </p>
+          <label htmlFor="edge-connection">Koneksi inventory</label>
+          <select
+            id="edge-connection"
+            value={edgeChoice}
+            onChange={(event) => {
+              setEdgeChoice(event.target.value);
+              setEdgeLayer('');
+              setEdgeError('');
+            }}
+          >
+            <option value="">Pilih koneksi</option>
+            {edgeChoices.map((item) => (
+              <option key={item.key} value={item.key}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+          <label htmlFor="edge-layer">Layer</label>
+          <select
+            id="edge-layer"
+            value={edgeLayer}
+            onChange={(event) => setEdgeLayer(event.target.value as Layer)}
+          >
+            <option value="">Pilih layer</option>
+            {map.layers
+              .filter((layer) =>
+                edgeChoice.startsWith('logical_link:')
+                  ? map.logicalLinks.some(
+                      (link) =>
+                        edgeChoice === `logical_link:${link.id}` &&
+                        link.routeName === layer,
+                    )
+                  : layer.startsWith(
+                      edgeChoice.startsWith('power_') ? 'power_' : 'fo_',
+                    ),
+              )
+              .map((layer) => (
+                <option key={layer} value={layer}>
+                  {layer.replaceAll('_', ' ')}
+                </option>
+              ))}
+          </select>
+          <label htmlFor="edge-from">Node awal</label>
+          <select
+            id="edge-from"
+            value={fromNodeId}
+            onChange={(event) => setFromNodeId(event.target.value)}
+          >
+            <option value="">Pilih node</option>
+            {map.layout.nodes.map((node) => (
+              <option key={node.id} value={node.id}>
+                {nodeName(node, names)}
+              </option>
+            ))}
+          </select>
+          <label htmlFor="edge-to">Node akhir</label>
+          <select
+            id="edge-to"
+            value={toNodeId}
+            onChange={(event) => setToNodeId(event.target.value)}
+          >
+            <option value="">Pilih node</option>
+            {map.layout.nodes.map((node) => (
+              <option key={node.id} value={node.id}>
+                {nodeName(node, names)}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            disabled={
+              !edgeChoice ||
+              !edgeLayer ||
+              !fromNodeId ||
+              !toNodeId ||
+              map.layout.edges.length >= 100000
+            }
+          >
+            Tambah edge
+          </button>
+          {edgeError && (
+            <p role="alert" className="error">
+              {edgeError}
+            </p>
+          )}
+        </form>
       )}
       {canEdit && history && (
         <div className="map-controls" aria-label="Riwayat node">

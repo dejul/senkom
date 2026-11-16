@@ -38,7 +38,7 @@ it('creates one local site node from inventory with snapped coordinates', () => 
   expect(addSiteNode(value, 'missing-site', 'another-node')).toBe(value);
 });
 
-it('moves only site nodes on grid, clamps bounds and preserves other map data', () => {
+it('moves site nodes on grid, binds attached edges and preserves inventory', () => {
   const value = map();
   const site = value.layout.nodes.find((node) => node.entityType === 'site')!;
   const device = {
@@ -54,7 +54,14 @@ it('moves only site nodes on grid, clamps bounds and preserves other map data', 
     x: 80,
     y: 0,
   });
-  expect(moved.layout.edges).toBe(value.layout.edges);
+  for (const edge of moved.layout.edges) {
+    const original = value.layout.edges.find((item) => item.id === edge.id)!;
+    if (edge.fromNodeId === site.id)
+      expect(edge.points[0]).toEqual({ x: 80, y: 0 });
+    else if (edge.toNodeId === site.id)
+      expect(edge.points.at(-1)).toEqual({ x: 80, y: 0 });
+    else expect(edge).toBe(original);
+  }
   expect(moved.sites).toBe(value.sites);
   expect(value.layout.nodes.find((node) => node.id === site.id)).toEqual(site);
   expect(moveSiteNode(value, device.id, 80, 80)).toBe(value);
