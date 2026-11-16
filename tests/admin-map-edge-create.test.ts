@@ -63,6 +63,23 @@ it('routes attached edges with moved node and records local dirty state once', (
   const routed = changed.present.layout.edges.find(
     (item) => item.id === edge.id,
   )!;
+  const powerBefore = value.layout.edges.find(
+    (item) => item.id === 'demo-edge-power',
+  )!;
+  const powerAfter = changed.present.layout.edges.find(
+    (item) => item.id === powerBefore.id,
+  )!;
+  expect(powerAfter.points).toHaveLength(powerBefore.points.length);
+  expect(powerAfter.points[1]?.y).toBe(powerBefore.points[1]?.y);
+  expect(powerAfter.points).toContainEqual(powerBefore.points[2]);
+  expect(
+    moveSiteNode(
+      changed.present,
+      node.id,
+      node.x + 120,
+      node.y + 80,
+    ).layout.edges.find((item) => item.id === powerBefore.id)?.points,
+  ).toHaveLength(powerBefore.points.length);
   expect(routed.points[0]).toEqual({ x: moved.x, y: moved.y });
   expect(
     routed.points.every(

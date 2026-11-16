@@ -65,7 +65,10 @@ export function isDirty(history: EditHistory): boolean {
   );
 }
 
-export function orthogonalRoute(from: Node, to: Node): Edge['points'] {
+export function orthogonalRoute(
+  from: Pick<Node, 'x' | 'y'>,
+  to: Pick<Node, 'x' | 'y'>,
+): Edge['points'] {
   return from.x === to.x || from.y === to.y
     ? [
         { x: from.x, y: from.y },
@@ -78,13 +81,34 @@ export function orthogonalRoute(from: Node, to: Node): Edge['points'] {
       ];
 }
 
+function boundRoute(edge: Edge, from: Node, to: Node): Edge['points'] {
+  if (edge.points.length === 2) return orthogonalRoute(from, to);
+  const points = edge.points.map((point) => ({ ...point }));
+  const first = points[1]!;
+  const last = points[points.length - 2]!;
+  if (edge.points[0]!.x === first.x) first.x = from.x;
+  else first.y = from.y;
+  if (edge.points.at(-1)!.x === last.x) last.x = to.x;
+  else last.y = to.y;
+  points[0] = { x: from.x, y: from.y };
+  points[points.length - 1] = { x: to.x, y: to.y };
+  return points.every(
+    (point, index) =>
+      index === 0 ||
+      point.x === points[index - 1]!.x ||
+      point.y === points[index - 1]!.y,
+  )
+    ? points
+    : orthogonalRoute(from, to);
+}
+
 function bindEdges(layout: MapContentV2['layout'], movedId: string) {
   const nodes = new Map(layout.nodes.map((node) => [node.id, node]));
   return layout.edges.map((edge) => {
     if (edge.fromNodeId !== movedId && edge.toNodeId !== movedId) return edge;
     const from = nodes.get(edge.fromNodeId);
     const to = nodes.get(edge.toNodeId);
-    return from && to ? { ...edge, points: orthogonalRoute(from, to) } : edge;
+    return from && to ? { ...edge, points: boundRoute(edge, from, to) } : edge;
   });
 }
 
