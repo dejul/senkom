@@ -165,6 +165,7 @@ if (!app.requestSingleInstanceLock()) {
       });
       window.webContents.on('render-process-gone', (_event, details) => {
         failures++;
+        if (sample) sample.rendererFailures = failures;
         admin.lock();
         logger.write('renderer-stopped', {
           reason: details.reason,
