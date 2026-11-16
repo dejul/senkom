@@ -1,11 +1,11 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 dan 2B-02 VERIFIED/terintegrasi; 2B-03a WIP pada `feature/phase-2b-03a`**.
+Phase 2B: **parent 2B-01 dan 2B-02 VERIFIED/terintegrasi; 2B-03a gate PASSED, PR #12 menunggu merge manual**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan hanya 2B-03a; parent 2B-03 tetap WIP.
+Next executable: tunggu CI head final dan merge manual PR #12; parent 2B-03 tetap WIP. Jangan mulai 2B-03b.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
 ## Parent 2B-02 gate (2026-11-16)
@@ -20,7 +20,7 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 ## 2B-03a - create/select/move site node (2026-11-16)
 
 - Scope V2: site node dari inventory yang sudah ada, pilih, drag snap-to-grid; map lokal berubah sekali saat pointerup. Editor/admin boleh edit; publisher dan viewer tetap read-only. Tanpa save API, undo/redo, edit properti, delete, atau perubahan backend/schema. Parent 2B-03 tetap WIP.
-- Commit implementasi `8d3e8dad3140c4e66efb128cbd0be6dc8dfc4aa1` pada branch `feature/phase-2b-03a`; PR/CI head final belum ada.
+- Commit implementasi `8d3e8dad3140c4e66efb128cbd0be6dc8dfc4aa1` dan evidence `b6040f4851ef7d6f6abb6082a6987a66fd34ddac` pushed. [PR #12](https://github.com/dejul/senkom/pull/12) OPEN; [CI PR `43833306383`](https://github.com/dejul/senkom/actions/runs/43833306383) pada exact head `b6040f4` SUCCESS, 16/16 mandatory, 0 skip, PHPUnit 141/4.133. Commit bukti CI ini memerlukan CI ulang pada head final. **2B-03a GATE PASSED - AWAITING MERGE**; branch khusus memerlukan merge manual menurut Auto-Merge V2.
 - Implementasi pada `apps/admin-web/src/map-canvas.tsx`, `workspace.tsx`, dan `style.css`; tes baru `tests/admin-map-site-edit.test.ts`. Lokal: fokus 10/10, frontend 106/106, schema 33/33, lint/contract, typecheck/build, Electron, Composer/npm audit PASS. Preview Chromium + API mock menguji create/select/drag, publisher denial, viewport sempit, 0 write dan 0 console error. PHPUnit/HTTP/MySQL lokal NOT RUN; CI PR wajib. [Bukti](phase-2-verification.md#2b-03a---createselectmove-site-node).
 
 ## Parent 2B-01 gate ulang (2026-11-16)
