@@ -112,3 +112,26 @@ it('clears redo after a new edit and ignores empty history commands', () => {
   expect(alternate.future).toHaveLength(0);
   expect(redoEdit(alternate)).toBe(alternate);
 });
+
+it('retains exactly 50 undo actions without corrupting older map state', () => {
+  let current = history();
+  const site = current.present.layout.nodes.find(
+    (node) => node.entityType === 'site',
+  )!;
+  for (let number = 1; number <= 60; number++)
+    current = commitEdit(current, (value) =>
+      editSiteNode(value, site.id, `Label ${number}`, 'site'),
+    );
+  expect(current.past).toHaveLength(50);
+  for (let number = 0; number < 50; number++) current = undoEdit(current);
+  expect(
+    current.present.layout.nodes.find((node) => node.id === site.id)?.label,
+  ).toBe('Label 10');
+  expect(undoEdit(current)).toBe(current);
+  expect(isDirty(current)).toBe(true);
+  for (let number = 0; number < 50; number++) current = redoEdit(current);
+  expect(
+    current.present.layout.nodes.find((node) => node.id === site.id)?.label,
+  ).toBe('Label 60');
+  expect(() => parsePublishedMapV2(current.present)).not.toThrow();
+});
