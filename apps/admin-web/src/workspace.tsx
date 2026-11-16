@@ -104,7 +104,12 @@ export function Workspace({
           >
             <p className="eyebrow">PETA INFRASTRUKTUR</p>
             <h2 id="canvas-title">Kanvas</h2>
-            <MapCanvas source={{ kind: 'draft' }} />
+            <MapCanvas
+              source={{ kind: 'draft' }}
+              editable={user.roles.some((role) =>
+                ['infrastructure_editor', 'system_admin'].includes(role),
+              )}
+            />
           </section>
           <aside
             id="properties"
