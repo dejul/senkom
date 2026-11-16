@@ -1,18 +1,18 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **2B-01a dan 2B-01b terintegrasi; gate parent 2B-01 lulus lokal, CI/merge PR pending**.
+Phase 2B: **2B-01a dan 2B-01b terintegrasi; PARENT GATE 2B-01 PASSED — AWAITING MERGE**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan CI dan merge PR gate parent 2B-01; jangan mulai 2B-02a.
+Next executable: selesaikan CI head final dan merge manual PR #8; verifikasi integrated main sebelum 2B-02a.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
 ## Parent 2B-01 gate ulang (2026-11-16)
 
 - PR #7 MERGED manual pada `cc14f5bf85a3cab2d20b220dadd6e71d685848a4`; `main`, `origin/main`, dan branch `feature/phase-2b-01-gate` sudah sama pada SHA itu. Laravel `v13.40.0` terintegrasi. Perubahan gate lama disimpan sebagai patch, dua salinan dokumen, dan stash sebelum fast-forward; konflik checkpoint diselesaikan dengan mempertahankan bukti gate lama dan security fix. [Bukti gate](phase-2-verification.md#parent-2b-01-gate-ulang-2026-11-16).
 - Acceptance V2: child 2B-01a/b ancestor; session/CSRF, login/logout, role/401/403, sidebar dan navigasi terbukti; kanvas/properti tetap placeholder; tidak ada token admin persisten atau fitur 2B-02a. Lokal: tes fokus 8, frontend 96, schema 33, policy 51 dan PHPUnit 141/4.133 seluruhnya PASS/0 skip. Composer install/validate/audit, PHP lint, ESLint/Prettier/contract, typecheck/build, npm audit, migration/DEMO seed, HTTP smoke dan Electron smoke PASS. MySQL disposable dihentikan dan credential sementara dihapus.
-- CI integrated main [run `43793065588`](https://github.com/dejul/senkom/actions/runs/43793065588) pada SHA PR #7 SUCCESS, 16/16 mandatory, 0 skip. CI untuk PR gate dokumentasi **NOT RUN** sebelum push. Parent tetap **WIP** sampai PR gate merged dan CI exact head PASS. PR docs-only/parent-only memerlukan merge manual menurut Auto-Merge V2.
+- CI integrated main [run `43793065588`](https://github.com/dejul/senkom/actions/runs/43793065588) pada SHA PR #7 SUCCESS, 16/16 mandatory, 0 skip. [CI PR #8 `43794863277`](https://github.com/dejul/senkom/actions/runs/43794863277) pada commit `5a0eb8ad62d21ab6ecc107ed5daf607f65e8f7af` SUCCESS: 16/16 mandatory, 0 skip, PHPUnit 141/4.133, frontend 96, schema 33, Composer audit 0 advisory, HTTP/Electron/build PASS. Commit bukti CI ini memerlukan CI ulang pada head final. Status **PARENT GATE PASSED — AWAITING MERGE**, belum VERIFIED. PR docs-only/parent-only memerlukan merge manual menurut Auto-Merge V2.
 
 ## Security fix Laravel concurrency advisory (2026-11-16)
 
