@@ -142,10 +142,17 @@ header span,
 .map-controls span {
   align-self: center;
 }
-.site-properties {
+.site-properties,
+.edge-properties {
   margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid #b7c6b7;
+}
+.map-waypoint {
+  fill: #fff;
+  stroke: #c36b22;
+  stroke-width: 3px;
+  cursor: move;
 }
 .map-viewport {
   display: block;
