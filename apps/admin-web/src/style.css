@@ -139,6 +139,14 @@ header span,
   margin: 0;
   padding: 8px 12px;
 }
+.map-controls span {
+  align-self: center;
+}
+.site-properties {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #b7c6b7;
+}
 .map-viewport {
   display: block;
   width: 100%;
