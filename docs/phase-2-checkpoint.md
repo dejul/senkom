@@ -1,12 +1,18 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 dan 2B-02a VERIFIED/terintegrasi; 2B-02b gate PASSED, PR #10 menunggu merge manual**.
+Phase 2B: **parent 2B-01, 2B-02a, dan 2B-02b VERIFIED/terintegrasi; parent 2B-02 gate WIP pada branch `feature/phase-2b-02-gate`**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan hanya 2B-02b; parent 2B-02 tetap WIP.
+Next executable: selesaikan hanya parent gate 2B-02; tunggu PR dan CI head final sebelum merge manual. Jangan mulai 2B-03.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## Parent 2B-02 gate (2026-11-16)
+
+- PR #10 MERGED manual pada `52986cdff7085fdac9e874e55d5b5a5da257e5e5`; head `60e1ea215efd6323dad3b4e1c3754d1734b3b155` dan head 2B-02a `8addaf70046af01e5d6d2f778ad6b94ba70678d8` ancestor main. `main`, `origin/main`, dan branch gate sama sebelum edit; worktree bersih. [CI integrated main `43824646388`](https://github.com/dejul/senkom/actions/runs/43824646388) SUCCESS pada exact merge SHA, 16/16 mandatory, 0 skip. **2B-02b VERIFIED dan terintegrasi**; catatan PR OPEN di bawah historis.
+- Preview Chromium atas Vite dan API mock menemukan `AdminApi` memanggil native `fetch` tanpa binding: login gagal `Illegal invocation`. Satu perubahan di `apps/admin-web/src/api.ts` mengikat default fetch ke `globalThis`. Preview ulang: login/logout, draft SVG, fit/zoom, layer, search/select, Enter/Escape, lebar 1280/390, console 0 error PASS. Data mock sintetis; screenshot di `.artifacts/phase2b02-preview/` diabaikan Git. Bukti lengkap di [verifikasi parent](phase-2-verification.md#parent-2b-02-gate-2026-11-16).
+- Parent **WIP** sampai seluruh gate lokal final, PR gate exact-head CI, merge manual, dan main terbaru diperiksa. Tidak ada 2B-03.
 
 ## Parent 2B-01 gate ulang (2026-11-16)
 

@@ -66,7 +66,7 @@ app.once('browser-window-created', (_event, window) => {
         return document.body.innerText;
       })()`);
       assert.match(adminText, /WEB ADMIN/);
-      assert.match(adminText, /API tidak dapat dijangkau/);
+      assert.match(adminText, /Permintaan API gagal\./);
       await writeFile(
         resolve(artifacts, 'admin.png'),
         (await admin.webContents.capturePage()).toPNG(),
