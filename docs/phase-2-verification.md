@@ -26,9 +26,9 @@ Defect awal: preview Chromium menampilkan `API tidak dapat dijangkau` karena `Ad
 | PHPUnit/HTTP/MySQL lokal | Tidak dijalankan lokal; CI integrated main exact merge SHA lulus sebelum fix. CI head PR gate wajib mengulang pada perubahan ini.                                                                                                   | NOT RUN lokal; CI PR PENDING |
 | Secret scan/diff review  | `git diff --check` exit 0; 31 added lines diperiksa dengan pola private key, cloud/GitHub token, bearer dan assignment credential: 0 hit. Staged 4 path in-scope; `git diff --cached --check` exit 0 dan scan added lines 31/0 hit. | PASS                         |
 
-Commit implementasi/evidence `2a92bb3c88e137be9cd2584369987820daff8a48`. PR/CI head final belum ada.
+Commit implementasi `2a92bb3c88e137be9cd2584369987820daff8a48`, evidence `f9386a938782da21af9a3da3ef866e8af2ac82a4`, keduanya pushed. [PR #11](https://github.com/dejul/senkom/pull/11) OPEN. [CI PR `43828359645`](https://github.com/dejul/senkom/actions/runs/43828359645) pada exact head `f9386a938782da21af9a3da3ef866e8af2ac82a4`: SUCCESS, 16/16 mandatory, 0 skip; PHPUnit 141/4.133, frontend/schema, HTTP/MySQL, lint, build, Electron, Composer/npm audit PASS. Commit bukti CI ini memerlukan CI ulang pada head final.
 
-Remaining: jalankan review diff/secret, CI exact-head pada PR gate, merge manual karena parent-only dan `apps/admin-web/src/api.ts`/`scripts/electron-smoke.cjs` sensitif menurut Auto-Merge V2, lalu periksa main terbaru. Parent tidak boleh dinyatakan VERIFIED selama PR OPEN. Tidak ada 2B-03.
+Remaining: CI exact-head setelah commit bukti, merge manual karena parent-only dan `apps/admin-web/src/api.ts`/`scripts/electron-smoke.cjs` sensitif menurut Auto-Merge V2, lalu periksa main terbaru. Parent tidak boleh dinyatakan VERIFIED selama PR OPEN. Tidak ada 2B-03.
 
 ## Verified Fix: laravel-concurrency-advisory
 
