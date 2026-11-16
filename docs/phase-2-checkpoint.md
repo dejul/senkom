@@ -1,19 +1,32 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **2B-01a dan 2B-01b terintegrasi; parent 2B-01 WIP**.
+Phase 2B: **2B-01a dan 2B-01b terintegrasi; PARENT GATE 2B-01 PASSED — AWAITING MERGE**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan CI dan manual merge security fix, lalu ulangi gate parent 2B-01; jangan mulai 2B-02a.
+Next executable: selesaikan CI head final dan merge manual PR #8; verifikasi integrated main sebelum 2B-02a.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## Parent 2B-01 gate ulang (2026-11-16)
+
+- PR #7 MERGED manual pada `cc14f5bf85a3cab2d20b220dadd6e71d685848a4`; `main`, `origin/main`, dan branch `feature/phase-2b-01-gate` sudah sama pada SHA itu. Laravel `v13.40.0` terintegrasi. Perubahan gate lama disimpan sebagai patch, dua salinan dokumen, dan stash sebelum fast-forward; konflik checkpoint diselesaikan dengan mempertahankan bukti gate lama dan security fix. [Bukti gate](phase-2-verification.md#parent-2b-01-gate-ulang-2026-11-16).
+- Acceptance V2: child 2B-01a/b ancestor; session/CSRF, login/logout, role/401/403, sidebar dan navigasi terbukti; kanvas/properti tetap placeholder; tidak ada token admin persisten atau fitur 2B-02a. Lokal: tes fokus 8, frontend 96, schema 33, policy 51 dan PHPUnit 141/4.133 seluruhnya PASS/0 skip. Composer install/validate/audit, PHP lint, ESLint/Prettier/contract, typecheck/build, npm audit, migration/DEMO seed, HTTP smoke dan Electron smoke PASS. MySQL disposable dihentikan dan credential sementara dihapus.
+- CI integrated main [run `43793065588`](https://github.com/dejul/senkom/actions/runs/43793065588) pada SHA PR #7 SUCCESS, 16/16 mandatory, 0 skip. [CI PR #8 `43794863277`](https://github.com/dejul/senkom/actions/runs/43794863277) pada commit `5a0eb8ad62d21ab6ecc107ed5daf607f65e8f7af` SUCCESS: 16/16 mandatory, 0 skip, PHPUnit 141/4.133, frontend 96, schema 33, Composer audit 0 advisory, HTTP/Electron/build PASS. Commit bukti CI ini memerlukan CI ulang pada head final. Status **PARENT GATE PASSED — AWAITING MERGE**, belum VERIFIED. PR docs-only/parent-only memerlukan merge manual menurut Auto-Merge V2.
 
 ## Security fix Laravel concurrency advisory (2026-11-16)
 
 - PR #6 MERGED manual; `main`/`origin/main` `4736f713193227d987e179064809667c436b742a`. Perubahan gate parent yang belum di-commit tetap di worktree `feature/phase-2b-01-gate`; fix memakai worktree/branch terpisah `fix/laravel-concurrency-advisory` dari main bersih. Tidak ada perubahan fitur Phase 2B.
 - CVE-2026-128083/GHSA-63hm-g96r-2m2q mengenai `laravel/framework v13.39.0`; metadata advisory menetapkan `13.40.0` sebagai patched version pertama untuk Laravel 13. Constraint `^13.39.0` sudah menerima versi aman. Hanya `apps/api/composer.lock` berubah: `v13.39.0` ke `v13.40.0`, 0 perubahan paket lain.
 - Lokal: Composer install 103 paket dari lockfile, validate dan audit 0 advisory PASS; PHPUnit 141 tes/4.133 asersi/0 skip dan HTTP smoke pada MySQL 8.4.11 disposable PASS. Frontend 96/0 skip, lint/contract, typecheck/build, PHP lint, npm production audit dan Electron smoke rerun PASS. MySQL disposable dihentikan. [Bukti](phase-2-verification.md#verified-fix-laravel-concurrency-advisory).
-- Status fix **VERIFIED** pada implementasi commit `313db9b343f022bc737cddc5f49fd44ff37fcc71`, PR #7. [CI PR `43789695673`](https://github.com/dejul/senkom/actions/runs/43789695673) pada exact SHA itu SUCCESS: 16/16 mandatory steps, 0 skipped; Composer audit 0 advisory, PHPUnit 141/4.133/0 skip, frontend 96, schema 33, HTTP, build, Electron dan npm audit PASS. Lockfile security-sensitive menurut Auto-Merge V2; PR memerlukan manual merge. Parent 2B-01 tetap WIP dan gate parent belum diulang.
+- Status fix **VERIFIED** pada implementasi commit `313db9b343f022bc737cddc5f49fd44ff37fcc71`, PR #7. [CI PR `43789695673`](https://github.com/dejul/senkom/actions/runs/43789695673) pada exact SHA itu SUCCESS: 16/16 mandatory steps, 0 skipped; Composer audit 0 advisory, PHPUnit 141/4.133/0 skip, frontend 96, schema 33, HTTP, build, Electron dan npm audit PASS. Lockfile security-sensitive menurut Auto-Merge V2; PR #7 MERGED manual pada `cc14f5bf85a3cab2d20b220dadd6e71d685848a4`. Parent 2B-01 tetap WIP dan gate parent belum diulang.
+
+## Gate parent 2B-01 — rekonsiliasi dan audit (2026-11-16)
+
+- PR #6 MERGED manual pada `4736f713193227d987e179064809667c436b742a`. `git fetch origin --prune`, `git switch main`, dan `git pull --ff-only origin main` exit 0. `main` lokal = `origin/main` pada SHA itu; commit 2B-01a `b7c4f72` dan 2B-01b `a5ea76b` keduanya ancestor. Working tree awal bersih. Branch gate terpisah: `feature/phase-2b-01-gate` dari main tersebut.
+- V2 hanya memuat child `2B-01a` dan `2B-01b`; tidak ada `2B-01c`. Parent 2B-01 memerlukan CSRF/session nyata, role UI, unauthorized state, dan tanpa token admin di localStorage. Kode dan tes kedua child sudah terintegrasi. [Audit gate](phase-2-verification.md#gate-parent-2b-01--rekonsiliasi-dan-audit-2026-11-16).
+- CI integrated main [run `43178975486`](https://github.com/dejul/senkom/actions/runs/43178975486) pada SHA merge SUCCESS: 16/16 mandatory steps, 0 skipped; PHPUnit 141/4.133/0 skip, frontend 96, schema 33, HTTP smoke, build, Electron, OpenAPI, audit PASS pada 2026-11-12. Auto-Merge V2 aktif, tetapi [run `43178419080`](https://github.com/dejul/senkom/actions/runs/43178419080) menolak PR #6: `Security-sensitive file requires manual merge`; pengguna melakukan merge manual.
+- Audit Composer lokal 2026-11-16 exit 1: `laravel/framework` terkunci `v13.39.0`, CVE-2026-128083/PKSA-yxbx-3c9s-cjt9 diumumkan 2026-11-13; versi terdampak `<13.40.0`. Tes fokus 8/0 skip, frontend 96/0 skip, lint/contract, dan npm production audit PASS. Build/Electron dan HTTP/MySQL lokal NOT RUN setelah gate gagal. Status parent **INCOMPLETE**, tanpa commit/push/PR gate dan tanpa perubahan kode produk.
 
 ## 2B-01b — shell dan role states (2026-11-12)
 
