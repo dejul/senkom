@@ -191,7 +191,8 @@ form {
 label {
   font-weight: 700;
 }
-input {
+input,
+select {
   width: 100%;
   padding: 12px;
   border: 1px solid #879b93;

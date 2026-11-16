@@ -4,8 +4,81 @@ import { loadMap, type MapSource } from './map-api';
 
 type View = { x: number; y: number; width: number; height: number };
 type Layer = MapContentV2['layers'][number];
+type Node = MapContentV2['layout']['nodes'][number];
 export type Selection = { kind: 'node' | 'edge'; id: string };
 const grid = 40;
+
+export function snapPoint(x: number, y: number, width: number, height: number) {
+  return {
+    x:
+      Math.max(0, Math.min(Math.round(x / grid), Math.floor(width / grid))) *
+      grid,
+    y:
+      Math.max(0, Math.min(Math.round(y / grid), Math.floor(height / grid))) *
+      grid,
+  };
+}
+
+export function addSiteNode(
+  map: MapContentV2,
+  siteId: string,
+  id: string,
+): MapContentV2 {
+  if (
+    map.layout.nodes.length >= 50000 ||
+    !map.sites.some((site) => site.id === siteId) ||
+    map.layout.nodes.some(
+      (node) =>
+        node.id === id ||
+        (node.entityType === 'site' && node.entityId === siteId),
+    )
+  )
+    return map;
+  return {
+    ...map,
+    layout: {
+      ...map.layout,
+      nodes: [
+        ...map.layout.nodes,
+        {
+          id,
+          entityType: 'site',
+          entityId: siteId,
+          ...snapPoint(
+            map.layout.width / 2,
+            map.layout.height / 2,
+            map.layout.width,
+            map.layout.height,
+          ),
+          symbol: 'site',
+        },
+      ],
+    },
+  };
+}
+
+export function moveSiteNode(
+  map: MapContentV2,
+  id: string,
+  x: number,
+  y: number,
+): MapContentV2 {
+  const node = map.layout.nodes.find(
+    (item) => item.id === id && item.entityType === 'site',
+  );
+  if (!node) return map;
+  const point = snapPoint(x, y, map.layout.width, map.layout.height);
+  if (node.x === point.x && node.y === point.y) return map;
+  return {
+    ...map,
+    layout: {
+      ...map.layout,
+      nodes: map.layout.nodes.map((item) =>
+        item.id === id ? { ...item, ...point } : item,
+      ),
+    },
+  };
+}
 
 const symbolCodes = {
   site: 'S',
@@ -117,33 +190,42 @@ export function MapDrawing({
   onPointerDown,
   onPointerMove,
   onPointerUp,
+  onPointerCancel,
   names = new Map(),
   hiddenLayers = new Set(),
   selected,
   onSelect,
+  onNodePointerDown,
 }: {
   layout: MapContentV2['layout'];
   view: View;
   kind: MapSource['kind'];
   onPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onPointerMove?: (event: PointerEvent<SVGSVGElement>) => void;
-  onPointerUp?: () => void;
+  onPointerUp?: (event: PointerEvent<SVGSVGElement>) => void;
+  onPointerCancel?: () => void;
   names?: ReadonlyMap<string, string>;
   hiddenLayers?: ReadonlySet<Layer>;
   selected?: Selection | null;
   onSelect?: (selection: Selection) => void;
+  onNodePointerDown?:
+    ((node: Node, event: PointerEvent<SVGGElement>) => void) | undefined;
 }) {
   return (
     <svg
       className="map-viewport"
       role="img"
-      aria-label="Kanvas peta read-only"
+      aria-label={
+        onNodePointerDown
+          ? 'Kanvas peta draft, site dapat dipindah'
+          : 'Kanvas peta read-only'
+      }
       viewBox={`${view.x} ${view.y} ${view.width} ${view.height}`}
       preserveAspectRatio="xMidYMid meet"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerCancel={onPointerCancel ?? onPointerUp}
     >
       <title>Peta {kind === 'draft' ? 'draft' : 'published'}</title>
       <defs>
@@ -229,7 +311,10 @@ export function MapDrawing({
             tabIndex={onSelect ? 0 : undefined}
             aria-label={`${node.entityType === 'site' ? 'Site' : 'Perangkat'} ${nodeName(node, names)}, simbol ${symbol}`}
             aria-pressed={onSelect ? active : undefined}
-            onPointerDown={(event) => event.stopPropagation()}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              if (node.entityType === 'site') onNodePointerDown?.(node, event);
+            }}
             onClick={() => onSelect?.({ kind: 'node', id: node.id })}
             onKeyDown={(event) => {
               if (
@@ -301,13 +386,35 @@ export function MapFeedback({
   );
 }
 
-export function MapCanvas({ source }: { source: MapSource }) {
+function pointerPoint(svg: SVGSVGElement, x: number, y: number) {
+  const matrix = svg.getScreenCTM();
+  return matrix ? new DOMPoint(x, y).matrixTransform(matrix.inverse()) : null;
+}
+
+export function MapCanvas({
+  source,
+  editable = false,
+}: {
+  source: MapSource;
+  editable?: boolean;
+}) {
   const kind = source.kind;
+  const canEdit = kind === 'draft' && editable;
   const token = source.kind === 'published' ? source.token : '';
   const [map, setMap] = useState<MapContentV2 | null>(null);
   const [error, setError] = useState('');
   const [view, setView] = useState<View | null>(null);
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
+  const [nodeDrag, setNodeDrag] = useState<{
+    id: string;
+    offsetX: number;
+    offsetY: number;
+    startX: number;
+    startY: number;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [siteId, setSiteId] = useState('');
   const [loading, setLoading] = useState(true);
   const [hiddenLayers, setHiddenLayers] = useState<Set<Layer>>(new Set());
   const [query, setQuery] = useState('');
@@ -341,6 +448,24 @@ export function MapCanvas({ source }: { source: MapSource }) {
   }, [kind, token]);
 
   const layout = map?.layout;
+  const availableSites =
+    map?.sites.filter(
+      (site) =>
+        !map.layout.nodes.some(
+          (node) => node.entityType === 'site' && node.entityId === site.id,
+        ),
+    ) ?? [];
+  const drawnLayout =
+    layout && nodeDrag
+      ? {
+          ...layout,
+          nodes: layout.nodes.map((node) =>
+            node.id === nodeDrag.id
+              ? { ...node, x: nodeDrag.x, y: nodeDrag.y }
+              : node,
+          ),
+        }
+      : layout;
   const empty = layout?.nodes.length === 0 && layout.edges.length === 0;
   const names = useMemo(
     () =>
@@ -374,6 +499,24 @@ export function MapCanvas({ source }: { source: MapSource }) {
     );
   }
   function pointerMove(event: PointerEvent<SVGSVGElement>) {
+    if (nodeDrag && layout) {
+      const point = pointerPoint(
+        event.currentTarget,
+        event.clientX,
+        event.clientY,
+      );
+      if (!point) return;
+      if (Math.hypot(point.x - nodeDrag.startX, point.y - nodeDrag.startY) < 3)
+        return;
+      const snapped = snapPoint(
+        point.x + nodeDrag.offsetX,
+        point.y + nodeDrag.offsetY,
+        layout.width,
+        layout.height,
+      );
+      setNodeDrag({ ...nodeDrag, ...snapped });
+      return;
+    }
     if (!drag || !view) return;
     const rect = event.currentTarget.getBoundingClientRect();
     setView(
@@ -392,11 +535,47 @@ export function MapCanvas({ source }: { source: MapSource }) {
     <div
       aria-busy={loading}
       onKeyDown={(event) => {
-        if (event.key === 'Escape') setSelected(null);
+        if (event.key === 'Escape') {
+          setSelected(null);
+          setNodeDrag(null);
+        }
       }}
     >
-      <p>{source.kind === 'draft' ? 'Draft' : 'Published'} · hanya baca</p>
+      <p>
+        {source.kind === 'draft' ? 'Draft' : 'Published'} ·{' '}
+        {canEdit ? 'perubahan lokal, belum tersimpan' : 'hanya baca'}
+      </p>
       <MapFeedback loading={loading} error={error} empty={Boolean(empty)} />
+      {canEdit && map && (
+        <div className="site-create">
+          <label htmlFor="site-node">Site belum di kanvas</label>
+          <select
+            id="site-node"
+            value={siteId}
+            onChange={(event) => setSiteId(event.target.value)}
+          >
+            <option value="">Pilih site</option>
+            {availableSites.map((site) => (
+              <option key={site.id} value={site.id}>
+                {site.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            disabled={!siteId || map.layout.nodes.length >= 50000}
+            onClick={() => {
+              const id = crypto.randomUUID();
+              setMap((current) => current && addSiteNode(current, siteId, id));
+              setSelected({ kind: 'node', id });
+              setSiteId('');
+            }}
+          >
+            Tambah node site
+          </button>
+          {availableSites.length === 0 && <p>Semua site sudah di kanvas.</p>}
+        </div>
+      )}
       {layout && view && !loading && !empty && (
         <>
           <fieldset className="map-layers">
@@ -513,7 +692,7 @@ export function MapCanvas({ source }: { source: MapSource }) {
             </button>
           </div>
           <MapDrawing
-            layout={layout}
+            layout={drawnLayout ?? layout}
             view={view}
             kind={source.kind}
             names={names}
@@ -525,7 +704,69 @@ export function MapCanvas({ source }: { source: MapSource }) {
               setDrag({ x: event.clientX, y: event.clientY });
             }}
             onPointerMove={pointerMove}
-            onPointerUp={() => setDrag(null)}
+            onPointerUp={(event) => {
+              if (nodeDrag && layout) {
+                const point = pointerPoint(
+                  event.currentTarget,
+                  event.clientX,
+                  event.clientY,
+                );
+                const position =
+                  point &&
+                  snapPoint(
+                    point.x + nodeDrag.offsetX,
+                    point.y + nodeDrag.offsetY,
+                    layout.width,
+                    layout.height,
+                  );
+                if (
+                  point &&
+                  position &&
+                  Math.hypot(
+                    point.x - nodeDrag.startX,
+                    point.y - nodeDrag.startY,
+                  ) >= 3
+                )
+                  setMap(
+                    (current) =>
+                      current &&
+                      moveSiteNode(
+                        current,
+                        nodeDrag.id,
+                        position.x,
+                        position.y,
+                      ),
+                  );
+                setNodeDrag(null);
+              }
+              setDrag(null);
+            }}
+            onNodePointerDown={
+              canEdit
+                ? (node, event) => {
+                    if (event.button !== 0) return;
+                    const svg = event.currentTarget.ownerSVGElement;
+                    const point =
+                      svg && pointerPoint(svg, event.clientX, event.clientY);
+                    if (!point) return;
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                    setSelected({ kind: 'node', id: node.id });
+                    setNodeDrag({
+                      id: node.id,
+                      offsetX: node.x - point.x,
+                      offsetY: node.y - point.y,
+                      startX: point.x,
+                      startY: point.y,
+                      x: node.x,
+                      y: node.y,
+                    });
+                  }
+                : undefined
+            }
+            onPointerCancel={() => {
+              setNodeDrag(null);
+              setDrag(null);
+            }}
           />
           {(selectedNode || selectedEdge) && (
             <p role="status" className="map-selection">
@@ -533,7 +774,11 @@ export function MapCanvas({ source }: { source: MapSource }) {
               {selectedNode
                 ? `${nodeName(selectedNode, names)} (${selectedNode.entityType}, ${selectedNode.id})`
                 : `${selectedEdge?.label ?? selectedEdge?.connectionId} (${selectedEdge?.layer}, ${selectedEdge?.id})`}
-              . Hanya baca. Tekan Escape untuk batal.
+              .{' '}
+              {canEdit && selectedNode?.entityType === 'site'
+                ? 'Geser site untuk mengubah posisi lokal.'
+                : 'Hanya baca.'}{' '}
+              Tekan Escape untuk batal.
             </p>
           )}
         </>

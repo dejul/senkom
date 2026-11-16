@@ -1,19 +1,27 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01, 2B-02a, dan 2B-02b VERIFIED/terintegrasi; parent 2B-02 gate WIP pada branch `feature/phase-2b-02-gate`**.
+Phase 2B: **parent 2B-01 dan 2B-02 VERIFIED/terintegrasi; 2B-03a WIP pada `feature/phase-2b-03a`**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan hanya parent gate 2B-02; tunggu PR dan CI head final sebelum merge manual. Jangan mulai 2B-03.
+Next executable: selesaikan hanya 2B-03a; parent 2B-03 tetap WIP.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
 ## Parent 2B-02 gate (2026-11-16)
+
+- Rekonsiliasi final: PR #11 MERGED manual pada `0160068fcedbb4ace81809046c499b6d63adfdb6`; head final `6bab05cd2bfc36daf1ef3a95d58fafe4ab7abe7e` ancestor `main`. `main` dan `origin/main` sama, worktree bersih sebelum branch 2B-03a. [CI PR final `43828983354`](https://github.com/dejul/senkom/actions/runs/43828983354) dan [CI integrated main `43830179853`](https://github.com/dejul/senkom/actions/runs/43830179853) SUCCESS pada SHA masing-masing, 16/16 mandatory, 0 skip. **Parent 2B-02 VERIFIED**; catatan WIP di bawah historis.
 
 - PR #10 MERGED manual pada `52986cdff7085fdac9e874e55d5b5a5da257e5e5`; head `60e1ea215efd6323dad3b4e1c3754d1734b3b155` dan head 2B-02a `8addaf70046af01e5d6d2f778ad6b94ba70678d8` ancestor main. `main`, `origin/main`, dan branch gate sama sebelum edit; worktree bersih. [CI integrated main `43824646388`](https://github.com/dejul/senkom/actions/runs/43824646388) SUCCESS pada exact merge SHA, 16/16 mandatory, 0 skip. **2B-02b VERIFIED dan terintegrasi**; catatan PR OPEN di bawah historis.
 - Preview Chromium atas Vite dan API mock menemukan `AdminApi` memanggil native `fetch` tanpa binding: login gagal `Illegal invocation`. Satu perubahan di `apps/admin-web/src/api.ts` mengikat default fetch ke `globalThis`. Preview ulang: login/logout, draft SVG, fit/zoom, layer, search/select, Enter/Escape, lebar 1280/390, console 0 error PASS. Data mock sintetis; screenshot di `.artifacts/phase2b02-preview/` diabaikan Git. Bukti lengkap di [verifikasi parent](phase-2-verification.md#parent-2b-02-gate-2026-11-16).
 - Commit implementasi `2a92bb3c88e137be9cd2584369987820daff8a48` dan evidence `f9386a938782da21af9a3da3ef866e8af2ac82a4` pushed. [PR #11](https://github.com/dejul/senkom/pull/11) OPEN. [CI PR `43828359645`](https://github.com/dejul/senkom/actions/runs/43828359645) pada exact SHA `f9386a9` SUCCESS: 16/16 mandatory, 0 skip; PHPUnit 141/4.133. Commit dokumentasi CI ini memerlukan CI ulang pada head final.
 - Parent **WIP** sampai seluruh gate lokal final, PR gate exact-head CI, merge manual, dan main terbaru diperiksa. Tidak ada 2B-03.
+
+## 2B-03a - create/select/move site node (2026-11-16)
+
+- Scope V2: site node dari inventory yang sudah ada, pilih, drag snap-to-grid; map lokal berubah sekali saat pointerup. Editor/admin boleh edit; publisher dan viewer tetap read-only. Tanpa save API, undo/redo, edit properti, delete, atau perubahan backend/schema. Parent 2B-03 tetap WIP.
+- Commit implementasi `8d3e8dad3140c4e66efb128cbd0be6dc8dfc4aa1` pada branch `feature/phase-2b-03a`; PR/CI head final belum ada.
+- Implementasi pada `apps/admin-web/src/map-canvas.tsx`, `workspace.tsx`, dan `style.css`; tes baru `tests/admin-map-site-edit.test.ts`. Lokal: fokus 10/10, frontend 106/106, schema 33/33, lint/contract, typecheck/build, Electron, Composer/npm audit PASS. Preview Chromium + API mock menguji create/select/drag, publisher denial, viewport sempit, 0 write dan 0 console error. PHPUnit/HTTP/MySQL lokal NOT RUN; CI PR wajib. [Bukti](phase-2-verification.md#2b-03a---createselectmove-site-node).
 
 ## Parent 2B-01 gate ulang (2026-11-16)
 
