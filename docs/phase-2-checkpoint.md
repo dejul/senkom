@@ -5,7 +5,7 @@ Phase 2B: **parent 2B-01 dan 2B-02 VERIFIED/terintegrasi; 2B-03a VERIFIED/terint
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: integrasikan dokumentasi susulan 2B-03a lewat PR manual; 2B-03b hanya atas instruksi terpisah. Parent 2B-03 tetap WIP.
+Next executable: 2B-03b hanya atas instruksi terpisah. Parent 2B-03 tetap WIP.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
 ## Parent 2B-02 gate (2026-11-16)
@@ -19,10 +19,10 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 
 ## 2B-03a - create/select/move site node (2026-11-16)
 
-- Rekonsiliasi final: PR #12 MERGED pada `4aa248eb3211a873bb860377f856a9e1875a37d8`; head `b6040f4851ef7d6f6abb6082a6987a66fd34ddac` ancestor `origin/main`. [CI integrated main `43836434540`](https://github.com/dejul/senkom/actions/runs/43836434540) pada exact merge SHA SUCCESS, 16/16 mandatory, 0 skip; PHPUnit 141/4.133. **2B-03a VERIFIED/terintegrasi**. Commit dokumentasi `6a9b2653b1674e4984760e2fafe6e2b405c41b96` dipush setelah merge, sehingga belum ada di main; PR dokumentasi susulan diperlukan. Catatan PR OPEN di bawah historis.
+- Rekonsiliasi final: PR #12 MERGED pada `4aa248eb3211a873bb860377f856a9e1875a37d8`; head `b6040f4851ef7d6f6abb6082a6987a66fd34ddac` ancestor `origin/main`. [CI integrated main `43836434540`](https://github.com/dejul/senkom/actions/runs/43836434540) pada exact merge SHA SUCCESS, 16/16 mandatory, 0 skip; PHPUnit 141/4.133. PR #13 dokumentasi susulan MERGED pada `c7d31d859111eb54a0cd78014858963bd9ed182b`; head `51307de15fc4cc02977ecfbf47ea7aac71ff2b36` ancestor `origin/main`. [CI integrated main `43848314985`](https://github.com/dejul/senkom/actions/runs/43848314985) pada exact merge SHA SUCCESS, 16/16 mandatory, 0 skip; PHPUnit 141/4.133. `main` dan `origin/main` sama pada SHA itu sebelum branch `fix/phase-2b-03a-closure` dibuat; worktree bersih. **2B-03a VERIFIED/terintegrasi; parent 2B-03 WIP**. Catatan PR OPEN di bawah historis.
 
 - Scope V2: site node dari inventory yang sudah ada, pilih, drag snap-to-grid; map lokal berubah sekali saat pointerup. Editor/admin boleh edit; publisher dan viewer tetap read-only. Tanpa save API, undo/redo, edit properti, delete, atau perubahan backend/schema. Parent 2B-03 tetap WIP.
-- Commit implementasi `8d3e8dad3140c4e66efb128cbd0be6dc8dfc4aa1` dan evidence `b6040f4851ef7d6f6abb6082a6987a66fd34ddac` pushed. [PR #12](https://github.com/dejul/senkom/pull/12) OPEN; [CI PR `43833306383`](https://github.com/dejul/senkom/actions/runs/43833306383) pada exact head `b6040f4` SUCCESS, 16/16 mandatory, 0 skip, PHPUnit 141/4.133. Commit bukti CI ini memerlukan CI ulang pada head final. **2B-03a GATE PASSED - AWAITING MERGE**; branch khusus memerlukan merge manual menurut Auto-Merge V2.
+- Riwayat sebelum merge: commit implementasi `8d3e8dad3140c4e66efb128cbd0be6dc8dfc4aa1` dan evidence `b6040f4851ef7d6f6abb6082a6987a66fd34ddac` pushed. [PR #12](https://github.com/dejul/senkom/pull/12) OPEN; [CI PR `43833306383`](https://github.com/dejul/senkom/actions/runs/43833306383) pada exact head `b6040f4` SUCCESS, 16/16 mandatory, 0 skip, PHPUnit 141/4.133. Commit bukti CI ini memerlukan CI ulang pada head final. **2B-03a GATE PASSED - AWAITING MERGE**; branch khusus memerlukan merge manual menurut Auto-Merge V2.
 - Implementasi pada `apps/admin-web/src/map-canvas.tsx`, `workspace.tsx`, dan `style.css`; tes baru `tests/admin-map-site-edit.test.ts`. Lokal: fokus 10/10, frontend 106/106, schema 33/33, lint/contract, typecheck/build, Electron, Composer/npm audit PASS. Preview Chromium + API mock menguji create/select/drag, publisher denial, viewport sempit, 0 write dan 0 console error. PHPUnit/HTTP/MySQL lokal NOT RUN; CI PR wajib. [Bukti](phase-2-verification.md#2b-03a---createselectmove-site-node).
 
 ## Parent 2B-01 gate ulang (2026-11-16)
