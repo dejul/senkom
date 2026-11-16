@@ -36,9 +36,10 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 
 ## Parent 2B-03 gate (2026-11-16)
 
-- Branch `feature/phase-2b-03-gate` dari integrated main `6659abaf260c38cacdb0fc12b5bff93f0daee82a`; worktree awal bersih. Scope hanya verifikasi gabungan 2B-03a/b, tanpa kode produk baru. **LOCAL ACCEPTANCE PASSED - CI PR PENDING**; parent belum VERIFIED sampai PR gate merged dan `main` diperiksa.
+- Branch `feature/phase-2b-03-gate` dari integrated main `6659abaf260c38cacdb0fc12b5bff93f0daee82a`; worktree awal bersih. Scope hanya verifikasi gabungan 2B-03a/b, tanpa kode produk baru. **PARENT GATE PASSED - AWAITING MERGE**; parent belum VERIFIED sampai PR gate merged dan `main` diperiksa.
 - Acceptance: create/select, drag snap 40 pada zoom/pan, satu commit saat pointerup; label/simbol site, delete confirm/cancel dan proteksi edge; undo/redo tombol+keyboard, kapasitas 50 dan dirty; role editor/admin vs publisher/viewer/published; layer/search, viewport responsif. Semua PASS berdasarkan tes fokus dan preview mock. [Bukti parent](phase-2-verification.md#parent-2b-03-gate-2026-11-16).
 - Lokal: fokus 15/15, frontend 111/111, role 8/8, schema 33/33, policy 51/51, lint/kontrak, typecheck/build, Electron, Composer/npm audit, PHP lint PASS. Preview Chromium Electron + API mock: lima keadaan akses, drag setelah zoom/pan, properti/delete/undo/redo, 0 write dan 0 console error, viewport 376 px PASS. PHPUnit/HTTP/MySQL lokal NOT RUN; CI integrated main `43872262472` PASS dan CI PR gate wajib. Tes kapasitas 50 ditambah pada `tests/admin-map-site-history.test.ts`.
+- Commit tes/bukti `27155ced5498af56654f298a47e52c2792b14de9` pushed; [PR #16](https://github.com/dejul/senkom/pull/16) OPEN. [CI PR `43874185195`](https://github.com/dejul/senkom/actions/runs/43874185195) pada exact SHA SUCCESS, 16/16 mandatory, 0 skip; PHPUnit 141/4.133, frontend 111, schema 33, HTTP/MySQL, build/Electron, Composer/npm audit PASS. [Auto-Merge V2 `43875041648`](https://github.com/dejul/senkom/actions/runs/43875041648) menahan parent-only PR karena tidak ada verified micro-batch claim; merge manual wajib. Commit dokumentasi ini memerlukan CI ulang pada head final.
 
 ## Parent 2B-01 gate ulang (2026-11-16)
 
