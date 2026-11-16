@@ -1,12 +1,19 @@
 # Checkpoint Phase 2
 
-Tanggal: 2026-11-12. Status: **Phase 2A COMPLETE**.
-Phase 2B: **2B-01a VERIFIED; 2B-01b local acceptance PASS, CI PR pending; parent 2B-01 WIP**.
+Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
+Phase 2B: **2B-01a dan 2B-01b terintegrasi; parent 2B-01 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan CI/PR 2B-01b; stop sebelum parent 2B-01 acceptance dan 2B-02a.
+Next executable: selesaikan CI dan manual merge security fix, lalu ulangi gate parent 2B-01; jangan mulai 2B-02a.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## Security fix Laravel concurrency advisory (2026-11-16)
+
+- PR #6 MERGED manual; `main`/`origin/main` `4736f713193227d987e179064809667c436b742a`. Perubahan gate parent yang belum di-commit tetap di worktree `feature/phase-2b-01-gate`; fix memakai worktree/branch terpisah `fix/laravel-concurrency-advisory` dari main bersih. Tidak ada perubahan fitur Phase 2B.
+- CVE-2026-128083/GHSA-63hm-g96r-2m2q mengenai `laravel/framework v13.39.0`; metadata advisory menetapkan `13.40.0` sebagai patched version pertama untuk Laravel 13. Constraint `^13.39.0` sudah menerima versi aman. Hanya `apps/api/composer.lock` berubah: `v13.39.0` ke `v13.40.0`, 0 perubahan paket lain.
+- Lokal: Composer install 103 paket dari lockfile, validate dan audit 0 advisory PASS; PHPUnit 141 tes/4.133 asersi/0 skip dan HTTP smoke pada MySQL 8.4.11 disposable PASS. Frontend 96/0 skip, lint/contract, typecheck/build, PHP lint, npm production audit dan Electron smoke rerun PASS. MySQL disposable dihentikan. [Bukti](phase-2-verification.md#verified-fix-laravel-concurrency-advisory).
+- Status fix **VERIFIED** pada implementasi commit `313db9b343f022bc737cddc5f49fd44ff37fcc71`, PR #7. [CI PR `43789695673`](https://github.com/dejul/senkom/actions/runs/43789695673) pada exact SHA itu SUCCESS: 16/16 mandatory steps, 0 skipped; Composer audit 0 advisory, PHPUnit 141/4.133/0 skip, frontend 96, schema 33, HTTP, build, Electron dan npm audit PASS. Lockfile security-sensitive menurut Auto-Merge V2; PR memerlukan manual merge. Parent 2B-01 tetap WIP dan gate parent belum diulang.
 
 ## 2B-01b — shell dan role states (2026-11-12)
 

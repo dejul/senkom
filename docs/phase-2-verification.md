@@ -1,5 +1,19 @@
 # Verifikasi Phase 2
 
+## Verified Fix: laravel-concurrency-advisory
+
+Status: **VERIFIED** untuk security fix (2026-11-16); parent 2B-01 tetap WIP.
+Branch/worktree: `fix/laravel-concurrency-advisory`, `D:\BSD\Project\Web\www\senkom-security-fix`, dari main `4736f713193227d987e179064809667c436b742a`. Worktree `feature/phase-2b-01-gate` menyimpan dua dokumen gate yang belum di-commit; tidak disentuh atau dibawa ke fix.
+
+- Root cause: `composer audit --locked --format=json` sebelum fix exit 1, satu advisory low `PKSA-yxbx-3c9s-cjt9`/CVE-2026-128083 pada `laravel/framework v13.39.0`. [GHSA-63hm-g96r-2m2q](https://github.com/advisories/GHSA-63hm-g96r-2m2q) menetapkan Laravel 13 `>=13.0.0,<13.40.0` terdampak dan `13.40.0` patched version pertama. `apps/api/composer.json` mensyaratkan `^13.39.0` dan PHP `~8.4.0`, kompatibel. Composer `update laravel/framework:13.40.0 --minimal-changes --dry-run` exit 0: hanya satu update.
+- Fix: `apps/api/composer.lock` mengubah `laravel/framework v13.39.0` menjadi `v13.40.0`, reference dist/source dan waktu rilis terkait. Paket tetap 103 (77 produksi, 26 dev), tanpa perubahan transitive, `composer.json`, kode produk, API, schema, atau frontend.
+- PHP 8.4.26/Composer 2.11.1: targeted update lockfile exit 0; `composer install --no-interaction --prefer-dist --no-progress` dari checkout bersih exit 0, 103 install; `composer validate --strict` exit 0; `composer audit --locked` dan audit installed exit 0, 0 advisory. `apps/api/tools/lint.php` exit 0.
+- MySQL 8.4.11 disposable melalui `scripts/ci-mysql.ps1`, loopback dan tiga DB `senkom_ci_*_test` terpisah: start exit 0; PHPUnit `--fail-on-skipped` exit 0, **141 tes/4.133 asersi/0 skip**; `node scripts/phase2-smoke.mjs --api-only` exit 0, termasuk auth/CSRF, 409/428, publish/rollback, viewer read-only; stop exit 0, direktori instance hilang. DB existing tidak dipakai.
+- Node 24.22.2/npm 11.19.1: `npm ci --no-audit --no-fund` exit 0, 216 paket; `npm test` exit 0, **96 tes/11 file, 0 skip**; `npm run lint` exit 0 (ESLint, Prettier, OpenAPI contract); `npm run build` exit 0 (contract, typecheck, desktop dan Web Admin); `npm audit --omit=dev` exit 0, 0 vulnerability. `npm run smoke:desktop` percobaan pertama exit 1 pada skenario corrupt (`UnknownVizError`) saat setup berat paralel; rerun terisolasi exit 0 pada demo/offline/corrupt/empty. `npm ci` awal dengan Node 22/npm 10 exit 1 `EBADENGINE`; instalasi ulang dengan versi yang diwajibkan exit 0.
+- Review/staging: hanya `apps/api/composer.lock`, checkpoint, dan verifikasi; `git diff --cached --check` exit 0, scan added lines 0 secret pattern, remote resmi dan base ancestor cocok. Commit implementasi `313db9b343f022bc737cddc5f49fd44ff37fcc71` pushed ke `origin/fix/laravel-concurrency-advisory` tanpa force; SHA lokal/remote sama. [PR #7](https://github.com/dejul/senkom/pull/7) OPEN menuju main.
+- [CI PR `43789695673`](https://github.com/dejul/senkom/actions/runs/43789695673) pada exact implementation SHA `313db9b343f022bc737cddc5f49fd44ff37fcc71`, event `pull_request`: SUCCESS, `checks` SUCCESS, **16/16 mandatory steps success, 0 skipped**. Composer audit 0 advisory; PHPUnit 141 tes/4.133 asersi/0 skip; frontend 96 dan schema 33; HTTP smoke, lint, Prettier, typecheck/build, Electron, OpenAPI dan npm audit 0 vulnerability PASS. Dokumentasi final pada head PR memerlukan CI baru sesudah push.
+- Lockfile security-sensitive menurut Auto-Merge V2, sehingga manual merge wajib meski CI PASS. PR belum MERGED; parent 2B-01 belum diverifikasi ulang, 2B-02a tidak dikerjakan.
+
 ## Verified Fix: auto-merge-v2
 
 Status: **VERIFIED** untuk policy dan regresi lokal; CI PR **NOT RUN** sebelum push.
