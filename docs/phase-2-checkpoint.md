@@ -1,18 +1,26 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **2B-01a dan 2B-01b terintegrasi; PARENT GATE 2B-01 PASSED — AWAITING MERGE**.
+Phase 2B: **parent 2B-01 VERIFIED dan terintegrasi; 2B-02a VERIFIED lokal, CI/PR pending**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan CI head final dan merge manual PR #8; verifikasi integrated main sebelum 2B-02a.
+Next executable: selesaikan dan verifikasi hanya 2B-02a; 2B-02b belum dimulai.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
 ## Parent 2B-01 gate ulang (2026-11-16)
 
+- Rekonsiliasi final: PR #8 MERGED manual, merge SHA `326e31892c7e121b5b38ff782dcd0daa99a33bde`; `main` dan `origin/main` sama dan bersih sebelum branch `feature/phase-2b-02a` dibuat. Head PR final `844a950bcdc0cceef16d7ed076a73e41ca04d12e` telah lulus CI 16/16 mandatory, 0 skip. [CI integrated main `43796382406`](https://github.com/dejul/senkom/actions/runs/43796382406) pada exact merge SHA SUCCESS, 16/16 mandatory, 0 skip. Kriteria parent lengkap; **parent 2B-01 VERIFIED**. Bukti historis di bawah mencatat status sebelum merge.
+
 - PR #7 MERGED manual pada `cc14f5bf85a3cab2d20b220dadd6e71d685848a4`; `main`, `origin/main`, dan branch `feature/phase-2b-01-gate` sudah sama pada SHA itu. Laravel `v13.40.0` terintegrasi. Perubahan gate lama disimpan sebagai patch, dua salinan dokumen, dan stash sebelum fast-forward; konflik checkpoint diselesaikan dengan mempertahankan bukti gate lama dan security fix. [Bukti gate](phase-2-verification.md#parent-2b-01-gate-ulang-2026-11-16).
 - Acceptance V2: child 2B-01a/b ancestor; session/CSRF, login/logout, role/401/403, sidebar dan navigasi terbukti; kanvas/properti tetap placeholder; tidak ada token admin persisten atau fitur 2B-02a. Lokal: tes fokus 8, frontend 96, schema 33, policy 51 dan PHPUnit 141/4.133 seluruhnya PASS/0 skip. Composer install/validate/audit, PHP lint, ESLint/Prettier/contract, typecheck/build, npm audit, migration/DEMO seed, HTTP smoke dan Electron smoke PASS. MySQL disposable dihentikan dan credential sementara dihapus.
 - CI integrated main [run `43793065588`](https://github.com/dejul/senkom/actions/runs/43793065588) pada SHA PR #7 SUCCESS, 16/16 mandatory, 0 skip. [CI PR #8 `43794863277`](https://github.com/dejul/senkom/actions/runs/43794863277) pada commit `5a0eb8ad62d21ab6ecc107ed5daf607f65e8f7af` SUCCESS: 16/16 mandatory, 0 skip, PHPUnit 141/4.133, frontend 96, schema 33, Composer audit 0 advisory, HTTP/Electron/build PASS. Commit bukti CI ini memerlukan CI ulang pada head final. Status **PARENT GATE PASSED — AWAITING MERGE**, belum VERIFIED. PR docs-only/parent-only memerlukan merge manual menurut Auto-Merge V2.
+
+## 2B-02a - read-only SVG canvas (2026-11-16)
+
+- Branch `feature/phase-2b-02a` dari integrated main `326e31892c7e121b5b38ff782dcd0daa99a33bde`. Scope hanya canvas SVG, fit/zoom/pan/grid, draft via sesi admin dan published via token viewer di memori, viewport responsif. Tidak ada write, layer/search/select/label/symbol workflow atau 2B-02b.
+- Acceptance lokal **VERIFIED**: `npm ci` 216 package; 101/101 frontend/schema tests, fokus 7/7, lint/contract, typecheck/build, Electron smoke, npm production audit 0 vulnerability, Composer install dry-run/validate/audit dan PHP lint PASS. Backend PHPUnit dan HTTP/MySQL lokal **NOT RUN** karena backend tidak berubah; mandatory CI akan menjalankannya. [Bukti 2B-02a](phase-2-verification.md#2b-02a---read-only-svg-canvas).
+- CI PR exact head dan merge **NOT RUN** pada catatan ini. Dependency manifest dan lockfile berubah untuk memakai schema validator yang sudah ada; Auto-Merge V2 menggolongkannya sensitif, sehingga merge manual wajib setelah CI PASS. Parent 2B-02 tetap WIP. Berikutnya PR/CI 2B-02a; 2B-02b hanya atas permintaan terpisah.
 
 ## Security fix Laravel concurrency advisory (2026-11-16)
 

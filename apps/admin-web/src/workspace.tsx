@@ -1,4 +1,5 @@
 import type { AdminSession } from './api';
+import { MapCanvas } from './map-canvas';
 
 type User = NonNullable<AdminSession['user']>;
 
@@ -95,7 +96,6 @@ export function Workspace({
           <p>Akses setiap map diperiksa oleh API saat data dimuat.</p>
         </section>
         <div className="work-area">
-          {/* ponytail: shell only; render map in 2B-02a, edits in later batches. */}
           <section
             id="canvas"
             className="panel canvas"
@@ -104,7 +104,7 @@ export function Workspace({
           >
             <p className="eyebrow">PETA INFRASTRUKTUR</p>
             <h2 id="canvas-title">Kanvas</h2>
-            <p>Data peta belum dimuat.</p>
+            <MapCanvas source={{ kind: 'draft' }} />
           </section>
           <aside
             id="properties"

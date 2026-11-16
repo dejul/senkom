@@ -80,6 +80,28 @@ header span,
 .canvas {
   min-height: 360px;
 }
+.map-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.map-controls button {
+  margin: 0;
+  padding: 8px 12px;
+}
+.map-viewport {
+  display: block;
+  width: 100%;
+  height: clamp(280px, 55vh, 640px);
+  margin-top: 12px;
+  border: 1px solid #b7c6b7;
+  background: #f8faf8;
+  touch-action: none;
+  cursor: grab;
+}
+.map-viewport:active {
+  cursor: grabbing;
+}
 .workspace h2 {
   font:
     400 30px/1.2 Georgia,
