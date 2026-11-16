@@ -20,6 +20,7 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 ## 2B-03a - create/select/move site node (2026-11-16)
 
 - Scope V2: site node dari inventory yang sudah ada, pilih, drag snap-to-grid; map lokal berubah sekali saat pointerup. Editor/admin boleh edit; publisher dan viewer tetap read-only. Tanpa save API, undo/redo, edit properti, delete, atau perubahan backend/schema. Parent 2B-03 tetap WIP.
+- Commit implementasi `8d3e8dad3140c4e66efb128cbd0be6dc8dfc4aa1` pada branch `feature/phase-2b-03a`; PR/CI head final belum ada.
 - Implementasi pada `apps/admin-web/src/map-canvas.tsx`, `workspace.tsx`, dan `style.css`; tes baru `tests/admin-map-site-edit.test.ts`. Lokal: fokus 10/10, frontend 106/106, schema 33/33, lint/contract, typecheck/build, Electron, Composer/npm audit PASS. Preview Chromium + API mock menguji create/select/drag, publisher denial, viewport sempit, 0 write dan 0 console error. PHPUnit/HTTP/MySQL lokal NOT RUN; CI PR wajib. [Bukti](phase-2-verification.md#2b-03a---createselectmove-site-node).
 
 ## Parent 2B-01 gate ulang (2026-11-16)
