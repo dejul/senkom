@@ -1,7 +1,7 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 dan 2B-02a VERIFIED/terintegrasi; 2B-02b VERIFIED lokal, CI/PR pending**.
+Phase 2B: **parent 2B-01 dan 2B-02a VERIFIED/terintegrasi; 2B-02b gate PASSED, PR #10 menunggu merge manual**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
@@ -28,7 +28,7 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 
 - Branch `feature/phase-2b-02b` dari integrated main `d4055213bd5baf366d56ef78e0d9b7a53fbed3d0`. Scope V2: toggle layer koneksi, cari/pilih node atau koneksi, tampilkan label/simbol, kontrol pointer dan keyboard read-only. Tidak ada editing, save, workflow 2B-03, backend, database, atau API contract baru.
 - Lokal **VERIFIED**: fokus 10 tes/3 file, semua 104 tes/13 file, lint/format/kontrak, typecheck/build, Electron smoke, npm production audit 0 vulnerability, Composer install dry-run/validate/audit, dan PHP lint PASS. Backend PHPUnit/HTTP/MySQL lokal NOT RUN karena backend tidak berubah; CI wajib. [Bukti](phase-2-verification.md#2b-02b---layer-searchselect-labelsymbol-keyboard).
-- CI PR dan merge NOT RUN saat catatan ini. Parent 2B-02 tetap WIP. Berikutnya PR/CI 2B-02b; parent gate hanya pada permintaan terpisah.
+- [CI PR #10 `43822879615`](https://github.com/dejul/senkom/actions/runs/43822879615) pada implementasi SHA `4ecfe637f983b7c6d58fb131b7cc6d087448b4f6` SUCCESS: 16/16 mandatory, 0 skip; PHPUnit 141/4.133, frontend 104, schema 33, HTTP/Electron/build/audit PASS. PR #10 OPEN. [Auto-Merge V2 `43823546609`](https://github.com/dejul/senkom/actions/runs/43823546609) menolak `Wrong branch for verified work`; branch khusus ini perlu merge manual sesudah CI head final. Parent 2B-02 tetap WIP; parent gate hanya pada permintaan terpisah.
 
 ## Security fix Laravel concurrency advisory (2026-11-16)
 
