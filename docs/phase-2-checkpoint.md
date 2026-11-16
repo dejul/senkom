@@ -1,7 +1,7 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 VERIFIED dan terintegrasi; 2B-02a VERIFIED lokal, CI/PR pending**.
+Phase 2B: **parent 2B-01 VERIFIED dan terintegrasi; 2B-02a gate PASSED, PR #9 menunggu merge manual**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
@@ -20,7 +20,7 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 
 - Branch `feature/phase-2b-02a` dari integrated main `326e31892c7e121b5b38ff782dcd0daa99a33bde`. Scope hanya canvas SVG, fit/zoom/pan/grid, draft via sesi admin dan published via token viewer di memori, viewport responsif. Tidak ada write, layer/search/select/label/symbol workflow atau 2B-02b.
 - Acceptance lokal **VERIFIED**: `npm ci` 216 package; 101/101 frontend/schema tests, fokus 7/7, lint/contract, typecheck/build, Electron smoke, npm production audit 0 vulnerability, Composer install dry-run/validate/audit dan PHP lint PASS. Backend PHPUnit dan HTTP/MySQL lokal **NOT RUN** karena backend tidak berubah; mandatory CI akan menjalankannya. [Bukti 2B-02a](phase-2-verification.md#2b-02a---read-only-svg-canvas).
-- CI PR exact head dan merge **NOT RUN** pada catatan ini. Dependency manifest dan lockfile berubah untuk memakai schema validator yang sudah ada; Auto-Merge V2 menggolongkannya sensitif, sehingga merge manual wajib setelah CI PASS. Parent 2B-02 tetap WIP. Berikutnya PR/CI 2B-02a; 2B-02b hanya atas permintaan terpisah.
+- [CI PR #9 `43798167095`](https://github.com/dejul/senkom/actions/runs/43798167095) pada implementasi SHA `3a4b12bace4ce9967633a610a4079b925be0cbb4` SUCCESS: 16/16 mandatory, 0 skip; PHPUnit 141/4.133, frontend 101, schema 33, HTTP/Electron/build/audit PASS. PR #9 OPEN. [Auto-Merge V2 `43798860487`](https://github.com/dejul/senkom/actions/runs/43798860487) menolak branch khusus ini: `Wrong branch for verified work`; manifest/lockfile juga file sensitif. Merge manual wajib setelah CI pada head final. Parent 2B-02 tetap WIP; 2B-02b hanya atas permintaan terpisah.
 
 ## Security fix Laravel concurrency advisory (2026-11-16)
 
