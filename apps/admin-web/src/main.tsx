@@ -2,6 +2,7 @@ import { StrictMode, useEffect, useState, type FormEvent } from 'react';
 import { createRoot } from 'react-dom/client';
 import { adminApi, ApiError, type AdminSession } from './api';
 import { accessView, AccessDenied, Workspace } from './workspace';
+import { MapCanvas } from './map-canvas';
 import './style.css';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
+  const [viewerToken, setViewerToken] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -89,7 +91,15 @@ function App() {
       <header>
         SENKOM <span>WEB ADMIN</span>
       </header>
-      {view === 'workspace' && !loading && session?.user ? (
+      {viewerToken ? (
+        <section className="panel">
+          <h1>Published map</h1>
+          <button type="button" onClick={() => setViewerToken('')}>
+            Keluar viewer
+          </button>
+          <MapCanvas source={{ kind: 'published', token: viewerToken }} />
+        </section>
+      ) : view === 'workspace' && !loading && session?.user ? (
         <Workspace
           user={session.user}
           busy={busy}
@@ -115,31 +125,53 @@ function App() {
               onLogout={logout}
             />
           ) : view === 'login' ? (
-            <form onSubmit={login}>
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="username"
-                required
-                maxLength={200}
-                disabled={busy}
-              />
-              <label htmlFor="password">Kata sandi</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                maxLength={128}
-                disabled={busy}
-              />
-              <button type="submit" disabled={busy}>
-                Masuk
-              </button>
-            </form>
+            <>
+              <form onSubmit={login}>
+                <label htmlFor="email">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="username"
+                  required
+                  maxLength={200}
+                  disabled={busy}
+                />
+                <label htmlFor="password">Kata sandi</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  maxLength={128}
+                  disabled={busy}
+                />
+                <button type="submit" disabled={busy}>
+                  Masuk
+                </button>
+              </form>
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const token = String(
+                    new FormData(event.currentTarget).get('viewerToken') ?? '',
+                  );
+                  if (/^[a-f0-9]{64}$/.test(token)) setViewerToken(token);
+                }}
+              >
+                <label htmlFor="viewer-token">Token viewer</label>
+                <input
+                  id="viewer-token"
+                  name="viewerToken"
+                  type="password"
+                  autoComplete="off"
+                  required
+                  pattern="[a-f0-9]{64}"
+                />
+                <button type="submit">Buka published map</button>
+              </form>
+            </>
           ) : (
             <button type="button" onClick={refresh} disabled={busy}>
               Muat ulang sesi
