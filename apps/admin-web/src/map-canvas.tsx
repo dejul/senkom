@@ -8,6 +8,62 @@ type Node = MapContentV2['layout']['nodes'][number];
 export type Selection = { kind: 'node' | 'edge'; id: string };
 const grid = 40;
 
+export type EditHistory = {
+  baseline: MapContentV2;
+  present: MapContentV2;
+  past: MapContentV2[];
+  future: MapContentV2[];
+};
+
+// ponytail: Keep 50 local node edits; use compact commands if maps or sessions outgrow this ceiling.
+const historyLimit = 50;
+
+export function commitEdit(
+  history: EditHistory,
+  edit: (map: MapContentV2) => MapContentV2,
+): EditHistory {
+  const next = edit(history.present);
+  return next === history.present
+    ? history
+    : {
+        ...history,
+        present: next,
+        past: [...history.past, history.present].slice(-historyLimit),
+        future: [],
+      };
+}
+
+export function undoEdit(history: EditHistory): EditHistory {
+  const previous = history.past.at(-1);
+  return previous
+    ? {
+        ...history,
+        present: previous,
+        past: history.past.slice(0, -1),
+        future: [history.present, ...history.future],
+      }
+    : history;
+}
+
+export function redoEdit(history: EditHistory): EditHistory {
+  const next = history.future[0];
+  return next
+    ? {
+        ...history,
+        present: next,
+        past: [...history.past, history.present].slice(-historyLimit),
+        future: history.future.slice(1),
+      }
+    : history;
+}
+
+export function isDirty(history: EditHistory): boolean {
+  return (
+    JSON.stringify(history.present.layout.nodes) !==
+    JSON.stringify(history.baseline.layout.nodes)
+  );
+}
+
 export function snapPoint(x: number, y: number, width: number, height: number) {
   return {
     x:
@@ -76,6 +132,58 @@ export function moveSiteNode(
       nodes: map.layout.nodes.map((item) =>
         item.id === id ? { ...item, ...point } : item,
       ),
+    },
+  };
+}
+
+export function editSiteNode(
+  map: MapContentV2,
+  id: string,
+  label: string,
+  symbol: Node['symbol'],
+): MapContentV2 {
+  const node = map.layout.nodes.find(
+    (item) => item.id === id && item.entityType === 'site',
+  );
+  const name = label.trim();
+  if (
+    !node ||
+    name.length > 200 ||
+    (symbol && !Object.hasOwn(symbolCodes, symbol)) ||
+    (node.label === (name || undefined) &&
+      (node.symbol ?? 'site') === (symbol ?? 'site'))
+  )
+    return map;
+  return {
+    ...map,
+    layout: {
+      ...map.layout,
+      nodes: map.layout.nodes.map((item) => {
+        if (item.id !== id) return item;
+        const next = { ...item, symbol: symbol ?? 'site' };
+        if (name) next.label = name;
+        else delete next.label;
+        return next;
+      }),
+    },
+  };
+}
+
+export function deleteSiteNode(map: MapContentV2, id: string): MapContentV2 {
+  if (
+    !map.layout.nodes.some(
+      (node) => node.id === id && node.entityType === 'site',
+    ) ||
+    map.layout.edges.some(
+      (edge) => edge.fromNodeId === id || edge.toNodeId === id,
+    )
+  )
+    return map;
+  return {
+    ...map,
+    layout: {
+      ...map.layout,
+      nodes: map.layout.nodes.filter((node) => node.id !== id),
     },
   };
 }
@@ -401,7 +509,7 @@ export function MapCanvas({
   const kind = source.kind;
   const canEdit = kind === 'draft' && editable;
   const token = source.kind === 'published' ? source.token : '';
-  const [map, setMap] = useState<MapContentV2 | null>(null);
+  const [history, setHistory] = useState<EditHistory | null>(null);
   const [error, setError] = useState('');
   const [view, setView] = useState<View | null>(null);
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
@@ -425,7 +533,7 @@ export function MapCanvas({
     loadMap(kind === 'published' ? { kind, token } : { kind })
       .then((value) => {
         if (!active) return;
-        setMap(value);
+        setHistory({ baseline: value, present: value, past: [], future: [] });
         setView({
           x: 0,
           y: 0,
@@ -447,6 +555,8 @@ export function MapCanvas({
     };
   }, [kind, token]);
 
+  const map = history?.present;
+  const dirty = useMemo(() => (history ? isDirty(history) : false), [history]);
   const layout = map?.layout;
   const availableSites =
     map?.sites.filter(
@@ -488,6 +598,14 @@ export function MapCanvas({
           (edge) => edge.id === selected.id && !hiddenLayers.has(edge.layer),
         )
       : undefined;
+  const linkedEdges =
+    selectedNode?.entityType === 'site'
+      ? (layout?.edges.filter(
+          (edge) =>
+            edge.fromNodeId === selectedNode.id ||
+            edge.toNodeId === selectedNode.id,
+        ).length ?? 0)
+      : 0;
   function move(directionX: number, directionY: number) {
     setView(
       (current) =>
@@ -535,6 +653,31 @@ export function MapCanvas({
     <div
       aria-busy={loading}
       onKeyDown={(event) => {
+        if (canEdit && (event.ctrlKey || event.metaKey) && !event.altKey) {
+          const target = event.target;
+          if (
+            target instanceof HTMLElement &&
+            (target.isContentEditable ||
+              ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+          )
+            return;
+          if (event.key.toLowerCase() === 'z') {
+            event.preventDefault();
+            setHistory(
+              (current) =>
+                current &&
+                (event.shiftKey ? redoEdit(current) : undoEdit(current)),
+            );
+            setNodeDrag(null);
+            return;
+          }
+          if (event.key.toLowerCase() === 'y') {
+            event.preventDefault();
+            setHistory((current) => current && redoEdit(current));
+            setNodeDrag(null);
+            return;
+          }
+        }
         if (event.key === 'Escape') {
           setSelected(null);
           setNodeDrag(null);
@@ -543,7 +686,11 @@ export function MapCanvas({
     >
       <p>
         {source.kind === 'draft' ? 'Draft' : 'Published'} ·{' '}
-        {canEdit ? 'perubahan lokal, belum tersimpan' : 'hanya baca'}
+        {canEdit
+          ? dirty
+            ? 'perubahan lokal belum tersimpan'
+            : 'tidak ada perubahan lokal'
+          : 'hanya baca'}
       </p>
       <MapFeedback loading={loading} error={error} empty={Boolean(empty)} />
       {canEdit && map && (
@@ -566,7 +713,13 @@ export function MapCanvas({
             disabled={!siteId || map.layout.nodes.length >= 50000}
             onClick={() => {
               const id = crypto.randomUUID();
-              setMap((current) => current && addSiteNode(current, siteId, id));
+              setHistory((current) =>
+                current
+                  ? commitEdit(current, (value) =>
+                      addSiteNode(value, siteId, id),
+                    )
+                  : current,
+              );
               setSelected({ kind: 'node', id });
               setSiteId('');
             }}
@@ -574,6 +727,33 @@ export function MapCanvas({
             Tambah node site
           </button>
           {availableSites.length === 0 && <p>Semua site sudah di kanvas.</p>}
+        </div>
+      )}
+      {canEdit && history && (
+        <div className="map-controls" aria-label="Riwayat node">
+          <button
+            type="button"
+            aria-keyshortcuts="Control+Z Meta+Z"
+            disabled={history.past.length === 0}
+            onClick={() =>
+              setHistory((current) => current && undoEdit(current))
+            }
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            aria-keyshortcuts="Control+Y Control+Shift+Z Meta+Shift+Z"
+            disabled={history.future.length === 0}
+            onClick={() =>
+              setHistory((current) => current && redoEdit(current))
+            }
+          >
+            Redo
+          </button>
+          <span role="status">
+            {dirty ? 'Draft berubah' : 'Draft tanpa perubahan'}
+          </span>
         </div>
       )}
       {layout && view && !loading && !empty && (
@@ -727,15 +907,17 @@ export function MapCanvas({
                     point.y - nodeDrag.startY,
                   ) >= 3
                 )
-                  setMap(
-                    (current) =>
-                      current &&
-                      moveSiteNode(
-                        current,
-                        nodeDrag.id,
-                        position.x,
-                        position.y,
-                      ),
+                  setHistory((current) =>
+                    current
+                      ? commitEdit(current, (value) =>
+                          moveSiteNode(
+                            value,
+                            nodeDrag.id,
+                            position.x,
+                            position.y,
+                          ),
+                        )
+                      : current,
                   );
                 setNodeDrag(null);
               }
@@ -780,6 +962,84 @@ export function MapCanvas({
                 : 'Hanya baca.'}{' '}
               Tekan Escape untuk batal.
             </p>
+          )}
+          {canEdit && selectedNode?.entityType === 'site' && (
+            <form
+              id="site-properties"
+              key={`${selectedNode.id}:${selectedNode.label}:${selectedNode.symbol}`}
+              className="site-properties"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const fields = new FormData(event.currentTarget);
+                const label = String(fields.get('label') ?? '');
+                const symbol = String(
+                  fields.get('symbol') ?? 'site',
+                ) as Node['symbol'];
+                setHistory((current) =>
+                  current
+                    ? commitEdit(current, (value) =>
+                        editSiteNode(value, selectedNode.id, label, symbol),
+                      )
+                    : current,
+                );
+              }}
+            >
+              <h3>Properti visual site</h3>
+              <p>
+                Site:{' '}
+                {names.get(selectedNode.entityId) ?? selectedNode.entityId}
+              </p>
+              <p>
+                Posisi: {selectedNode.x}, {selectedNode.y}
+              </p>
+              <label htmlFor="site-label">Label kanvas</label>
+              <input
+                id="site-label"
+                name="label"
+                defaultValue={selectedNode.label ?? ''}
+                maxLength={200}
+              />
+              <label htmlFor="site-symbol">Simbol</label>
+              <select
+                id="site-symbol"
+                name="symbol"
+                defaultValue={selectedNode.symbol ?? 'site'}
+              >
+                {Object.keys(symbolCodes).map((symbol) => (
+                  <option key={symbol} value={symbol}>
+                    {symbol.replaceAll('_', ' ')}
+                  </option>
+                ))}
+              </select>
+              <button type="submit">Terapkan properti</button>
+              <button
+                type="button"
+                disabled={linkedEdges > 0}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      `Hapus node site ${nodeName(selectedNode, names)} dari kanvas?`,
+                    )
+                  ) {
+                    setHistory((current) =>
+                      current
+                        ? commitEdit(current, (value) =>
+                            deleteSiteNode(value, selectedNode.id),
+                          )
+                        : current,
+                    );
+                    setSelected(null);
+                  }
+                }}
+              >
+                Hapus node site
+              </button>
+              {linkedEdges > 0 && (
+                <p role="status">
+                  Node dipakai {linkedEdges} koneksi; hapus koneksi lebih dulu.
+                </p>
+              )}
+            </form>
           )}
         </>
       )}

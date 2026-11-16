@@ -119,7 +119,7 @@ export function Workspace({
           >
             <p className="eyebrow">INSPEKTOR</p>
             <h2 id="properties-title">Properti</h2>
-            <p>Belum ada objek dipilih.</p>
+            <p>Pilih node site di kanvas untuk membuka properti visualnya.</p>
           </aside>
         </div>
       </div>

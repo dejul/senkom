@@ -1,11 +1,11 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 dan 2B-02 VERIFIED/terintegrasi; 2B-03a VERIFIED/terintegrasi; parent 2B-03 WIP**.
+Phase 2B: **parent 2B-01 dan 2B-02 VERIFIED/terintegrasi; 2B-03a VERIFIED/terintegrasi; 2B-03b acceptance lokal VERIFIED; parent 2B-03 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: 2B-03b hanya atas instruksi terpisah. Parent 2B-03 tetap WIP.
+Next executable: integrasikan 2B-03b setelah CI PR exact-head dan merge sesuai Auto-Merge V2. Parent 2B-03 tetap WIP; gate parent hanya atas instruksi terpisah.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
 ## Parent 2B-02 gate (2026-11-16)
@@ -24,6 +24,14 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 - Scope V2: site node dari inventory yang sudah ada, pilih, drag snap-to-grid; map lokal berubah sekali saat pointerup. Editor/admin boleh edit; publisher dan viewer tetap read-only. Tanpa save API, undo/redo, edit properti, delete, atau perubahan backend/schema. Parent 2B-03 tetap WIP.
 - Riwayat sebelum merge: commit implementasi `8d3e8dad3140c4e66efb128cbd0be6dc8dfc4aa1` dan evidence `b6040f4851ef7d6f6abb6082a6987a66fd34ddac` pushed. [PR #12](https://github.com/dejul/senkom/pull/12) OPEN; [CI PR `43833306383`](https://github.com/dejul/senkom/actions/runs/43833306383) pada exact head `b6040f4` SUCCESS, 16/16 mandatory, 0 skip, PHPUnit 141/4.133. Commit bukti CI ini memerlukan CI ulang pada head final. **2B-03a GATE PASSED - AWAITING MERGE**; branch khusus memerlukan merge manual menurut Auto-Merge V2.
 - Implementasi pada `apps/admin-web/src/map-canvas.tsx`, `workspace.tsx`, dan `style.css`; tes baru `tests/admin-map-site-edit.test.ts`. Lokal: fokus 10/10, frontend 106/106, schema 33/33, lint/contract, typecheck/build, Electron, Composer/npm audit PASS. Preview Chromium + API mock menguji create/select/drag, publisher denial, viewport sempit, 0 write dan 0 console error. PHPUnit/HTTP/MySQL lokal NOT RUN; CI PR wajib. [Bukti](phase-2-verification.md#2b-03a---createselectmove-site-node).
+
+## 2B-03b - site properties, delete, undo/redo (2026-11-16)
+
+- Preflight: PR #14 MERGED manual pada `9abd666806fa39726be73eb5ddfb050e039463f7`; head `747708dfe47f2b5f739cd010e814ddfcbd0e7d46` ancestor `origin/main`. [CI integrated main `43851976955`](https://github.com/dejul/senkom/actions/runs/43851976955) pada exact merge SHA SUCCESS, 16/16 mandatory, 0 skip. `main` fast-forward ke SHA itu, worktree bersih, lalu branch `feature/phase-2b-03b` dibuat. 2B-03a tetap terintegrasi.
+- Scope V2: properti visual node site (label/simbol), delete dengan konfirmasi dan penolakan jika edge masih terikat, undo/redo node via tombol dan keyboard, dirty state lokal. Create/select/drag/snap 2B-03a tetap bekerja. Tidak ada save API, perubahan inventory/backend/schema, edit edge, atau parent gate.
+- Implementasi: `apps/admin-web/src/map-canvas.tsx`, `workspace.tsx`, `style.css`; tes baru `tests/admin-map-site-history.test.ts`. Perubahan map hanya di memori, satu drag menjadi satu entri undo saat pointerup; riwayat dibatasi 50 aksi. Parent 2B-03 WIP.
+- Lokal: fokus site 6/6, role/history 12/12, frontend 110/110, schema 33/33, lint/Prettier/kontrak, typecheck/build, Electron smoke, Composer install dry-run/validate/audit, PHP lint dan npm production audit exit 0. Preview Chromium Electron + API mock: edit, delete batal/konfirmasi, undo tombol/redo keyboard, create/drag 2B-03a, publisher read-only, viewport 376 px, 0 write/console error PASS. PHPUnit/HTTP/MySQL lokal NOT RUN karena backend tidak berubah; CI PR wajib. [Bukti rinci](phase-2-verification.md#2b-03b---site-properties-delete-undoredo).
+- Commit implementasi `d4c84c95416e4ade2fea51150f9cfbbd40e413c9` pushed ke `origin/feature/phase-2b-03b`; [PR #15](https://github.com/dejul/senkom/pull/15) OPEN. [CI PR implementasi `43861077433`](https://github.com/dejul/senkom/actions/runs/43861077433) pada exact SHA SUCCESS, 16/16 mandatory, 0 skip; PHPUnit 141/4.133, frontend 110, schema 33, HTTP/MySQL, build/Electron, Composer/npm audit PASS. [Auto-Merge V2 `43861738560`](https://github.com/dejul/senkom/actions/runs/43861738560) menolak `Wrong branch for verified work`; branch khusus membutuhkan merge manual sesudah CI head final. Commit bukti ini memerlukan CI ulang pada head final. **2B-03b GATE PASSED - AWAITING MERGE**; parent 2B-03 WIP.
 
 ## Parent 2B-01 gate ulang (2026-11-16)
 
