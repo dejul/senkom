@@ -1,9 +1,81 @@
-import { useEffect, useState, type PointerEvent } from 'react';
+import { useEffect, useMemo, useState, type PointerEvent } from 'react';
 import type { MapContentV2 } from '@senkom/shared-types';
 import { loadMap, type MapSource } from './map-api';
 
 type View = { x: number; y: number; width: number; height: number };
+type Layer = MapContentV2['layers'][number];
+export type Selection = { kind: 'node' | 'edge'; id: string };
 const grid = 40;
+
+const symbolCodes = {
+  site: 'S',
+  router: 'R',
+  switch: 'SW',
+  otb: 'OTB',
+  odf: 'ODF',
+  splice_closure: 'SC',
+  power_panel: 'P',
+  ups: 'UPS',
+  source: 'SRC',
+  junction: 'J',
+  pdu: 'PDU',
+  other: '?',
+} as const;
+
+export function nodeName(
+  node: MapContentV2['layout']['nodes'][number],
+  names: ReadonlyMap<string, string>,
+): string {
+  return node.label ?? names.get(node.entityId) ?? node.entityId;
+}
+
+export function searchMap(
+  map: MapContentV2,
+  query: string,
+  hiddenLayers: ReadonlySet<Layer>,
+  names: ReadonlyMap<string, string>,
+) {
+  const term = query.trim().toLocaleLowerCase();
+  if (!term) return [];
+  const nodes = map.layout.nodes
+    .filter((node) =>
+      [
+        node.id,
+        node.entityId,
+        node.label ?? '',
+        names.get(node.entityId) ?? '',
+      ].some((value) => value.toLocaleLowerCase().includes(term)),
+    )
+    .map((node) => ({
+      kind: 'node' as const,
+      id: node.id,
+      title: nodeName(node, names),
+    }));
+  const edges = map.layout.edges
+    .filter(
+      (edge) =>
+        !hiddenLayers.has(edge.layer) &&
+        [edge.id, edge.connectionId, edge.label ?? ''].some((value) =>
+          value.toLocaleLowerCase().includes(term),
+        ),
+    )
+    .map((edge) => ({
+      kind: 'edge' as const,
+      id: edge.id,
+      title: edge.label ?? edge.connectionId,
+    }));
+  return [...nodes, ...edges].slice(0, 20);
+}
+
+export function selectWithKey(
+  key: string,
+  selection: Selection,
+  onSelect: (selection: Selection) => void,
+): boolean {
+  if (key !== 'Enter' && key !== ' ') return false;
+  onSelect(selection);
+  return true;
+}
 
 export function zoomView(
   view: View,
@@ -45,6 +117,10 @@ export function MapDrawing({
   onPointerDown,
   onPointerMove,
   onPointerUp,
+  names = new Map(),
+  hiddenLayers = new Set(),
+  selected,
+  onSelect,
 }: {
   layout: MapContentV2['layout'];
   view: View;
@@ -52,6 +128,10 @@ export function MapDrawing({
   onPointerDown?: (event: PointerEvent<SVGSVGElement>) => void;
   onPointerMove?: (event: PointerEvent<SVGSVGElement>) => void;
   onPointerUp?: () => void;
+  names?: ReadonlyMap<string, string>;
+  hiddenLayers?: ReadonlySet<Layer>;
+  selected?: Selection | null;
+  onSelect?: (selection: Selection) => void;
 }) {
   return (
     <svg
@@ -88,26 +168,111 @@ export function MapDrawing({
         height={layout.height}
         fill="url(#map-grid)"
       />
-      {layout.edges.map((edge) => (
-        <polyline
-          key={edge.id}
-          points={edge.points.map((point) => `${point.x},${point.y}`).join(' ')}
-          fill="none"
-          stroke="#426b65"
-          strokeWidth="3"
-        />
-      ))}
-      {layout.nodes.map((node) => (
-        <circle
-          key={node.id}
-          cx={node.x}
-          cy={node.y}
-          r="8"
-          fill="#235d47"
-          stroke="white"
-          strokeWidth="2"
-        />
-      ))}
+      {layout.edges
+        .filter((edge) => !hiddenLayers.has(edge.layer))
+        .map((edge) => (
+          <g
+            key={edge.id}
+            role={onSelect ? 'button' : undefined}
+            tabIndex={onSelect ? 0 : undefined}
+            aria-label={`Koneksi ${edge.label ?? edge.connectionId}, ${edge.layer}`}
+            aria-pressed={
+              onSelect
+                ? selected?.kind === 'edge' && selected.id === edge.id
+                : undefined
+            }
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => onSelect?.({ kind: 'edge', id: edge.id })}
+            onKeyDown={(event) => {
+              if (
+                onSelect &&
+                selectWithKey(
+                  event.key,
+                  { kind: 'edge', id: edge.id },
+                  onSelect,
+                )
+              )
+                event.preventDefault();
+            }}
+          >
+            <polyline
+              points={edge.points
+                .map((point) => `${point.x},${point.y}`)
+                .join(' ')}
+              fill="none"
+              stroke={
+                selected?.kind === 'edge' && selected.id === edge.id
+                  ? '#c36b22'
+                  : '#426b65'
+              }
+              strokeWidth="6"
+            />
+            {edge.label && (
+              <text
+                x={edge.points[Math.floor(edge.points.length / 2)]?.x}
+                y={edge.points[Math.floor(edge.points.length / 2)]?.y}
+                className="map-label"
+              >
+                {edge.label}
+              </text>
+            )}
+          </g>
+        ))}
+      {layout.nodes.map((node) => {
+        const symbol =
+          node.symbol ?? (node.entityType === 'site' ? 'site' : 'other');
+        const active = selected?.kind === 'node' && selected.id === node.id;
+        return (
+          <g
+            key={node.id}
+            role={onSelect ? 'button' : undefined}
+            tabIndex={onSelect ? 0 : undefined}
+            aria-label={`${node.entityType === 'site' ? 'Site' : 'Perangkat'} ${nodeName(node, names)}, simbol ${symbol}`}
+            aria-pressed={onSelect ? active : undefined}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => onSelect?.({ kind: 'node', id: node.id })}
+            onKeyDown={(event) => {
+              if (
+                onSelect &&
+                selectWithKey(
+                  event.key,
+                  { kind: 'node', id: node.id },
+                  onSelect,
+                )
+              )
+                event.preventDefault();
+            }}
+          >
+            {symbol === 'site' ? (
+              <circle
+                cx={node.x}
+                cy={node.y}
+                r="14"
+                fill="#235d47"
+                stroke={active ? '#c36b22' : 'white'}
+                strokeWidth="3"
+              />
+            ) : (
+              <rect
+                x={node.x - 15}
+                y={node.y - 13}
+                width="30"
+                height="26"
+                rx="4"
+                fill="#235d47"
+                stroke={active ? '#c36b22' : 'white'}
+                strokeWidth="3"
+              />
+            )}
+            <text x={node.x} y={node.y + 4} className="map-symbol">
+              {symbolCodes[symbol]}
+            </text>
+            <text x={node.x} y={node.y + 30} className="map-label">
+              {nodeName(node, names)}
+            </text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -144,6 +309,9 @@ export function MapCanvas({ source }: { source: MapSource }) {
   const [view, setView] = useState<View | null>(null);
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hiddenLayers, setHiddenLayers] = useState<Set<Layer>>(new Set());
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState<Selection | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -174,6 +342,27 @@ export function MapCanvas({ source }: { source: MapSource }) {
 
   const layout = map?.layout;
   const empty = layout?.nodes.length === 0 && layout.edges.length === 0;
+  const names = useMemo(
+    () =>
+      new Map([
+        ...(map?.sites ?? []).map((site) => [site.id, site.name] as const),
+        ...(map?.devices ?? []).map(
+          (device) => [device.id, device.code] as const,
+        ),
+      ]),
+    [map],
+  );
+  const matches = map ? searchMap(map, query, hiddenLayers, names) : [];
+  const selectedNode =
+    selected?.kind === 'node'
+      ? layout?.nodes.find((node) => node.id === selected.id)
+      : undefined;
+  const selectedEdge =
+    selected?.kind === 'edge'
+      ? layout?.edges.find(
+          (edge) => edge.id === selected.id && !hiddenLayers.has(edge.layer),
+        )
+      : undefined;
   function move(directionX: number, directionY: number) {
     setView(
       (current) =>
@@ -200,11 +389,68 @@ export function MapCanvas({ source }: { source: MapSource }) {
   }
 
   return (
-    <div aria-busy={loading}>
+    <div
+      aria-busy={loading}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') setSelected(null);
+      }}
+    >
       <p>{source.kind === 'draft' ? 'Draft' : 'Published'} · hanya baca</p>
       <MapFeedback loading={loading} error={error} empty={Boolean(empty)} />
       {layout && view && !loading && !empty && (
         <>
+          <fieldset className="map-layers">
+            <legend>Layer koneksi</legend>
+            {map.layers.map((layer) => (
+              <label key={layer}>
+                <input
+                  type="checkbox"
+                  checked={!hiddenLayers.has(layer)}
+                  onChange={() => {
+                    setHiddenLayers((current) => {
+                      const next = new Set(current);
+                      if (next.has(layer)) next.delete(layer);
+                      else next.add(layer);
+                      return next;
+                    });
+                    setSelected(null);
+                  }}
+                />
+                {layer.replaceAll('_', ' ')}
+              </label>
+            ))}
+          </fieldset>
+          <label htmlFor="map-search">Cari node atau koneksi</label>
+          <input
+            id="map-search"
+            type="search"
+            value={query}
+            maxLength={200}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          {query.trim() && (
+            <div className="map-results" aria-live="polite">
+              {matches.length ? (
+                <ul>
+                  {matches.map((item) => (
+                    <li key={`${item.kind}:${item.id}`}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelected({ kind: item.kind, id: item.id })
+                        }
+                      >
+                        {item.kind === 'node' ? 'Node' : 'Koneksi'}:{' '}
+                        {item.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>Tidak ditemukan.</p>
+              )}
+            </div>
+          )}
           <div className="map-controls" aria-label="Kontrol kanvas">
             <button
               type="button"
@@ -270,6 +516,10 @@ export function MapCanvas({ source }: { source: MapSource }) {
             layout={layout}
             view={view}
             kind={source.kind}
+            names={names}
+            hiddenLayers={hiddenLayers}
+            selected={selected}
+            onSelect={setSelected}
             onPointerDown={(event) => {
               event.currentTarget.setPointerCapture(event.pointerId);
               setDrag({ x: event.clientX, y: event.clientY });
@@ -277,6 +527,15 @@ export function MapCanvas({ source }: { source: MapSource }) {
             onPointerMove={pointerMove}
             onPointerUp={() => setDrag(null)}
           />
+          {(selectedNode || selectedEdge) && (
+            <p role="status" className="map-selection">
+              Dipilih:{' '}
+              {selectedNode
+                ? `${nodeName(selectedNode, names)} (${selectedNode.entityType}, ${selectedNode.id})`
+                : `${selectedEdge?.label ?? selectedEdge?.connectionId} (${selectedEdge?.layer}, ${selectedEdge?.id})`}
+              . Hanya baca. Tekan Escape untuk batal.
+            </p>
+          )}
         </>
       )}
     </div>

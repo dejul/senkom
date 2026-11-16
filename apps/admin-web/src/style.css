@@ -85,6 +85,56 @@ header span,
   flex-wrap: wrap;
   gap: 6px;
 }
+.map-layers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 12px 0;
+  border: 1px solid #b7c6b7;
+}
+.map-layers label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.map-layers input {
+  width: auto;
+  margin: 0;
+}
+.map-results ul {
+  max-height: 180px;
+  overflow: auto;
+  padding-left: 20px;
+}
+.map-results button {
+  margin: 2px 0;
+  padding: 4px 8px;
+}
+.map-label,
+.map-symbol {
+  text-anchor: middle;
+  pointer-events: none;
+  font:
+    12px 'Bahnschrift',
+    sans-serif;
+}
+.map-label {
+  fill: #183133;
+  stroke: white;
+  stroke-width: 3px;
+  paint-order: stroke;
+}
+.map-symbol {
+  fill: white;
+  font-size: 8px;
+}
+.map-viewport g[role='button'] {
+  cursor: pointer;
+}
+.map-viewport g[role='button']:focus-visible > :is(circle, rect, polyline) {
+  stroke: #c36b22;
+  stroke-width: 5px;
+}
 .map-controls button {
   margin: 0;
   padding: 8px 12px;
