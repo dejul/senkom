@@ -26,6 +26,8 @@ Defect awal: preview Chromium menampilkan `API tidak dapat dijangkau` karena `Ad
 | PHPUnit/HTTP/MySQL lokal | Tidak dijalankan lokal; CI integrated main exact merge SHA lulus sebelum fix. CI head PR gate wajib mengulang pada perubahan ini.                                                                                                   | NOT RUN lokal; CI PR PENDING |
 | Secret scan/diff review  | `git diff --check` exit 0; 31 added lines diperiksa dengan pola private key, cloud/GitHub token, bearer dan assignment credential: 0 hit. Staged 4 path in-scope; `git diff --cached --check` exit 0 dan scan added lines 31/0 hit. | PASS                         |
 
+Commit implementasi/evidence `2a92bb3c88e137be9cd2584369987820daff8a48`. PR/CI head final belum ada.
+
 Remaining: jalankan review diff/secret, CI exact-head pada PR gate, merge manual karena parent-only dan `apps/admin-web/src/api.ts`/`scripts/electron-smoke.cjs` sensitif menurut Auto-Merge V2, lalu periksa main terbaru. Parent tidak boleh dinyatakan VERIFIED selama PR OPEN. Tidak ada 2B-03.
 
 ## Verified Fix: laravel-concurrency-advisory
