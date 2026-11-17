@@ -9,6 +9,7 @@ import { parseMapContent } from '@senkom/map-schema';
 import type { MapContentV2 } from '@senkom/shared-types';
 import { loadMap, type MapSource } from './map-api';
 import { FoForms } from './fo-forms';
+import { LogicalForms } from './logical-forms';
 
 type View = { x: number; y: number; width: number; height: number };
 type Layer = MapContentV2['layers'][number];
@@ -1247,6 +1248,14 @@ export function MapCanvas({
       )}
       {canEdit && map && (
         <FoForms
+          map={map}
+          onChange={(next) =>
+            setHistory((current) => current && commitEdit(current, () => next))
+          }
+        />
+      )}
+      {canEdit && map && (
+        <LogicalForms
           map={map}
           onChange={(next) =>
             setHistory((current) => current && commitEdit(current, () => next))
