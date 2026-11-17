@@ -221,7 +221,7 @@ export function PowerForms({
       <p>
         Perangkat sumber/beban dan terminal dibuat melalui form perangkat/port.
         Sirkuit memakai ID terminal dan kabel dari draft API. Perubahan hanya
-        lokal; gambar tidak mengubah konektivitas Power.
+        lokal sampai Simpan draft; gambar tidak mengubah konektivitas Power.
       </p>
       <form onSubmit={submitCable}>
         <h4>Tambah kabel Power</h4>

@@ -7,7 +7,13 @@ import {
 } from 'react';
 import { parseMapContent } from '@senkom/map-schema';
 import type { MapContentV2 } from '@senkom/shared-types';
-import { loadMap, type MapSource } from './map-api';
+import {
+  loadDraft,
+  loadMap,
+  saveDraft,
+  type DraftMap,
+  type MapSource,
+} from './map-api';
 import { FoForms } from './fo-forms';
 import { LogicalForms } from './logical-forms';
 import { PowerForms } from './power-forms';
@@ -74,6 +80,21 @@ export function redoEdit(history: EditHistory): EditHistory {
 
 export function isDirty(history: EditHistory): boolean {
   return JSON.stringify(history.present) !== JSON.stringify(history.baseline);
+}
+
+export function acceptSavedDraft(
+  history: EditHistory,
+  submitted: MapContentV2,
+  saved: DraftMap,
+): EditHistory {
+  return {
+    ...history,
+    baseline: saved.content,
+    present:
+      JSON.stringify(history.present) === JSON.stringify(submitted)
+        ? saved.content
+        : history.present,
+  };
 }
 
 export function addDevice(map: MapContentV2, device: Device): MapContentV2 {
@@ -846,8 +867,13 @@ export function MapCanvas({
   const kind = source.kind;
   const canEdit = kind === 'draft' && editable;
   const token = source.kind === 'published' ? source.token : '';
+  // ponytail: Unsaved draft lives in page memory; add durable local storage only if reload recovery enters approved scope.
   const [history, setHistory] = useState<EditHistory | null>(null);
   const [error, setError] = useState('');
+  const [etag, setEtag] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [saveFeedback, setSaveFeedback] = useState('');
   const [view, setView] = useState<View | null>(null);
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const [nodeDrag, setNodeDrag] = useState<{
@@ -884,15 +910,27 @@ export function MapCanvas({
 
   useEffect(() => {
     let active = true;
-    loadMap(kind === 'published' ? { kind, token } : { kind })
-      .then((value) => {
+    (kind === 'draft'
+      ? loadDraft()
+      : loadMap({ kind: 'published', token }).then((content) => ({
+          content,
+          etag: null,
+        }))
+    )
+      .then(({ content, etag: loadedEtag }) => {
         if (!active) return;
-        setHistory({ baseline: value, present: value, past: [], future: [] });
+        setHistory({
+          baseline: content,
+          present: content,
+          past: [],
+          future: [],
+        });
+        setEtag(loadedEtag);
         setView({
           x: 0,
           y: 0,
-          width: value.layout.width,
-          height: value.layout.height,
+          width: content.layout.width,
+          height: content.layout.height,
         });
       })
       .catch((cause: unknown) => {
@@ -911,6 +949,28 @@ export function MapCanvas({
 
   const map = history?.present;
   const dirty = useMemo(() => (history ? isDirty(history) : false), [history]);
+
+  async function save() {
+    if (!canEdit || !history || !dirty || !etag || saving) return;
+    const submitted = history.present;
+    setSaving(true);
+    setSaveError('');
+    setSaveFeedback('');
+    try {
+      const saved = await saveDraft(submitted, etag);
+      setHistory(
+        (current) => current && acceptSavedDraft(current, submitted, saved),
+      );
+      setEtag(saved.etag);
+      setSaveFeedback('Draft tersimpan di server.');
+    } catch (cause) {
+      setSaveError(
+        cause instanceof Error ? cause.message : 'Draft tidak dapat disimpan.',
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
   const layout = map?.layout;
   const availableSites =
     map?.sites.filter(
@@ -1169,8 +1229,8 @@ export function MapCanvas({
         <section className="inventory-forms" aria-label="Perangkat dan port">
           <h3>Inventaris perangkat dan port</h3>
           <p>
-            Referensi memakai ID dari draft API. Perubahan tetap lokal sampai
-            fitur simpan draft tersedia.
+            Referensi memakai ID dari draft API. Simpan perubahan dengan tombol
+            Simpan draft.
           </p>
           <form onSubmit={submitDevice}>
             <h4>Tambah perangkat</h4>
@@ -1456,7 +1516,7 @@ export function MapCanvas({
         </form>
       )}
       {canEdit && history && (
-        <div className="map-controls" aria-label="Riwayat node">
+        <div className="map-controls" aria-label="Riwayat draft">
           <button
             type="button"
             aria-keyshortcuts="Control+Z Meta+Z"
@@ -1480,6 +1540,19 @@ export function MapCanvas({
           <span role="status">
             {dirty ? 'Draft berubah' : 'Draft tanpa perubahan'}
           </span>
+          <button
+            type="button"
+            disabled={!dirty || saving || !etag}
+            onClick={save}
+          >
+            {saving ? 'Menyimpan draft…' : 'Simpan draft'}
+          </button>
+          {saveError && (
+            <p role="alert" className="error">
+              {saveError}
+            </p>
+          )}
+          {saveFeedback && <p role="status">{saveFeedback}</p>}
         </div>
       )}
       {layout && view && !loading && !empty && (
