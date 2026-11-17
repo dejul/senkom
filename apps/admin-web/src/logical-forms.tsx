@@ -247,8 +247,8 @@ export function LogicalForms({
       <p>
         Urutan core mengikuti daftar di bawah. Konflik draft ditolak; masalah
         publish ditampilkan sebagai peringatan. Validasi server tetap final.
-        Perubahan hanya lokal, tanpa mengubah kabel, core fisik, terminasi, atau
-        splice.
+        Perubahan lokal sampai Simpan draft, tanpa mengubah kabel, core fisik,
+        terminasi, atau splice.
       </p>
       <form onSubmit={submit}>
         <label htmlFor="logical-link">Logical link</label>

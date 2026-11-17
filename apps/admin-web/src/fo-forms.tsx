@@ -191,7 +191,7 @@ export function FoForms({
       <h3>Inventaris fiber optik</h3>
       <p>
         Kabel, core, terminasi, dan splice memakai ID draft API. Perubahan hanya
-        lokal; persilangan gambar tidak membuat splice.
+        lokal sampai Simpan draft; persilangan gambar tidak membuat splice.
       </p>
       <form
         onSubmit={(event) =>

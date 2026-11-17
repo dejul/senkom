@@ -106,7 +106,7 @@ export function CorridorForms({
       <p>
         Pilih kabel FO dan Power secara eksplisit dari draft API. Keanggotaan
         koridor tidak mengubah kabel, sirkuit Power, logical link, atau gambar.
-        Perubahan hanya lokal.
+        Perubahan lokal sampai Simpan draft.
       </p>
       <form onSubmit={submit}>
         <label htmlFor="corridor-select">Koridor</label>
