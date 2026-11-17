@@ -20,6 +20,8 @@ Preview terintegrasi `.artifacts/parent-2b06-preview/browser-smoke.cjs` (ignored
 
 Tidak ada defect blocking pada scope parent yang disetujui. Edit kabel Power tidak diuji karena bukan acceptance 2B-06a/parent; UI API nyata tetap NOT RUN. Parent 2B-06 belum VERIFIED sampai bukti gate terintegrasi dan CI postmerge PASS. Tidak ada perubahan kode produk atau awal 2B-07.
 
+Commit evidence awal `3bd8400d23bd5f46e6de9caecd1e708609a2384e` pushed ke `feature/phase-2b-06-gate`; [PR parent #29](https://github.com/dejul/senkom/pull/29) OPEN menuju `main`. CI exact-head PR masih berjalan; parent-only PR memerlukan merge manual menurut `docs/git-workflow.md`. Tidak ada klaim VERIFIED sebelum merge/postmerge CI.
+
 ## 2B-06b - Corridor/shared-route forms
 
 Status: **VERIFIED** (2026-11-17). [PR #27](https://github.com/dejul/senkom/pull/27) MERGED manual pada `b9696b29cba783dde9a0074daa12bb55cac0194c`; head `7ac911bea18cb71fd0b0fbddca8560814dc259ad` ancestor `origin/main`. [CI PR exact-head `44097282091`](https://github.com/dejul/senkom/actions/runs/44097282091) dan [CI postmerge `44098705647`](https://github.com/dejul/senkom/actions/runs/44098705647) SUCCESS, masing-masing **16/16 mandatory PASS, 0 skip**. [Auto-Merge V2 `44098460458`](https://github.com/dejul/senkom/actions/runs/44098460458) menolak `Missing or ambiguous verification claim`; merge manual selesai. Parent 2B-06 tetap **WIP** sampai gate parent terpisah. 2B-07 belum dimulai.
