@@ -1,20 +1,22 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 sampai 2B-05 VERIFIED/terintegrasi; 2B-06a dan 2B-06b VERIFIED/terintegrasi; parent 2B-06 WIP**.
+Phase 2B: **parent 2B-01 sampai 2B-06 VERIFIED/terintegrasi**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan PR parent 2B-06 gate, CI exact-head dan postmerge. Server save/publish tetap milik 2B-07; 2B-07 belum dimulai.
+Next executable: 2B-07a hanya pada instruksi terpisah. Server save/publish tetap milik 2B-07; 2B-07 belum dimulai.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
 ## Parent 2B-06 gate (2026-11-17)
 
+- Closure 2026-11-18: [PR parent #29](https://github.com/dejul/senkom/pull/29) MERGED manual pada `cd20d914a2b24bbffc8acb40ac4eb6811dadf5da`; head final `cdcf293bb235c40fd49a2a2355260a64f1fcf3d6` ancestor `origin/main`. [CI PR exact-head `44105907590`](https://github.com/dejul/senkom/actions/runs/44105907590) dan [CI postmerge `44107426624`](https://github.com/dejul/senkom/actions/runs/44107426624) SUCCESS, masing-masing 16/16 mandatory PASS, 0 skip. [Auto-Merge V2 `44107348690`](https://github.com/dejul/senkom/actions/runs/44107348690) memblokir parent-only PR karena `Missing or ambiguous verification claim`; merge manual selesai. **Parent 2B-06 VERIFIED** tanpa defect blocking. Catatan WIP/pending berikut adalah snapshot pra-merge. 2B-07 belum dimulai.
 - Branch `feature/phase-2b-06-gate` dari `origin/main` `e71d3cf7d945f205755ebae17085a635b31bc431`; worktree awal bersih, stash/worktree lain utuh. PR #26/#27/#28 MERGED; SHA merge dan CI postmerge ketiganya diverifikasi, masing-masing 16/16 mandatory PASS, 0 skip. Bukti child 2B-06a/b terintegrasi.
 - Acceptance yang tersedia: create kabel/sirkuit Power dan edit sirkuit, validasi source/load/terminal/supply/path, koridor FO+Power, referensi dan duplikat, integritas kabel/sirkuit/logical/layout, draft/role/Undo/Redo, serta regresi canvas/node/edge/FO/logical PASS. Fokus 24/24; frontend 138/138; lint, kontrak, typecheck, build, Electron, PHP lint, Composer dan npm audit exit 0. Preview Web Admin gabungan dengan API mock exit 0, viewport 376 px, 0 API write/error konsol. PHPUnit/HTTP/MySQL lokal dan UI API nyata NOT RUN; CI postmerge #28 menjalankan backend. [Matriks dan perintah](phase-2-verification.md#parent-2b-06-gate-2026-11-17).
 - Rekonsiliasi scope **B**: V2 2B-06a/b (`docs/codegen-microbatch-plan-v2.md` baris 88–89) dan acceptance parent (`docs/codegen-plan.md` baris 146) tidak mensyaratkan edit kabel Power. Instruksi edit kabel pada prompt gate sebelumnya melampaui plan; bukti lama tetap utuh. [Analisis rinci](phase-2-verification.md#parent-2b-06-gate-2026-11-17).
-- **Parent 2B-06 WIP**: acceptance approved lokal PASS tanpa defect blocking; menunggu PR gate, CI exact-head, merge dan CI postmerge sebelum VERIFIED. 2B-07 belum dimulai.
+- Snapshot pra-merge: **Parent 2B-06 WIP**; acceptance approved lokal PASS tanpa defect blocking; saat itu menunggu PR gate, CI exact-head, merge dan CI postmerge sebelum VERIFIED. 2B-07 belum dimulai.
 - Commit evidence awal `3bd8400d23bd5f46e6de9caecd1e708609a2384e` pushed; [PR parent #29](https://github.com/dejul/senkom/pull/29) OPEN. CI exact-head PR berjalan; merge parent-only tetap manual.
+- Commit dokumentasi `ee12dfd0d558de90418eee1fff3af0e4017373a2` ter-push setelah PR #29 MERGED dan tidak masuk merge SHA; branch `fix/phase-2b-06-closure` dari merge SHA merekonsiliasi bukti tanpa mengubah source produk.
 
 ## 2B-06b - form koridor/jalur bersama (2026-11-17)
 
