@@ -5,8 +5,15 @@ Phase 2B: **parent 2B-01 sampai 2B-05 VERIFIED/terintegrasi; 2B-05a, 2B-05b, dan
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: tunggu instruksi eksplisit untuk 2B-06a. Server save/publish tetap milik 2B-07.
+Next executable: 2B-06a diminta eksplisit pada 2026-11-17; gate PR/merge masih pending. Server save/publish tetap milik 2B-07.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## 2B-06a - form Power source/load/main/backup (2026-11-17)
+
+- PR #25 MERGED pada `824aca0c43d1318f10135d4a082f0e909b258948`; commit koreksi `f6f71fef573a4de6c170a7adfe606aa5f343d6be` ancestor `origin/main`. [CI PR exact-head `44038157094`](https://github.com/dejul/senkom/actions/runs/44038157094) dan [CI postmerge `44039229982`](https://github.com/dejul/senkom/actions/runs/44039229982) SUCCESS pada SHA masing-masing, 16/16 mandatory PASS, 0 skip. Dokumen koreksi terintegrasi; parent **2B-05 VERIFIED** tanpa defect blocking.
+- Scope V2 berikutnya `2B-06a`: form Power source/load/main/backup dan validasi terminal/supply type; parent `docs/codegen-plan.md` mewajibkan relasi Power terlihat. Branch `feature/phase-2b-06a` dari merge SHA PR #25, worktree awal bersih; stash/worktree lain utuh. Form lokal menambah kabel Power, memilih terminal sumber/beban dan supply PLN/UPS/backup, mengurutkan kabel circuit, menolak referensi/duplikat/jenis sumber salah, dan memperlihatkan masalah path. 2B-06b corridor/shared-route, 2B-07 save/publish, API/backend/schema, dan konektivitas dari gambar di luar scope.
+- Tes fokus Power+regresi 15/15, frontend 134/134, typecheck, lint/format/kontrak/build, Electron smoke, PHP lint, Composer validate/audit, npm production audit exit 0. Preview Electron Chromium + API mock: tambah kabel/sirkuit backup, UPS invalid, path, Undo/Redo, role, inventory/FO/logical/node-edge, viewport 376 px, 0 API write/error konsol PASS. PHPUnit/HTTP/MySQL lokal dan UI API nyata **NOT RUN**; CI PR wajib menguji backend. [Matriks rinci](phase-2-verification.md#2b-06a---power-sourceloadmainbackup-forms).
+- Commit implementasi `dcb1469f1200b9216ba719fc472446b4cc34ee6c` pushed; [PR #26](https://github.com/dejul/senkom/pull/26) OPEN. [CI PR `44087815330`](https://github.com/dejul/senkom/actions/runs/44087815330) SUCCESS pada commit itu, 16/16 mandatory PASS, 0 skip. [Auto-Merge V2 `44088524887`](https://github.com/dejul/senkom/actions/runs/44088524887) menolak: `Missing or ambiguous verification claim`; status belum VERIFIED sehingga tidak ada claim. Commit evidence berikutnya memerlukan CI exact-head ulang. Status **LOCAL ACCEPTANCE PASS; EVIDENCE CI/MERGE PENDING**. Jangan mulai 2B-06b.
 
 ## Parent 2B-05 gate (2026-11-17)
 
