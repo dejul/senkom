@@ -1,14 +1,23 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 sampai 2B-05 VERIFIED/terintegrasi; 2B-05a, 2B-05b, dan 2B-05c VERIFIED/terintegrasi**.
+Phase 2B: **parent 2B-01 sampai 2B-05 VERIFIED/terintegrasi; 2B-06a VERIFIED/terintegrasi; parent 2B-06 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: 2B-06a diminta eksplisit pada 2026-11-17; gate PR/merge masih pending. Server save/publish tetap milik 2B-07.
+Next executable: 2B-06b diminta eksplisit pada 2026-11-17; gate PR/merge masih pending. Server save/publish tetap milik 2B-07.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
+## 2B-06b - form koridor/jalur bersama (2026-11-17)
+
+- PR #26 MERGED manual pada `946c46efdbd5bb696d14e876a7fe2f966212a1ec`; head final `4da31e9d218f3a0ffce321df1a3c4bf289c42a8b` ancestor `origin/main`. [CI PR exact-head `44088905722`](https://github.com/dejul/senkom/actions/runs/44088905722) dan [CI postmerge `44090910579`](https://github.com/dejul/senkom/actions/runs/44090910579) SUCCESS, masing-masing 16/16 mandatory PASS, 0 skip. 2B-06a **VERIFIED/terintegrasi**; catatan OPEN/pending di bawah adalah snapshot historis.
+- Scope V2 `2B-06b`: form corridor/shared-route memakai `routes(id,code,name,cableIds)`, membership kabel FO/Power eksplisit dari draft API; tanpa urutan kabel, metadata/status, relasi site/device langsung, eksklusivitas kabel, atau inferensi dari layout. Branch `feature/phase-2b-06b` dari PR #26 merge SHA, worktree awal bersih; stash/worktree lain utuh. Form create/edit koridor menolak nama kosong, kabel kosong/hilang/duplikat, dan kode duplikat; kabel dan sirkuit Power tetap utuh. Parent 2B-06 masih WIP, 2B-07 tidak dimulai.
+- Fokus koridor+regresi Power/FO/logical/canvas 24/24, frontend 138/138, typecheck, lint/format/kontrak/build, Electron smoke, PHP lint, Composer validate/audit, npm production audit exit 0. Preview Electron Chromium + API mock: koridor FO+Power, Power cable dari form 2B-06a, error kode/kabel kosong, Undo/Redo, dirty, editor/admin/publisher/viewer/published, viewport 376 px, 0 API write/error konsol PASS. PHPUnit/HTTP/MySQL lokal dan UI API nyata **NOT RUN**; CI PR wajib menjalankan backend. [Matriks rinci](phase-2-verification.md#2b-06b---corridorshared-route-forms).
+- Commit implementasi `8e5a8cb263fbbaed56d4bc6677216b41a939c95c` pushed; [PR #27](https://github.com/dejul/senkom/pull/27) OPEN. [CI PR awal `44097046227`](https://github.com/dejul/senkom/actions/runs/44097046227) berjalan pada SHA implementasi saat catatan ini; commit evidence memerlukan CI exact-head baru. Status **LOCAL ACCEPTANCE PASS; EVIDENCE CI/MERGE PENDING**. Jangan tandai 2B-06b VERIFIED atau mulai parent gate/2B-07 sebelum integrasi.
+
 ## 2B-06a - form Power source/load/main/backup (2026-11-17)
+
+- Closure 2026-11-17: PR #26 dan postmerge CI di atas membuktikan integrasi 2B-06a; **VERIFIED**. Catatan status pending berikut adalah snapshot pra-merge.
 
 - PR #25 MERGED pada `824aca0c43d1318f10135d4a082f0e909b258948`; commit koreksi `f6f71fef573a4de6c170a7adfe606aa5f343d6be` ancestor `origin/main`. [CI PR exact-head `44038157094`](https://github.com/dejul/senkom/actions/runs/44038157094) dan [CI postmerge `44039229982`](https://github.com/dejul/senkom/actions/runs/44039229982) SUCCESS pada SHA masing-masing, 16/16 mandatory PASS, 0 skip. Dokumen koreksi terintegrasi; parent **2B-05 VERIFIED** tanpa defect blocking.
 - Scope V2 berikutnya `2B-06a`: form Power source/load/main/backup dan validasi terminal/supply type; parent `docs/codegen-plan.md` mewajibkan relasi Power terlihat. Branch `feature/phase-2b-06a` dari merge SHA PR #25, worktree awal bersih; stash/worktree lain utuh. Form lokal menambah kabel Power, memilih terminal sumber/beban dan supply PLN/UPS/backup, mengurutkan kabel circuit, menolak referensi/duplikat/jenis sumber salah, dan memperlihatkan masalah path. 2B-06b corridor/shared-route, 2B-07 save/publish, API/backend/schema, dan konektivitas dari gambar di luar scope.
