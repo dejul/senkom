@@ -5,8 +5,16 @@ Phase 2B: **parent 2B-01 sampai 2B-06 VERIFIED/terintegrasi**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: 2B-07a hanya pada instruksi terpisah. Server save/publish tetap milik 2B-07; 2B-07 belum dimulai.
+Next executable: integrasi 2B-07a; 2B-07b memerlukan instruksi terpisah setelah 2B-07a VERIFIED. Parent 2B-07 WIP.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## 2B-07a - Save Draft, dirty state, request failure (2026-11-18)
+
+- Prasyarat: [PR closure #30](https://github.com/dejul/senkom/pull/30) MERGED pada `ee32cf73e6f9b30eadb8e09c379f3e48bd3a902d`; head `686821d8acec8e7e4ae01b77067b0cf154625602` ancestor `origin/main`. [CI postmerge `44145850265`](https://github.com/dejul/senkom/actions/runs/44145850265) SUCCESS pada SHA merge, 16/16 mandatory PASS, 0 skip. Dokumen closure parent 2B-06 VERIFIED terintegrasi; tidak ada defect blocking.
+- Branch `feature/phase-2b-07a` dari SHA merge #30; worktree awal bersih, worktree/stash lain utuh. Scope V2 hanya Save Draft, dirty state dan request failure: draft lokal bertahan saat simpan gagal. `PUT /api/v1/admin/map/draft` existing memakai CSRF dan exact `If-Match` ETag. Editor/admin dapat menyimpan draft; publisher/viewer/published read-only. Server memvalidasi, mengotorisasi dan menyimpan atomik. Validate/publish 2B-07b, pemulihan konflik 409 2B-07c, E2E API nyata 2B-09a; tanpa perubahan backend, schema, OpenAPI atau dependency.
+- Implementasi: GET draft memeriksa versi/ETag; tombol Simpan draft aktif hanya ketika dirty dan tidak sedang menyimpan; PUT mengirim konten penuh, CSRF dan If-Match. Respons sukses memperbarui baseline/ETag kanonis tanpa membuang edit baru selama request. Kegagalan network/403/409/419/422 mempertahankan present, Undo/Redo dan dirty; pesan error tampil. Copy form menjelaskan perubahan lokal sampai Simpan draft.
+- Fokus `npm test -- tests/admin-map-draft-save.test.ts tests/admin-map-canvas.test.ts`: exit 0, 12/12. Full `npm test`: exit 0, 145/145. `npm run lint`, `npm run build` (kontrak/typecheck/production builds), `npm run smoke:desktop`, `php apps/api/tools/lint.php`, `composer --working-dir apps/api validate --strict`, `composer --working-dir apps/api audit --locked`, `npm audit --omit=dev --audit-level=low`: exit 0; audit 0 temuan. Preview Electron Chromium + API mock: save/reload, 422/409 mempertahankan edit dan Undo/Redo, role/published, 376 px, 0 error konsol PASS. PHPUnit/HTTP/MySQL lokal dan UI API nyata NOT RUN; CI PR wajib menjalankan backend/HTTP/MySQL.
+- Implementasi commit `24555d6cdce09eb227ea44bd9280d0b7a19971ba`. Status **WIP: LOCAL ACCEPTANCE PASS; PR/CI/MERGE PENDING**. 2B-07a belum VERIFIED; parent 2B-07 WIP. [Matriks rinci](phase-2-verification.md#2b-07a---save-draft-dirty-state-request-failure).
 
 ## Parent 2B-06 gate (2026-11-17)
 
