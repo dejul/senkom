@@ -1,12 +1,19 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01, 2B-02, dan 2B-03 VERIFIED/terintegrasi; 2B-04a VERIFIED/terintegrasi; 2B-04b GATE PASSED - AWAITING MERGE; parent 2B-04 WIP**.
+Phase 2B: **parent 2B-01, 2B-02, dan 2B-03 VERIFIED/terintegrasi; 2B-04a/b terintegrasi; Electron postmerge CI gagal; parent 2B-04 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: tunggu CI exact-head dokumentasi dan merge manual PR #18; parent 2B-04 tetap WIP. Jangan mulai batch berikutnya tanpa instruksi.
+Next executable: integrasikan fix Electron setelah CI exact-head dan merge manual, verifikasi ulang CI `main`, lalu lanjutkan parent gate 2B-04. Jangan mulai batch berikutnya tanpa instruksi.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## Recovery Electron CI untuk parent 2B-04 (2026-11-16)
+
+- PR #18 MERGED pada `c824558e859162411f0e32fb7ffcc5e444701907`; head `e0dc07395a59f3d571a477b088a0d29132d7737b` ancestor `origin/main`. [CI PR `43894841264`](https://github.com/dejul/senkom/actions/runs/43894841264) PASS 16/16, 0 skip; [CI postmerge `43898923692`](https://github.com/dejul/senkom/actions/runs/43898923692) FAIL 13/16: Electron smoke `rendererFailures` 0, expected 1; OpenAPI dan npm audit SKIPPED.
+- Branch fix `fix/electron-renderer-metrics` dari integrated `main`; worktree terpisah. Perubahan dokumentasi belum di-commit pada `feature/phase-2b-04-gate` tetap utuh. Root cause: event renderer crash menaikkan counter, tetapi objek performance yang dikembalikan IPC baru diperbarui interval 5 detik. Fix menyinkronkan counter pada event; smoke memeriksa counter segera setelah recovery.
+- Reproduksi lokal Node 24.22.2/Electron 45.2.1 sebelum fix: 3/3 smoke PASS; kegagalan spesifik CI tidak terulang lokal. Setelah fix: 3/3 smoke PASS, frontend 117/117, fokus node/edge 21/21, policy 51/51, lint/kontrak/typecheck/build, Composer/npm audit PASS. Preview Web Admin API mock: input angka waypoint `(480,320)`, rute ortogonal, endpoint tetap, Undo/Redo, role read-only dan 0 write/browser error PASS. Backend MySQL/HTTP/PHPUnit lokal NOT RUN karena Composer install tertahan saat autoload; CI wajib menguji.
+- Status fix: implementasi `0cf969d4938825a44226e53cbc16fbce20fc0958` dan evidence `0943dd8bc156ee2b00d5b63d8758e7748827607b` pushed; [PR #19](https://github.com/dejul/senkom/pull/19) OPEN. [CI PR `43913179637`](https://github.com/dejul/senkom/actions/runs/43913179637) pada SHA evidence PASS 16/16 mandatory, 0 skip, termasuk Electron, PHPUnit 141/4.133, MySQL/HTTP, kontrak dan audit. [Auto-Merge V2 `43914142876`](https://github.com/dejul/senkom/actions/runs/43914142876) menolak file sensitif dan mensyaratkan merge manual. Commit dokumentasi ini perlu CI exact-head ulang; postmerge `main` belum diverifikasi. Parent 2B-04 **WIP**; parent gate PR belum dibuat. Bukti rinci di `docs/phase-2-verification.md`.
 
 ## 2B-04b - waypoint editing, edge delete, undo/redo (2026-11-16)
 

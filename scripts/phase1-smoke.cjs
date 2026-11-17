@@ -247,6 +247,7 @@ async function verifyPhase1(window, artifacts) {
   await waitFor("document.querySelectorAll('[data-site-id]').length === 8");
   const recovered = await js('window.senkomViewer.bootstrap()');
   assert.equal(JSON.stringify(recovered.map.snapshot), initialSnapshot);
+  assert.equal(recovered.performance.rendererFailures, 1);
   await waitFor(
     'window.senkomViewer.status().then(s => s.performance.rafFps > 0)',
   );
