@@ -1,15 +1,16 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 sampai 2B-05 VERIFIED/terintegrasi; 2B-06a VERIFIED/terintegrasi; parent 2B-06 WIP**.
+Phase 2B: **parent 2B-01 sampai 2B-05 VERIFIED/terintegrasi; 2B-06a dan 2B-06b VERIFIED/terintegrasi; parent 2B-06 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: 2B-06b diminta eksplisit pada 2026-11-17; gate PR/merge masih pending. Server save/publish tetap milik 2B-07.
+Next executable: parent 2B-06 gate hanya pada instruksi terpisah. Server save/publish tetap milik 2B-07; 2B-07 belum dimulai.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
 ## 2B-06b - form koridor/jalur bersama (2026-11-17)
 
+- Closure 2026-11-17: [PR #27](https://github.com/dejul/senkom/pull/27) MERGED pada `b9696b29cba783dde9a0074daa12bb55cac0194c`; head final `7ac911bea18cb71fd0b0fbddca8560814dc259ad` ancestor `origin/main`. [CI PR exact-head `44097282091`](https://github.com/dejul/senkom/actions/runs/44097282091) dan [CI postmerge `44098705647`](https://github.com/dejul/senkom/actions/runs/44098705647) SUCCESS pada SHA masing-masing, 16/16 mandatory PASS, 0 skip. **2B-06b VERIFIED/terintegrasi** tanpa defect blocking. Auto-Merge V2 [`44098460458`](https://github.com/dejul/senkom/actions/runs/44098460458) menolak `Missing or ambiguous verification claim`; PR kemudian MERGED manual. Parent 2B-06 tetap **WIP**, gate parent belum dijalankan. Catatan OPEN/pending di bawah adalah snapshot pra-merge.
 - PR #26 MERGED manual pada `946c46efdbd5bb696d14e876a7fe2f966212a1ec`; head final `4da31e9d218f3a0ffce321df1a3c4bf289c42a8b` ancestor `origin/main`. [CI PR exact-head `44088905722`](https://github.com/dejul/senkom/actions/runs/44088905722) dan [CI postmerge `44090910579`](https://github.com/dejul/senkom/actions/runs/44090910579) SUCCESS, masing-masing 16/16 mandatory PASS, 0 skip. 2B-06a **VERIFIED/terintegrasi**; catatan OPEN/pending di bawah adalah snapshot historis.
 - Scope V2 `2B-06b`: form corridor/shared-route memakai `routes(id,code,name,cableIds)`, membership kabel FO/Power eksplisit dari draft API; tanpa urutan kabel, metadata/status, relasi site/device langsung, eksklusivitas kabel, atau inferensi dari layout. Branch `feature/phase-2b-06b` dari PR #26 merge SHA, worktree awal bersih; stash/worktree lain utuh. Form create/edit koridor menolak nama kosong, kabel kosong/hilang/duplikat, dan kode duplikat; kabel dan sirkuit Power tetap utuh. Parent 2B-06 masih WIP, 2B-07 tidak dimulai.
 - Fokus koridor+regresi Power/FO/logical/canvas 24/24, frontend 138/138, typecheck, lint/format/kontrak/build, Electron smoke, PHP lint, Composer validate/audit, npm production audit exit 0. Preview Electron Chromium + API mock: koridor FO+Power, Power cable dari form 2B-06a, error kode/kabel kosong, Undo/Redo, dirty, editor/admin/publisher/viewer/published, viewport 376 px, 0 API write/error konsol PASS. PHPUnit/HTTP/MySQL lokal dan UI API nyata **NOT RUN**; CI PR wajib menjalankan backend. [Matriks rinci](phase-2-verification.md#2b-06b---corridorshared-route-forms).
