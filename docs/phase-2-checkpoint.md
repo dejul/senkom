@@ -1,12 +1,20 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 sampai 2B-04 VERIFIED/terintegrasi; 2B-05a acceptance lokal PASS, CI/PR pending; parent 2B-05 WIP**.
+Phase 2B: **parent 2B-01 sampai 2B-04 VERIFIED/terintegrasi; 2B-05a VERIFIED/terintegrasi; 2B-05b acceptance lokal PASS, CI/PR pending; parent 2B-05 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan PR dan CI exact-head 2B-05a. Jangan mulai 2B-05b tanpa instruksi.
+Next executable: selesaikan PR dan CI exact-head 2B-05b. Jangan mulai 2B-05c tanpa instruksi.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## 2B-05b - form inventaris FO (2026-11-17)
+
+- PR #21 MERGED pada `576467c809875ec11cf602c0f30cf20c19245bff`; [CI postmerge `44011871890`](https://github.com/dejul/senkom/actions/runs/44011871890) SUCCESS, 16/16 mandatory, 0 skip. **2B-05a VERIFIED/terintegrasi**. Snapshot PR #21 OPEN di bawah tetap bukti historis sebelum merge.
+- Branch `feature/phase-2b-05b` dari merge SHA; worktree awal bersih, stash dan worktree lain utuh. Konflik scope prompt lama diselesaikan oleh instruksi pengguna: sesuai V2, 2B-05b hanya form cable/core/termination/splice FO; logical Ring A/B dan alokasi milik 2B-05c, save server milik 2B-07.
+- Form lokal editor/admin memakai site, cable, core, optical port, dan closure ID dari draft API. Validasi menolak referensi hilang, duplikat, kapasitas/nomor core, ujung terminasi salah/terpakai, self-splice, closure/site salah, dan reverse duplicate. Core faulty/unknown tetap boleh menjadi inventaris fisik; status `allocated` tidak diisi manual. Perubahan masuk Undo/Redo dan dirty state; publisher/viewer/published read-only. Tidak ada API write, backend/schema, atau logical edit.
+- Fokus FO + regresi inventory/node-edge 13/13; frontend 124/124; policy 51/51. Lint/format/kontrak/typecheck/build, Electron smoke, PHP lint, Composer install dry-run/validate/audit, npm production audit PASS. Preview Chromium Electron + API mock: 4 form, konflik, Undo/Redo, role, device/port regresi, node/edge regresi, viewport 376 px, 0 API write/error konsol PASS. PHPUnit/HTTP/MySQL lokal dan UI API nyata NOT RUN; CI PR wajib menjalankan backend. Rincian di `docs/phase-2-verification.md`.
+- Status **2B-05b LOCAL GATE PASSED; PR CI PENDING**. Parent **2B-05 WIP**; jangan mulai 2B-05c sebelum instruksi baru.
 
 ## 2B-05a - form perangkat/port dan validasi referensi (2026-11-17)
 
