@@ -20,7 +20,9 @@ Preview terintegrasi `.artifacts/parent-2b06-preview/browser-smoke.cjs` (ignored
 
 Tidak ada defect blocking pada scope parent yang disetujui. Edit kabel Power tidak diuji karena bukan acceptance 2B-06a/parent; UI API nyata tetap NOT RUN. Parent 2B-06 belum VERIFIED sampai bukti gate terintegrasi dan CI postmerge PASS. Tidak ada perubahan kode produk atau awal 2B-07.
 
-Commit evidence awal `3bd8400d23bd5f46e6de9caecd1e708609a2384e` pushed ke `feature/phase-2b-06-gate`; [PR parent #29](https://github.com/dejul/senkom/pull/29) OPEN menuju `main`. CI exact-head PR masih berjalan; parent-only PR memerlukan merge manual menurut `docs/git-workflow.md`. Tidak ada klaim VERIFIED sebelum merge/postmerge CI.
+Snapshot awal: commit evidence `3bd8400d23bd5f46e6de9caecd1e708609a2384e` pushed ke `feature/phase-2b-06-gate`; [PR parent #29](https://github.com/dejul/senkom/pull/29) OPEN menuju `main`. CI exact-head PR saat itu berjalan; parent-only PR memerlukan merge manual menurut `docs/git-workflow.md`. Tidak ada klaim VERIFIED sebelum merge/postmerge CI.
+
+Update evidence PR: commit `cdcf293bb235c40fd49a2a2355260a64f1fcf3d6` pushed; [CI exact-head `44105907590`](https://github.com/dejul/senkom/actions/runs/44105907590) SUCCESS pada SHA itu, **16/16 mandatory PASS, 0 skip**. Commit dokumentasi lanjutan yang merekam hasil ini memerlukan CI exact-head baru sebelum gate PR dinyatakan lulus.
 
 ## 2B-06b - Corridor/shared-route forms
 
