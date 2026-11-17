@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useState, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+  type PointerEvent,
+} from 'react';
+import { parseMapContent } from '@senkom/map-schema';
 import type { MapContentV2 } from '@senkom/shared-types';
 import { loadMap, type MapSource } from './map-api';
 
@@ -7,6 +14,8 @@ type Layer = MapContentV2['layers'][number];
 type Node = MapContentV2['layout']['nodes'][number];
 type Edge = MapContentV2['layout']['edges'][number];
 type Point = Edge['points'][number];
+type Device = MapContentV2['devices'][number];
+type Port = MapContentV2['ports'][number];
 export type Selection = { kind: 'node' | 'edge'; id: string };
 const grid = 40;
 
@@ -60,10 +69,36 @@ export function redoEdit(history: EditHistory): EditHistory {
 }
 
 export function isDirty(history: EditHistory): boolean {
-  return (
-    JSON.stringify(history.present.layout) !==
-    JSON.stringify(history.baseline.layout)
-  );
+  return JSON.stringify(history.present) !== JSON.stringify(history.baseline);
+}
+
+export function addDevice(map: MapContentV2, device: Device): MapContentV2 {
+  if (!map.sites.some((site) => site.id === device.siteId))
+    throw new Error('Relasi site ID tidak ditemukan pada draft.');
+  if (
+    map.devices.some(
+      (item) =>
+        item.id === device.id ||
+        item.code.toLowerCase() === device.code.toLowerCase(),
+    )
+  )
+    throw new Error('ID atau kode perangkat sudah dipakai.');
+  return parseMapContent({ ...map, devices: [...map.devices, device] });
+}
+
+export function addPort(map: MapContentV2, port: Port): MapContentV2 {
+  if (!map.devices.some((device) => device.id === port.deviceId))
+    throw new Error('Relasi device ID tidak ditemukan pada draft.');
+  if (
+    map.ports.some(
+      (item) =>
+        item.id === port.id ||
+        (item.deviceId === port.deviceId &&
+          item.name.toLowerCase() === port.name.toLowerCase()),
+    )
+  )
+    throw new Error('ID atau nama port pada perangkat sudah dipakai.');
+  return parseMapContent({ ...map, ports: [...map.ports, port] });
 }
 
 export function orthogonalRoute(
@@ -836,6 +871,8 @@ export function MapCanvas({
   const [fromNodeId, setFromNodeId] = useState('');
   const [toNodeId, setToNodeId] = useState('');
   const [edgeError, setEdgeError] = useState('');
+  const [inventoryError, setInventoryError] = useState('');
+  const [inventoryFeedback, setInventoryFeedback] = useState('');
   const [loading, setLoading] = useState(true);
   const [hiddenLayers, setHiddenLayers] = useState<Set<Layer>>(new Set());
   const [query, setQuery] = useState('');
@@ -1020,6 +1057,63 @@ export function MapCanvas({
     setDrag({ x: event.clientX, y: event.clientY });
   }
 
+  function submitDevice(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canEdit || !map) return;
+    const form = new FormData(event.currentTarget);
+    const device: Device = {
+      id: crypto.randomUUID(),
+      siteId: String(form.get('siteId') ?? ''),
+      code: String(form.get('code') ?? '').trim(),
+      type: String(form.get('type')) as Device['type'],
+      ...(String(form.get('model') ?? '').trim()
+        ? { model: String(form.get('model')).trim() }
+        : {}),
+      status: { state: 'active', source: 'manual' },
+    };
+    try {
+      const next = addDevice(map, device);
+      setHistory((current) => current && commitEdit(current, () => next));
+      setInventoryError('');
+      setInventoryFeedback(
+        `Perangkat ${device.code} ditambahkan lokal. ID API: ${device.id}.`,
+      );
+      event.currentTarget.reset();
+    } catch (cause) {
+      setInventoryError(
+        cause instanceof Error ? cause.message : 'Perangkat tidak valid.',
+      );
+      setInventoryFeedback('');
+    }
+  }
+
+  function submitPort(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canEdit || !map) return;
+    const form = new FormData(event.currentTarget);
+    const port: Port = {
+      id: crypto.randomUUID(),
+      deviceId: String(form.get('deviceId') ?? ''),
+      name: String(form.get('name') ?? '').trim(),
+      type: String(form.get('type')) as Port['type'],
+      status: { state: 'active', source: 'manual' },
+    };
+    try {
+      const next = addPort(map, port);
+      setHistory((current) => current && commitEdit(current, () => next));
+      setInventoryError('');
+      setInventoryFeedback(
+        `Port ${port.name} ditambahkan lokal. ID API: ${port.id}.`,
+      );
+      event.currentTarget.reset();
+    } catch (cause) {
+      setInventoryError(
+        cause instanceof Error ? cause.message : 'Port tidak valid.',
+      );
+      setInventoryFeedback('');
+    }
+  }
+
   return (
     <div
       aria-busy={loading}
@@ -1067,6 +1161,89 @@ export function MapCanvas({
           : 'hanya baca'}
       </p>
       <MapFeedback loading={loading} error={error} empty={Boolean(empty)} />
+      {canEdit && map && (
+        <section className="inventory-forms" aria-label="Perangkat dan port">
+          <h3>Inventaris perangkat dan port</h3>
+          <p>
+            Referensi memakai ID dari draft API. Perubahan tetap lokal sampai
+            fitur simpan draft tersedia.
+          </p>
+          <form onSubmit={submitDevice}>
+            <h4>Tambah perangkat</h4>
+            <label htmlFor="device-site">Site</label>
+            <select id="device-site" name="siteId" required defaultValue="">
+              <option value="">Pilih site</option>
+              {map.sites.map((site) => (
+                <option key={site.id} value={site.id}>
+                  {site.name} ({site.id})
+                </option>
+              ))}
+            </select>
+            <label htmlFor="device-code">Kode perangkat</label>
+            <input
+              id="device-code"
+              name="code"
+              required
+              maxLength={96}
+              pattern="[A-Za-z0-9][A-Za-z0-9._-]*"
+            />
+            <label htmlFor="device-type">Jenis perangkat</label>
+            <select id="device-type" name="type" required defaultValue="">
+              <option value="">Pilih jenis</option>
+              {(
+                [
+                  'router',
+                  'switch',
+                  'otb',
+                  'odf',
+                  'splice_closure',
+                  'power_panel',
+                  'ups',
+                  'source',
+                  'junction',
+                  'pdu',
+                  'other',
+                ] as const
+              ).map((type) => (
+                <option key={type} value={type}>
+                  {type.replaceAll('_', ' ')}
+                </option>
+              ))}
+            </select>
+            <label htmlFor="device-model">Model (opsional)</label>
+            <input id="device-model" name="model" maxLength={200} />
+            <button type="submit">Tambah perangkat lokal</button>
+          </form>
+          <form onSubmit={submitPort}>
+            <h4>Tambah port</h4>
+            <label htmlFor="port-device">Perangkat</label>
+            <select id="port-device" name="deviceId" required defaultValue="">
+              <option value="">Pilih perangkat</option>
+              {map.devices.map((device) => (
+                <option key={device.id} value={device.id}>
+                  {device.code} ({device.id})
+                </option>
+              ))}
+            </select>
+            <label htmlFor="port-name">Nama port</label>
+            <input id="port-name" name="name" required maxLength={200} />
+            <label htmlFor="port-type">Jenis port</label>
+            <select id="port-type" name="type" required defaultValue="">
+              <option value="">Pilih jenis</option>
+              <option value="sfp">SFP</option>
+              <option value="fiber">Fiber</option>
+              <option value="terminal">Terminal</option>
+            </select>
+            <button type="submit">Tambah port lokal</button>
+          </form>
+          {inventoryError && (
+            <p role="alert" className="error">
+              {inventoryError}
+            </p>
+          )}
+          {inventoryFeedback && <p role="status">{inventoryFeedback}</p>}
+        </section>
+      )}
       {canEdit && map && (
         <div className="site-create">
           <label htmlFor="site-node">Site belum di kanvas</label>

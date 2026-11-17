@@ -1,12 +1,19 @@
 # Checkpoint Phase 2
 
-Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01, 2B-02, dan 2B-03 VERIFIED/terintegrasi; 2B-04a/b VERIFIED/terintegrasi; parent 2B-04 gate lokal PASS, menunggu PR/merge**.
+Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
+Phase 2B: **parent 2B-01 sampai 2B-04 VERIFIED/terintegrasi; 2B-05a acceptance lokal PASS, CI/PR pending; parent 2B-05 WIP**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan PR parent gate 2B-04, CI exact-head, merge manual, dan verifikasi postmerge `main`. Jangan mulai batch berikutnya tanpa instruksi.
+Next executable: selesaikan PR dan CI exact-head 2B-05a. Jangan mulai 2B-05b tanpa instruksi.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## 2B-05a - form perangkat/port dan validasi referensi (2026-11-17)
+
+- PR #20 MERGED manual pada `574f554742e96b8f7061ff73931c22e549e4780c`; head `1625214f7dd95dd70aec5faa9351da667f66739b` ancestor `origin/main`. [CI PR exact-head `43996062512`](https://github.com/dejul/senkom/actions/runs/43996062512) dan [CI postmerge `main` `43997799061`](https://github.com/dejul/senkom/actions/runs/43997799061) SUCCESS, masing-masing 16/16 mandatory, 0 skip. Parent **2B-04 VERIFIED**; kegagalan dan recovery Electron historis tetap di bawah.
+- Scope V2 2B-05a: form device/port pada draft, pilihan site/device dengan ID dari API, validasi referensi dan duplikat, pesan error relasi. Tidak ada form FO/logical, mutasi API, save server, perubahan backend/schema, atau konektivitas yang disimpulkan dari gambar. Parent 2B-05 tetap **WIP**.
+- Branch `feature/phase-2b-05a` dari `origin/main` merge SHA; worktree awal bersih. `apps/admin-web/src/map-canvas.tsx` menambah form lokal editor/admin dan dirty state inventory; `tests/admin-map-inventory-form.test.ts` menguji referensi, skema, riwayat. Fokus 2/2, frontend 119/119, policy 51/51, lint/format/kontrak/typecheck/build, Electron smoke, PHP lint, Composer install/validate/audit, npm production audit PASS. Preview Web Admin + API mock: create device/port, ID API, error duplikat/relasi, Undo/Redo, read-only role, viewport 376 px, 0 API write/console error PASS; preview node/edge regresi PASS. API UI nyata serta PHPUnit/HTTP/MySQL lokal NOT RUN; CI PR wajib menjalankan backend lengkap. Bukti rinci di `docs/phase-2-verification.md`.
+- Commit implementasi `757065e8b5544ce7ab0e1ed9b88fcd6ef14d834a` pushed; [PR #21](https://github.com/dejul/senkom/pull/21) OPEN. [CI PR awal `44000542132`](https://github.com/dejul/senkom/actions/runs/44000542132) berjalan pada SHA itu; commit dokumentasi ini memerlukan CI exact-head ulang. Status **2B-05a LOCAL GATE PASSED; PR CI PENDING**. Jangan tandai VERIFIED sebelum gate PR exact-head terpenuhi; jangan mulai 2B-05b.
 
 ## Parent 2B-04 gate dilanjutkan (2026-11-17)
 
