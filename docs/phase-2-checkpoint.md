@@ -5,8 +5,15 @@ Phase 2B: **parent 2B-01 sampai 2B-05 VERIFIED/terintegrasi; 2B-06a dan 2B-06b V
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: parent 2B-06 gate hanya pada instruksi terpisah. Server save/publish tetap milik 2B-07; 2B-07 belum dimulai.
+Next executable: selesaikan PR parent 2B-06 gate, CI exact-head dan postmerge. Server save/publish tetap milik 2B-07; 2B-07 belum dimulai.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## Parent 2B-06 gate (2026-11-17)
+
+- Branch `feature/phase-2b-06-gate` dari `origin/main` `e71d3cf7d945f205755ebae17085a635b31bc431`; worktree awal bersih, stash/worktree lain utuh. PR #26/#27/#28 MERGED; SHA merge dan CI postmerge ketiganya diverifikasi, masing-masing 16/16 mandatory PASS, 0 skip. Bukti child 2B-06a/b terintegrasi.
+- Acceptance yang tersedia: create kabel/sirkuit Power dan edit sirkuit, validasi source/load/terminal/supply/path, koridor FO+Power, referensi dan duplikat, integritas kabel/sirkuit/logical/layout, draft/role/Undo/Redo, serta regresi canvas/node/edge/FO/logical PASS. Fokus 24/24; frontend 138/138; lint, kontrak, typecheck, build, Electron, PHP lint, Composer dan npm audit exit 0. Preview Web Admin gabungan dengan API mock exit 0, viewport 376 px, 0 API write/error konsol. PHPUnit/HTTP/MySQL lokal dan UI API nyata NOT RUN; CI postmerge #28 menjalankan backend. [Matriks dan perintah](phase-2-verification.md#parent-2b-06-gate-2026-11-17).
+- Rekonsiliasi scope **B**: V2 2B-06a/b (`docs/codegen-microbatch-plan-v2.md` baris 88–89) dan acceptance parent (`docs/codegen-plan.md` baris 146) tidak mensyaratkan edit kabel Power. Instruksi edit kabel pada prompt gate sebelumnya melampaui plan; bukti lama tetap utuh. [Analisis rinci](phase-2-verification.md#parent-2b-06-gate-2026-11-17).
+- **Parent 2B-06 WIP**: acceptance approved lokal PASS tanpa defect blocking; menunggu PR gate, CI exact-head, merge dan CI postmerge sebelum VERIFIED. 2B-07 belum dimulai.
 
 ## 2B-06b - form koridor/jalur bersama (2026-11-17)
 
