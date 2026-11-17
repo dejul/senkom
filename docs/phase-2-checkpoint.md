@@ -1,12 +1,18 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 sampai 2B-04 VERIFIED/terintegrasi; 2B-05a dan 2B-05b VERIFIED/terintegrasi; 2B-05c acceptance lokal PASS, CI/PR pending; parent 2B-05 WIP**.
+Phase 2B: **parent 2B-01 sampai 2B-04 VERIFIED/terintegrasi; 2B-05a, 2B-05b, dan 2B-05c VERIFIED/terintegrasi; parent 2B-05 gate lokal PASS, PR pending**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan PR dan CI exact-head 2B-05c. Parent 2B-05 memerlukan gate terpisah; jangan mulai 2B-06 tanpa instruksi.
+Next executable: selesaikan PR gate parent 2B-05 dan CI exact-head, lalu verifikasi integrasi setelah merge manual. Jangan mulai 2B-06 tanpa instruksi.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## Parent 2B-05 gate (2026-11-17)
+
+- PR #23 MERGED manual pada `45d27b750bf77770406d56b1e28e04a77b865e07`; head final `e6916eb105a00406ab4485fbec1fd4dbdd70a84f` ancestor `origin/main`. [CI PR exact-head `44032596615`](https://github.com/dejul/senkom/actions/runs/44032596615) dan [CI postmerge `44033664504`](https://github.com/dejul/senkom/actions/runs/44033664504) SUCCESS, masing-masing 16/16 mandatory PASS, 0 skip. **2B-05c VERIFIED/terintegrasi**; catatan OPEN/pending di bawah adalah snapshot historis.
+- Branch `feature/phase-2b-05-gate` dari merge SHA, worktree awal bersih; stash dan worktree lain utuh. Acceptance gabungan device/port, kabel/core/terminasi/splice FO, Ring A/B dan alokasi memakai ID draft, memisahkan inventory fisik dari logical/layout, serta mempertahankan role, published read-only, dirty dan Undo/Redo. Tes integrasi+regresi 19/19, frontend 130/130, policy 51/51, lint/kontrak/typecheck/build, Electron, PHP lint, Composer/npm audit PASS. Preview Chromium dengan API mock menjalankan rantai form gabungan, konflik, role, node/edge, viewport 376 px, 0 write/error konsol. UI API nyata dan backend lokal NOT RUN; CI postmerge menjalankan PHPUnit 141/4.133, HTTP dan MySQL. [Bukti rinci](phase-2-verification.md#parent-2b-05-gate-2026-11-17).
+- Commit gate `7685e01e7d5ff4d5dc3988c6dbb7589089f35154` pushed; [PR #24](https://github.com/dejul/senkom/pull/24) OPEN. [CI PR awal `44035929418`](https://github.com/dejul/senkom/actions/runs/44035929418) berjalan pada SHA itu; commit evidence berikutnya memerlukan CI exact-head ulang. Parent **2B-05 WIP** sampai PR gate MERGED, CI exact-head PR dan postmerge `main` 16/16 PASS, 0 skip. Server save/publish tetap milik 2B-07; 2B-06 tidak dimulai.
 
 ## 2B-05c - logical Ring A/B dan alokasi (2026-11-17)
 
