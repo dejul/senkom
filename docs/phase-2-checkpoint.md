@@ -1,12 +1,19 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-16. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01, 2B-02, dan 2B-03 VERIFIED/terintegrasi; 2B-04a/b terintegrasi; Electron postmerge CI gagal; parent 2B-04 WIP**.
+Phase 2B: **parent 2B-01, 2B-02, dan 2B-03 VERIFIED/terintegrasi; 2B-04a/b VERIFIED/terintegrasi; parent 2B-04 gate lokal PASS, menunggu PR/merge**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: integrasikan fix Electron setelah CI exact-head dan merge manual, verifikasi ulang CI `main`, lalu lanjutkan parent gate 2B-04. Jangan mulai batch berikutnya tanpa instruksi.
+Next executable: selesaikan PR parent gate 2B-04, CI exact-head, merge manual, dan verifikasi postmerge `main`. Jangan mulai batch berikutnya tanpa instruksi.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## Parent 2B-04 gate dilanjutkan (2026-11-17)
+
+- PR #19 MERGED manual pada `74ce164104e414296c6b9a5f2950265a9ef1749f`; head `5c3582554bfae560f32b9367624b4ed38423a98f` ancestor `origin/main`. [CI PR exact-head `43938179839`](https://github.com/dejul/senkom/actions/runs/43938179839) dan [CI postmerge `43993703538`](https://github.com/dejul/senkom/actions/runs/43993703538) SUCCESS pada SHA masing-masing, 16/16 mandatory, 0 skip. Crash monitoring dan assertion tetap aktif; **2B-04b VERIFIED/terintegrasi**. Kegagalan CI `43898923692` tetap tercatat di bawah sebagai riwayat.
+- Branch `feature/phase-2b-04-gate` fast-forward ke merge SHA. Dua dokumen gate WIP lama dicadangkan di `.artifacts/phase2b04-gate-preserved/`, disimpan dalam stash, lalu direkonsiliasi tanpa menghapus bukti historis; stash tetap ada. Tidak ada perubahan kode produk.
+- Acceptance gabungan: create edge dari koneksi inventory, node/layer valid, rute ortogonal dan endpoint binding; insert/drag/input angka/remove waypoint; delete confirm/cancel; Undo/Redo dan dirty node/edge; editor/admin draft versus publisher/viewer/published; inventory fisik tetap. Fokus 21/21, frontend 117/117, role/schema 37/37, policy 51/51 PASS. Lint/kontrak/typecheck/build, Electron, PHP lint, Composer/npm audit PASS. Preview Chromium Electron + API mock menguji node create, edge create, node move, numeric `(480,320)`, drag/cancel/delete/Undo/Redo, role read-only, viewport 376 px, 0 write API dan 0 console error: PASS. API nyata UI dan PHPUnit/HTTP/MySQL lokal NOT RUN; CI postmerge menjalankan backend lengkap. Bukti di `docs/phase-2-verification.md`.
+- Commit evidence `73003d0937fefd593c8f06a3ece78e675ea14c66` pushed ke branch gate; [PR #20](https://github.com/dejul/senkom/pull/20) OPEN. Commit dokumentasi ini memerlukan CI exact-head baru. Parent 2B-04 **WIP** sampai PR gate MERGED dan CI postmerge `main` PASS; 2B-05a belum dimulai.
 
 ## Recovery Electron CI untuk parent 2B-04 (2026-11-16)
 
@@ -14,6 +21,13 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 - Branch fix `fix/electron-renderer-metrics` dari integrated `main`; worktree terpisah. Perubahan dokumentasi belum di-commit pada `feature/phase-2b-04-gate` tetap utuh. Root cause: event renderer crash menaikkan counter, tetapi objek performance yang dikembalikan IPC baru diperbarui interval 5 detik. Fix menyinkronkan counter pada event; smoke memeriksa counter segera setelah recovery.
 - Reproduksi lokal Node 24.22.2/Electron 45.2.1 sebelum fix: 3/3 smoke PASS; kegagalan spesifik CI tidak terulang lokal. Setelah fix: 3/3 smoke PASS, frontend 117/117, fokus node/edge 21/21, policy 51/51, lint/kontrak/typecheck/build, Composer/npm audit PASS. Preview Web Admin API mock: input angka waypoint `(480,320)`, rute ortogonal, endpoint tetap, Undo/Redo, role read-only dan 0 write/browser error PASS. Backend MySQL/HTTP/PHPUnit lokal NOT RUN karena Composer install tertahan saat autoload; CI wajib menguji.
 - Status fix: implementasi `0cf969d4938825a44226e53cbc16fbce20fc0958` dan evidence `0943dd8bc156ee2b00d5b63d8758e7748827607b` pushed; [PR #19](https://github.com/dejul/senkom/pull/19) OPEN. [CI PR `43913179637`](https://github.com/dejul/senkom/actions/runs/43913179637) pada SHA evidence PASS 16/16 mandatory, 0 skip, termasuk Electron, PHPUnit 141/4.133, MySQL/HTTP, kontrak dan audit. [Auto-Merge V2 `43914142876`](https://github.com/dejul/senkom/actions/runs/43914142876) menolak file sensitif dan mensyaratkan merge manual. Commit dokumentasi ini perlu CI exact-head ulang; postmerge `main` belum diverifikasi. Parent 2B-04 **WIP**; parent gate PR belum dibuat. Bukti rinci di `docs/phase-2-verification.md`.
+
+## Parent 2B-04 gate - tertahan postmerge CI (2026-11-16)
+
+- PR #18 MERGED manual pada `c824558e859162411f0e32fb7ffcc5e444701907`; head `e0dc07395a59f3d571a477b088a0d29132d7737b` ancestor `origin/main`. [CI PR exact-head `43894841264`](https://github.com/dejul/senkom/actions/runs/43894841264) SUCCESS, 16/16 mandatory, 0 skip. `main` lokal fast-forward ke merge SHA; worktree awal bersih; branch gate `feature/phase-2b-04-gate` dibuat.
+- [CI postmerge `43898923692`](https://github.com/dejul/senkom/actions/runs/43898923692) pada exact merge SHA **FAIL**: 13/16 mandatory PASS, Electron smoke FAIL (`scripts/phase1-smoke.cjs:254`, `rendererFailures` 0, expected 1), OpenAPI contract dan npm audit SKIPPED. Integrasi kode ada, tetapi status 2B-04b final **belum VERIFIED** akibat gate postmerge. Penyebab kegagalan Electron belum dipastikan.
+- Lokal pada branch gate: fokus node/edge 21/21, frontend 117/117, lint/kontrak, typecheck/build, Electron smoke, policy 51/51, PHP lint, Composer install/validate/audit, npm production audit PASS. Preview Chromium Electron + API mock PASS untuk create edge, waypoint, cancel/delete/Undo/Redo, node move, role read-only, viewport 376 px; 0 write API dan 0 browser console error. API nyata dan MySQL/HTTP/PHPUnit lokal NOT RUN; CI postmerge menjalankan backend sebelum gagal pada Electron.
+- **Parent 2B-04 WIP**. Tidak ada commit, push, atau PR gate selama mandatory postmerge CI gagal. Bukti rinci di `docs/phase-2-verification.md`.
 
 ## 2B-04b - waypoint editing, edge delete, undo/redo (2026-11-16)
 
