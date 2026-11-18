@@ -5,8 +5,14 @@ Phase 2B: **parent 2B-01 sampai 2B-06 VERIFIED/terintegrasi**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: integrasi PR 2B-07c setelah gate lokal/CI; parent 2B-07 tetap WIP. Jangan mulai gate parent atau 2B-08.
+Next executable: gate parent 2B-07 pada branch `feature/phase-2b-07-gate`; acceptance lokal PASS, PR/CI gate dan merge masih pending. Parent 2B-07 tetap WIP; jangan mulai 2B-08.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## Parent 2B-07 gate (2026-11-18)
+
+- [PR #33](https://github.com/dejul/senkom/pull/33) MERGED manual pada `51eb5e97d934705046ae14f214037998d74da112`; head final `2c5a5d6897453ef1af933266ec308b9fa1bef73a` ancestor `origin/main`. [CI PR exact-head `44221223490`](https://github.com/dejul/senkom/actions/runs/44221223490) dan [CI postmerge `44223766808`](https://github.com/dejul/senkom/actions/runs/44223766808) SUCCESS, masing-masing **16/16 mandatory PASS, 0 skip**. Postmerge PHPUnit 141 tes/4.133 asersi/0 skip, HTTP/MySQL, frontend 153, schema 33, lint/build/Electron/OpenAPI/audit PASS. **2B-07c VERIFIED/terintegrasi**; status PR OPEN di bawah historis.
+- Branch `feature/phase-2b-07-gate` dari `origin/main` SHA merge #33; worktree awal bersih, worktree/stash lain utuh. Acceptance parent Save Draft, Validate, Publish, HTTP 409 dan integritas Phase 2A/2B **PASS** berdasarkan tes fokus 15/15, frontend 153/153, lint/build, Electron, PHP/Composer/npm, preview mock gabungan, dan backend/HTTP/MySQL CI postmerge #33. [Matriks dan batasan](phase-2-verification.md#parent-2b-07-gate-2026-11-18). UI browser API nyata dan PHPUnit/MySQL/HTTP lokal **NOT RUN**; backend CI nyata PASS. Preview gabungan exit 0 setelah skrip 2B-07b lama disesuaikan di artefak ignored untuk freeze 409; 0 console error, viewport 376 px.
+- Status **LOCAL ACCEPTANCE PASS; PARENT WIP**. Parent-only PR perlu merge manual; setelah exact-head CI gate 16/16 tanpa skip dapat dilaporkan **GATE PASSED — AWAITING MERGE**. Parent **VERIFIED** hanya setelah PR gate MERGED, bukti di `main`, dan CI postmerge SHA merge PASS. 2B-08 belum dimulai.
 
 ## 2B-07c - Concurrent editing dan pemulihan konflik 409 (2026-11-18)
 
