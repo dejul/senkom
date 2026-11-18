@@ -1,14 +1,15 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 sampai 2B-09 VERIFIED/terintegrasi**; tidak ada gate closure 2B terpisah. 2C-01a VERIFIED; parent 2C-01 WIP.
+Phase 2B: **parent 2B-01 sampai 2B-09 VERIFIED/terintegrasi**; tidak ada gate closure 2B terpisah. 2C-01a dan 2C-01b VERIFIED; parent 2C-01 WIP.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next permitted: hanya micro-batch 2C-01b sesuai [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md) baris 103. 2C-02 dan parent gate belum dimulai.
+Next permitted: parent 2C-01 gate hanya atas permintaan terpisah. 2C-02 dan parent gate belum dimulai.
 
 ## 2C-01b — viewer token OS-protection, IPC/log redaction (2026-11-18)
 
+- Closure: [PR #43](https://github.com/dejul/senkom/pull/43) MERGED manual oleh `dejul` pada `adb6cf172a5bed9ac9d35c51780b3403300ff70a`; final head `264980f9015328d684715591a49e722c2792dd6f` terintegrasi. [CI PR exact-head `44326927940`](https://github.com/dejul/senkom/actions/runs/44326927940) dan [CI postmerge `44328358284`](https://github.com/dejul/senkom/actions/runs/44328358284) SUCCESS pada SHA masing-masing: **16/16 mandatory PASS, 0 skip**. [Auto-Merge V2 `44328216526`](https://github.com/dejul/senkom/actions/runs/44328216526) memblokir `Missing or ambiguous verification claim`; merge manual terjadi sesudahnya. **2C-01b VERIFIED**; status WIP di bawah snapshot pra-merge. Parent 2C-01 tetap WIP; parent gate dan 2C-02 belum dimulai.
 - Prasyarat **2C-01a VERIFIED**: [PR #42](https://github.com/dejul/senkom/pull/42) MERGED manual pada `5e55dc67c39f1cc06e7d2af7a7bf9fe254949230`; final head `9d184600f9d862af7158578c5fb1a6c5f76e2fc8` terintegrasi. [CI PR exact-head `44320673059`](https://github.com/dejul/senkom/actions/runs/44320673059) dan [CI postmerge `44322957575`](https://github.com/dejul/senkom/actions/runs/44322957575) SUCCESS pada SHA masing-masing: **16/16 mandatory PASS, 0 skip**.
 - Branch `feature/phase-2c-01b` dari merge SHA #42; worktree awal bersih, tiga worktree dan dua stash historis utuh. Scope V2 baris 103: token viewer diproteksi OS/DPAPI pada main process, tidak mencapai renderer/IPC/log. Origin HTTPS dan redirect guard 2C-01a dipertahankan. HTTP fetch/ETag/cache/scheduler serta parent gate di luar batch.
 - Operator menyalin token viewer scoped dari file provisioning backend ke `%APPDATA%\SENKOM\viewer-token.pending` dengan ACL terbatas. Main Windows memakai Electron `safeStorage` async, memverifikasi roundtrip sebelum atomic replace `viewer-token.protected.json`, lalu menghapus plaintext staging pada sukses dan kegagalan validasi/enkripsi; gagal hapus ditolak untuk penanganan operator. Token invalid/oversized atau OS encryption unavailable ditolak; versi encrypted lama bertahan saat import gagal. Rotasi memakai import berikutnya; tidak ada token di IPC/bootstrap, log, error, atau screenshot. [Prosedur](operations-runbook.md#phase-2c-01b-provisi-token-viewer-desktop).
