@@ -44,6 +44,14 @@ export type EditHistory = {
 // ponytail: Keep 50 local map edits; use compact commands if maps or sessions outgrow this ceiling.
 const historyLimit = 50;
 
+function isDraftConflict(cause: unknown): boolean {
+  return (
+    cause instanceof ApiError &&
+    cause.status === 409 &&
+    cause.code === 'DRAFT_CONFLICT'
+  );
+}
+
 export function commitEdit(
   history: EditHistory,
   edit: (map: MapContentV2) => MapContentV2,
@@ -885,6 +893,8 @@ export function MapCanvas({
   >(null);
   const [saveError, setSaveError] = useState('');
   const [saveFeedback, setSaveFeedback] = useState('');
+  // ponytail: Manual reapply in a fresh tab is the recovery ceiling; add a merge UI only after its rules are approved.
+  const [conflict, setConflict] = useState(false);
   const [validation, setValidation] = useState<{
     etag: string;
     result: ValidationResult;
@@ -943,6 +953,7 @@ export function MapCanvas({
           future: [],
         });
         setEtag(loadedEtag);
+        setConflict(false);
         setView({
           x: 0,
           y: 0,
@@ -968,7 +979,15 @@ export function MapCanvas({
   const dirty = useMemo(() => (history ? isDirty(history) : false), [history]);
 
   async function save() {
-    if (!canEdit || !history || !dirty || !etag || pendingRef.current) return;
+    if (
+      !canEdit ||
+      !history ||
+      !dirty ||
+      !etag ||
+      conflict ||
+      pendingRef.current
+    )
+      return;
     const submitted = history.present;
     pendingRef.current = true;
     setPending('save');
@@ -985,6 +1004,7 @@ export function MapCanvas({
       setEtag(saved.etag);
       setSaveFeedback('Draft tersimpan di server.');
     } catch (cause) {
+      if (isDraftConflict(cause)) setConflict(true);
       setSaveError(
         cause instanceof Error ? cause.message : 'Draft tidak dapat disimpan.',
       );
@@ -995,7 +1015,15 @@ export function MapCanvas({
   }
 
   async function validate() {
-    if (!canPublish || !history || dirty || !etag || pendingRef.current) return;
+    if (
+      !canPublish ||
+      !history ||
+      dirty ||
+      !etag ||
+      conflict ||
+      pendingRef.current
+    )
+      return;
     pendingRef.current = true;
     setPending('validate');
     setValidation(null);
@@ -1005,6 +1033,7 @@ export function MapCanvas({
       const result = await validateDraft(etag);
       setValidation({ etag, result });
     } catch (cause) {
+      if (isDraftConflict(cause)) setConflict(true);
       setWorkflowError(
         cause instanceof Error ? cause.message : 'Validasi gagal.',
       );
@@ -1020,6 +1049,7 @@ export function MapCanvas({
       !history ||
       dirty ||
       !etag ||
+      conflict ||
       pendingRef.current ||
       !validation?.result.valid ||
       validation.etag !== etag
@@ -1050,6 +1080,7 @@ export function MapCanvas({
       }
     } catch (cause) {
       setValidation(null);
+      if (isDraftConflict(cause)) setConflict(true);
       setWorkflowError(
         cause instanceof ApiError && cause.code === 'INVALID_RESPONSE'
           ? 'Status publikasi belum pasti. Periksa server sebelum mengulangi publikasi.'
@@ -1633,7 +1664,7 @@ export function MapCanvas({
           </span>
           <button
             type="button"
-            disabled={!dirty || pending !== null || !etag}
+            disabled={!dirty || pending !== null || !etag || conflict}
             onClick={save}
           >
             {pending === 'save' ? 'Menyimpan draft…' : 'Simpan draft'}
@@ -1650,7 +1681,7 @@ export function MapCanvas({
         <div className="map-controls" aria-label="Validasi dan publikasi draft">
           <button
             type="button"
-            disabled={!etag || dirty || pending !== null}
+            disabled={!etag || dirty || pending !== null || conflict}
             onClick={validate}
           >
             {pending === 'validate' ? 'Memvalidasi draft…' : 'Validasi draft'}
@@ -1660,6 +1691,7 @@ export function MapCanvas({
             disabled={
               !etag ||
               dirty ||
+              conflict ||
               pending !== null ||
               !validation?.result.valid ||
               validation.etag !== etag
@@ -1692,6 +1724,18 @@ export function MapCanvas({
             </p>
           )}
           {publishFeedback && <p role="status">{publishFeedback}</p>}
+        </div>
+      )}
+      {conflict && kind === 'draft' && (
+        <div role="alert" className="error">
+          <p>
+            Draft server berubah. Edit lokal dan riwayat Undo/Redo tetap di tab
+            ini. Buka draft terbaru di tab baru, lalu gabungkan perubahan secara
+            manual sebelum menyimpan. Operasi di tab ini dihentikan.
+          </p>
+          <a href="#canvas" target="_blank" rel="noopener noreferrer">
+            Buka draft terbaru di tab baru
+          </a>
         </div>
       )}
       {layout && view && !loading && !empty && (
