@@ -1,6 +1,6 @@
 # Web Admin operator SOP — Phase 2B
 
-Status: 2B-09b review draft. Parent 2B-09 acceptance remains separate.
+Status: 2B-09b operator review approved on 2026-11-18. Parent 2B-09 acceptance remains separate.
 
 ## Access and roles
 
