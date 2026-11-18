@@ -142,6 +142,9 @@ header span,
 .map-controls span {
   align-self: center;
 }
+.revision-history {
+  overflow-wrap: anywhere;
+}
 .site-properties,
 .edge-properties {
   margin-top: 18px;
