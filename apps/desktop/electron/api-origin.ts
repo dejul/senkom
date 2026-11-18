@@ -39,7 +39,7 @@ export async function readApiOrigin(
   }
 }
 
-// ponytail: origin-only request guard; add token and bounded snapshot fetch in 2C-01b/2C-02a.
+// ponytail: origin-only request guard; add bounded snapshot fetch in 2C-02a.
 export async function fetchAllowedApi(
   origin: string,
   path: string,

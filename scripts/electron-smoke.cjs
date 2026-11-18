@@ -1,7 +1,9 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, safeStorage } = require('electron');
 const assert = require('node:assert/strict');
-const { mkdir, writeFile } = require('node:fs/promises');
-const { resolve } = require('node:path');
+const { Buffer } = require('node:buffer');
+const { createHash } = require('node:crypto');
+const { mkdir, readFile, stat, writeFile } = require('node:fs/promises');
+const { join, resolve } = require('node:path');
 const { verifyPhase1 } = require('./phase1-smoke.cjs');
 
 const artifacts = resolve(__dirname, '../.artifacts');
@@ -36,6 +38,35 @@ app.once('browser-window-created', (_event, window) => {
       assert.match(result.text, /DEMO \/ BUKAN MONITORING LIVE/);
       assert.match(result.text, /renderer terisolasi/);
       assert.deepEqual(errors, []);
+      if (process.env.SENKOM_SMOKE_SCENARIO === 'demo') {
+        assert.equal(await safeStorage.isAsyncEncryptionAvailable(), true);
+        const userData = join(process.env.SENKOM_SMOKE_APP_DATA, 'SENKOM');
+        const protectedFile = await readFile(
+          join(userData, 'viewer-token.protected.json'),
+          'utf8',
+        );
+        const encrypted = JSON.parse(protectedFile);
+        const { result: token } = await safeStorage.decryptStringAsync(
+          Buffer.from(encrypted.ciphertext, 'base64'),
+        );
+        assert.equal(
+          createHash('sha256').update(token).digest('hex'),
+          process.env.SENKOM_SMOKE_TOKEN_HASH,
+        );
+        assert.ok(!protectedFile.includes(token));
+        await assert.rejects(stat(join(userData, 'viewer-token.pending')), {
+          code: 'ENOENT',
+        });
+        const bootstrap = await window.webContents.executeJavaScript(
+          '(async () => JSON.stringify(await window.senkomViewer.bootstrap()))()',
+        );
+        assert.ok(!bootstrap.includes(token));
+        assert.ok(
+          !(
+            await readFile(join(userData, 'logs/desktop.jsonl'), 'utf8')
+          ).includes(token),
+        );
+      }
       await mkdir(artifacts, { recursive: true });
       await verifyPhase1(window, artifacts);
       if (process.env.SENKOM_SMOKE_SCENARIO !== 'demo') {

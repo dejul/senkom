@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { readFile, mkdir, mkdtemp, writeFile, unlink } from 'node:fs/promises';
-import { randomBytes, scryptSync } from 'node:crypto';
+import { createHash, randomBytes, scryptSync } from 'node:crypto';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { URL, fileURLToPath } from 'node:url';
@@ -59,6 +59,9 @@ await writeFile(
 );
 const userData = join(appData, 'SENKOM');
 await mkdir(userData);
+const viewerToken = randomBytes(32).toString('hex');
+await writeFile(join(userData, 'viewer-token.pending'), viewerToken);
+const viewerTokenHash = createHash('sha256').update(viewerToken).digest('hex');
 const pin = randomBytes(16).toString('hex');
 const salt = randomBytes(16);
 await writeFile(
@@ -91,6 +94,7 @@ try {
           SENKOM_SMOKE_APP_DATA: appData,
           SENKOM_SMOKE_SCENARIO: scenario,
           SENKOM_SMOKE_PIN: pin,
+          SENKOM_SMOKE_TOKEN_HASH: viewerTokenHash,
         },
         stdio: 'inherit',
         windowsHide: true,

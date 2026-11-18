@@ -24,7 +24,13 @@ task scheduler, service, firewall rule, atau perubahan OS yang dipasang.
 
 Operator Windows menaruh `api-origin.json` di `%APPDATA%\SENKOM` (Electron `userData`) sebelum menjalankan desktop. Isi hanya origin HTTPS tepercaya, misalnya `{"origin":"https://api.example.test"}`. Jangan masukkan token, username, password, path, query, atau fragment. Batasi akses berkas dengan izin akun operator OS; restart desktop setelah mengganti berkas.
 
-Main process membaca berkas maksimal 2 KiB dan menolak field tambahan atau origin invalid; berkas absen berarti API belum dikonfigurasi. Log hanya mencatat `api-origin-ready` atau `api-origin-rejected`, tanpa nilai origin. Guard request main process menerima path pada origin tersebut saja, memakai `redirect: 'error'`, dan menolak respons dari origin lain. Renderer/IPC tidak menerima konfigurasi. 2C-01a belum melakukan fetch otomatis; token viewer, timeout/batas respons, snapshot, dan sync masuk batch berikutnya.
+Main process membaca berkas maksimal 2 KiB dan menolak field tambahan atau origin invalid; berkas absen berarti API belum dikonfigurasi. Log hanya mencatat `api-origin-ready` atau `api-origin-rejected`, tanpa nilai origin. Guard request main process menerima path pada origin tersebut saja, memakai `redirect: 'error'`, dan menolak respons dari origin lain. Renderer/IPC tidak menerima konfigurasi. Token viewer dijelaskan di bawah; fetch otomatis, timeout/batas respons, snapshot, dan sync masuk batch berikutnya.
+
+## Phase 2C-01b: provisi token viewer desktop
+
+Backend menerbitkan token viewer scoped melalui `senkom:viewer-token` ke berkas baru yang ACL-nya terbatas (lihat [setup API](phase-2a-setup.md#provisioning-akses)). Salin isi **64 karakter hex tanpa newline** ke `%APPDATA%\SENKOM\viewer-token.pending` memakai akun Windows yang menjalankan desktop; batasi ACL. Simpan file sumber terlindung sampai log `viewer-token-ready`, lalu hapus sumber provisioning. Jangan tempel token ke command line, environment variable, tiket, screenshot, atau repository.
+
+Saat startup, main process Windows hanya menerima token valid jika Electron `safeStorage` menyediakan enkripsi OS. Main mengenkripsi dan memverifikasi hasil sebelum mengganti `viewer-token.protected.json` secara atomik; file staging plaintext dihapus juga saat validasi atau enkripsi gagal. Jika OS menolak penghapusan, log `viewer-token-rejected`: operator harus menghapus staging dengan hak akses yang benar. Log hanya mencatat `viewer-token-ready` atau `viewer-token-rejected`; renderer/IPC tidak menerima token. Jika impor gagal, token encrypted lama dipertahankan; perbaiki OS encryption/ACL atau terbitkan token baru, lalu ulangi. Token backend berlaku 1–24 jam dan bisa dicabut; ulangi provisi untuk rotasi. Batch ini belum melakukan HTTP fetch, refresh, cache, atau sinkronisasi.
 
 ## SOP yang masih harus dibangun
 
