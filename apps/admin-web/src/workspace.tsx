@@ -1,7 +1,13 @@
-import { useEffect, useState } from 'react';
-import type { AdminSession } from './api';
+import { useEffect, useRef, useState } from 'react';
+import { ApiError, type AdminSession } from './api';
 import { MapCanvas } from './map-canvas';
-import { loadRevisions, type RevisionPage } from './map-api';
+import {
+  loadDraft,
+  loadRevisions,
+  rollbackRevision,
+  type DraftMap,
+  type RevisionPage,
+} from './map-api';
 
 type User = NonNullable<AdminSession['user']>;
 
@@ -53,13 +59,27 @@ export function AccessDenied({
   );
 }
 
-function PublishedHistory() {
+function PublishedHistory({
+  canRollback,
+  onRollback,
+}: {
+  canRollback: boolean;
+  onRollback: (before: string, after: DraftMap) => void;
+}) {
   const [page, setPage] = useState(1);
   const [refresh, setRefresh] = useState(0);
   const [result, setResult] = useState<RevisionPage | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [confirmation, setConfirmation] = useState<{
+    revisionId: string;
+    etag: string;
+  } | null>(null);
+  const [rollbackBusy, setRollbackBusy] = useState(false);
+  const [rollbackError, setRollbackError] = useState('');
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const rollbackPending = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -92,11 +112,72 @@ function PublishedHistory() {
   }, [page, refresh]);
 
   function changePage(next: number) {
+    setConfirmation(null);
     setLoading(true);
     setError('');
     setResult(null);
     setSelectedId(null);
     setPage(next);
+  }
+
+  async function prepareRollback() {
+    if (!canRollback || !selectedId || rollbackPending.current) return;
+    rollbackPending.current = true;
+    setRollbackBusy(true);
+    setRollbackError('');
+    setConfirmation(null);
+    try {
+      const draft = await loadDraft();
+      setConfirmation({ revisionId: selectedId, etag: draft.etag });
+    } catch (cause) {
+      setRollbackError(
+        cause instanceof Error
+          ? cause.message
+          : 'Versi draft tidak dapat dimuat.',
+      );
+    } finally {
+      rollbackPending.current = false;
+      setRollbackBusy(false);
+    }
+  }
+
+  async function confirmRollback() {
+    if (
+      !canRollback ||
+      !confirmation ||
+      selectedId !== confirmation.revisionId ||
+      rollbackPending.current
+    )
+      return;
+    rollbackPending.current = true;
+    setRollbackBusy(true);
+    setRollbackError('');
+    try {
+      const after = await rollbackRevision(
+        confirmation.revisionId,
+        confirmation.etag,
+      );
+      onRollback(confirmation.etag, after);
+      setActiveId(confirmation.revisionId);
+      setConfirmation(null);
+      setLoading(true);
+      setError('');
+      setRefresh((value) => value + 1);
+    } catch (cause) {
+      setConfirmation(null);
+      setRollbackError(
+        cause instanceof ApiError && cause.status === 409
+          ? 'Draft berubah di server. Muat ulang versi, periksa perubahan, lalu ulangi rollback.'
+          : cause instanceof ApiError && cause.code === 'INVALID_RESPONSE'
+            ? 'Status rollback belum pasti. Periksa published map sebelum mencoba lagi.'
+            : cause instanceof Error
+              ? cause.message
+              : 'Rollback gagal.',
+      );
+    } finally {
+      rollbackPending.current = false;
+      setRollbackBusy(false);
+    }
   }
 
   return (
@@ -110,6 +191,7 @@ function PublishedHistory() {
       <button
         type="button"
         onClick={() => {
+          setConfirmation(null);
           setLoading(true);
           setError('');
           setRefresh((value) => value + 1);
@@ -123,6 +205,7 @@ function PublishedHistory() {
           {error}
         </p>
       )}
+      {activeId && <p role="status">Rollback ke revisi {activeId} berhasil.</p>}
       {result && (
         <>
           {result.total === 0 ? (
@@ -135,7 +218,12 @@ function PublishedHistory() {
                     <button
                       type="button"
                       aria-pressed={selectedId === item.revisionId}
-                      onClick={() => setSelectedId(item.revisionId)}
+                      disabled={rollbackBusy}
+                      onClick={() => {
+                        setSelectedId(item.revisionId);
+                        setConfirmation(null);
+                        setRollbackError('');
+                      }}
                     >
                       Revisi {item.revisionId}
                     </button>{' '}
@@ -147,7 +235,7 @@ function PublishedHistory() {
               <div className="map-controls" aria-label="Halaman riwayat">
                 <button
                   type="button"
-                  disabled={page === 1}
+                  disabled={page === 1 || rollbackBusy}
                   onClick={() => changePage(page - 1)}
                 >
                   Sebelumnya
@@ -157,7 +245,7 @@ function PublishedHistory() {
                 </span>
                 <button
                   type="button"
-                  disabled={page * 10 >= result.total}
+                  disabled={page * 10 >= result.total || rollbackBusy}
                   onClick={() => changePage(page + 1)}
                 >
                   Berikutnya
@@ -174,6 +262,48 @@ function PublishedHistory() {
             key={selectedId}
             source={{ kind: 'revision', revisionId: selectedId }}
           />
+          {canRollback && (
+            <div className="rollback-controls">
+              <button
+                type="button"
+                disabled={rollbackBusy || loading}
+                onClick={prepareRollback}
+              >
+                Pilih revisi untuk rollback
+              </button>
+              {confirmation && (
+                <div role="group" aria-label="Konfirmasi rollback">
+                  <p>
+                    Jadikan revisi {confirmation.revisionId} published aktif?
+                    Riwayat tetap immutable; draft tersimpan dan edit lokal
+                    tetap terpisah. Versi draft{' '}
+                    {confirmation.etag.replaceAll('"', '')} akan diperiksa lagi
+                    saat rollback.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={rollbackBusy}
+                    onClick={confirmRollback}
+                  >
+                    Konfirmasi rollback
+                  </button>
+                  <button
+                    type="button"
+                    disabled={rollbackBusy}
+                    onClick={() => setConfirmation(null)}
+                  >
+                    Batal
+                  </button>
+                </div>
+              )}
+              {rollbackBusy && <p role="status">Memproses rollback…</p>}
+              {rollbackError && (
+                <p role="alert" className="error">
+                  {rollbackError}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </section>
@@ -191,6 +321,13 @@ export function Workspace({
   error: string;
   onLogout: () => void;
 }) {
+  const [rollback, setRollback] = useState<{
+    before: string;
+    after: DraftMap;
+  }>();
+  const canRollback = user.roles.some((role) =>
+    ['publisher', 'system_admin'].includes(role),
+  );
   return (
     <div className="workspace" aria-busy={busy}>
       <nav aria-label="Navigasi Web Admin" className="sidebar">
@@ -242,6 +379,7 @@ export function Workspace({
               publishable={user.roles.some((role) =>
                 ['publisher', 'system_admin'].includes(role),
               )}
+              rollback={rollback}
             />
           </section>
           <aside
@@ -255,7 +393,10 @@ export function Workspace({
             <p>Pilih node site di kanvas untuk membuka properti visualnya.</p>
           </aside>
         </div>
-        <PublishedHistory />
+        <PublishedHistory
+          canRollback={canRollback}
+          onRollback={(before, after) => setRollback({ before, after })}
+        />
       </div>
     </div>
   );
