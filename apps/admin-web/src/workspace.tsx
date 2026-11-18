@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import type { AdminSession } from './api';
 import { MapCanvas } from './map-canvas';
+import { loadRevisions, type RevisionPage } from './map-api';
 
 type User = NonNullable<AdminSession['user']>;
 
@@ -51,6 +53,133 @@ export function AccessDenied({
   );
 }
 
+function PublishedHistory() {
+  const [page, setPage] = useState(1);
+  const [refresh, setRefresh] = useState(0);
+  const [result, setResult] = useState<RevisionPage | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    loadRevisions(page)
+      .then((value) => {
+        if (!active) return;
+        setResult(value);
+        setSelectedId((current) =>
+          value.revisions.some((item) => item.revisionId === current)
+            ? current
+            : (value.revisions[0]?.revisionId ?? null),
+        );
+      })
+      .catch((cause: unknown) => {
+        if (!active) return;
+        setResult(null);
+        setSelectedId(null);
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : 'Riwayat tidak dapat dimuat.',
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [page, refresh]);
+
+  function changePage(next: number) {
+    setLoading(true);
+    setError('');
+    setResult(null);
+    setSelectedId(null);
+    setPage(next);
+  }
+
+  return (
+    <section
+      id="published-history"
+      className="panel revision-history"
+      aria-label="Riwayat published"
+    >
+      <h2>Riwayat published</h2>
+      {/* ponytail: History refresh is manual; wire publish events when live synchronization enters scope. */}
+      <button
+        type="button"
+        onClick={() => {
+          setLoading(true);
+          setError('');
+          setRefresh((value) => value + 1);
+        }}
+      >
+        Muat ulang riwayat
+      </button>
+      {loading && <p role="status">Memuat riwayat…</p>}
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
+      {result && (
+        <>
+          {result.total === 0 ? (
+            <p>Belum ada revisi published.</p>
+          ) : (
+            <>
+              <ol>
+                {result.revisions.map((item) => (
+                  <li key={item.revisionId}>
+                    <button
+                      type="button"
+                      aria-pressed={selectedId === item.revisionId}
+                      onClick={() => setSelectedId(item.revisionId)}
+                    >
+                      Revisi {item.revisionId}
+                    </button>{' '}
+                    <time dateTime={item.publishedAt}>{item.publishedAt}</time>{' '}
+                    · draft v{item.draftVersion}
+                  </li>
+                ))}
+              </ol>
+              <div className="map-controls" aria-label="Halaman riwayat">
+                <button
+                  type="button"
+                  disabled={page === 1}
+                  onClick={() => changePage(page - 1)}
+                >
+                  Sebelumnya
+                </button>
+                <span>
+                  Halaman {page} · {result.total} revisi
+                </span>
+                <button
+                  type="button"
+                  disabled={page * 10 >= result.total}
+                  onClick={() => changePage(page + 1)}
+                >
+                  Berikutnya
+                </button>
+              </div>
+            </>
+          )}
+        </>
+      )}
+      {selectedId && (
+        <div aria-label="Pratinjau revisi published">
+          <h3>Pratinjau revisi {selectedId}</h3>
+          <MapCanvas
+            key={selectedId}
+            source={{ kind: 'revision', revisionId: selectedId }}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function Workspace({
   user,
   busy,
@@ -68,6 +197,7 @@ export function Workspace({
         <p className="eyebrow">RUANG KERJA</p>
         <a href="#overview">Ringkasan</a>
         <a href="#canvas">Kanvas</a>
+        <a href="#published-history">Riwayat</a>
         <a href="#properties">Properti</a>
         <button type="button" disabled={busy} onClick={onLogout}>
           Keluar
@@ -125,6 +255,7 @@ export function Workspace({
             <p>Pilih node site di kanvas untuk membuka properti visualnya.</p>
           </aside>
         </div>
+        <PublishedHistory />
       </div>
     </div>
   );

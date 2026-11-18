@@ -883,6 +883,7 @@ export function MapCanvas({
   const canEdit = kind === 'draft' && editable;
   const canPublish = kind === 'draft' && publishable;
   const token = source.kind === 'published' ? source.token : '';
+  const revisionId = source.kind === 'revision' ? source.revisionId : '';
   // ponytail: Unsaved draft lives in page memory; add durable local storage only if reload recovery enters approved scope.
   const [history, setHistory] = useState<EditHistory | null>(null);
   const [error, setError] = useState('');
@@ -939,7 +940,11 @@ export function MapCanvas({
     let active = true;
     (kind === 'draft'
       ? loadDraft()
-      : loadMap({ kind: 'published', token }).then((content) => ({
+      : loadMap(
+          kind === 'published'
+            ? { kind: 'published', token }
+            : { kind: 'revision', revisionId },
+        ).then((content) => ({
           content,
           etag: null,
         }))
@@ -973,7 +978,7 @@ export function MapCanvas({
     return () => {
       active = false;
     };
-  }, [kind, token]);
+  }, [kind, token, revisionId]);
 
   const map = history?.present;
   const dirty = useMemo(() => (history ? isDirty(history) : false), [history]);
@@ -1856,7 +1861,7 @@ export function MapCanvas({
           <MapDrawing
             layout={drawnLayout ?? layout}
             view={view}
-            kind={source.kind}
+            kind={kind === 'draft' ? 'draft' : 'published'}
             names={names}
             hiddenLayers={hiddenLayers}
             selected={selected}

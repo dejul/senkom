@@ -3,9 +3,17 @@ import type { components, MapContentV2 } from '@senkom/shared-types';
 import { adminApi, ApiError } from './api';
 
 export type MapSource =
-  { kind: 'draft' } | { kind: 'published'; token: string };
+  | { kind: 'draft' }
+  | { kind: 'published'; token: string }
+  | { kind: 'revision'; revisionId: string };
 
 export type DraftMap = { content: MapContentV2; etag: string };
+export type Revision = components['schemas']['Revision'];
+export type RevisionPage = {
+  revisions: Revision[];
+  page: number;
+  total: number;
+};
 export type ValidationResult =
   components['schemas']['ValidationResponse']['data'];
 export type PublicationResult =
@@ -39,7 +47,11 @@ function parseDraft(payload: unknown, response: Response): DraftMap {
 }
 
 async function adminMapRequest(
-  path: '/map/draft' | '/map/validate' | '/map/publish',
+  path:
+    | '/map/draft'
+    | '/map/validate'
+    | '/map/publish'
+    | `/map-revisions?page=${number}&perPage=10`,
   method: 'GET' | 'PUT' | 'POST',
   content?: MapContentV2,
   etag?: string,
@@ -196,6 +208,67 @@ export async function publishDraft(etag: string): Promise<PublicationResult> {
   return data as PublicationResult;
 }
 
+export async function loadRevisions(page: number): Promise<RevisionPage> {
+  if (!Number.isSafeInteger(page) || page < 1)
+    throw new ApiError(0, 'INVALID_PAGE', 'Halaman riwayat tidak valid.');
+  const { payload, response } = await adminMapRequest(
+    `/map-revisions?page=${page}&perPage=10`,
+    'GET',
+  );
+  const data =
+    payload && typeof payload === 'object' && 'data' in payload
+      ? payload.data
+      : null;
+  const meta =
+    payload && typeof payload === 'object' && 'meta' in payload
+      ? payload.meta
+      : null;
+  if (
+    !Array.isArray(data) ||
+    data.length > 10 ||
+    !data.every(
+      (item: unknown) =>
+        item &&
+        typeof item === 'object' &&
+        'revisionId' in item &&
+        typeof item.revisionId === 'string' &&
+        item.revisionId.length > 0 &&
+        'draftVersion' in item &&
+        typeof item.draftVersion === 'number' &&
+        Number.isSafeInteger(item.draftVersion) &&
+        item.draftVersion > 0 &&
+        'publishedAt' in item &&
+        typeof item.publishedAt === 'string' &&
+        item.publishedAt.length > 0 &&
+        'publishedBy' in item &&
+        typeof item.publishedBy === 'string' &&
+        item.publishedBy.length > 0 &&
+        'checksum' in item &&
+        typeof item.checksum === 'string' &&
+        /^[a-f0-9]{64}$/.test(item.checksum),
+    ) ||
+    !meta ||
+    typeof meta !== 'object' ||
+    !('apiVersion' in meta) ||
+    meta.apiVersion !== '1' ||
+    !('schemaVersion' in meta) ||
+    meta.schemaVersion !== 2 ||
+    !('page' in meta) ||
+    meta.page !== page ||
+    !('perPage' in meta) ||
+    meta.perPage !== 10 ||
+    !('total' in meta) ||
+    !Number.isSafeInteger(meta.total) ||
+    (meta.total as number) < 0
+  )
+    throw new ApiError(
+      response.status,
+      'INVALID_RESPONSE',
+      'Respons riwayat tidak valid.',
+    );
+  return { revisions: data as Revision[], page, total: meta.total as number };
+}
+
 export async function loadMap(source: MapSource): Promise<MapContentV2> {
   const published = source.kind === 'published';
   let response: Response;
@@ -203,7 +276,9 @@ export async function loadMap(source: MapSource): Promise<MapContentV2> {
     response = await fetch(
       published
         ? '/api/v1/viewer/map?schemaVersion=2'
-        : '/api/v1/admin/map/draft',
+        : source.kind === 'revision'
+          ? `/api/v1/admin/map-revisions/${encodeURIComponent(source.revisionId)}`
+          : '/api/v1/admin/map/draft',
       {
         method: 'GET',
         credentials: published ? 'omit' : 'same-origin',
@@ -243,7 +318,7 @@ export async function loadMap(source: MapSource): Promise<MapContentV2> {
   try {
     if (!payload || typeof payload !== 'object' || !('data' in payload))
       throw new Error();
-    if (published) {
+    if (published || source.kind === 'revision') {
       const snapshot = parsePublishedMapV2(payload.data);
       return snapshot;
     }
