@@ -1,19 +1,29 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 sampai 2B-07 VERIFIED/terintegrasi**.
+Phase 2B: **parent 2B-01 sampai 2B-08 VERIFIED/terintegrasi**; 2B-09 WIP.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: selesaikan parent 2B-08 gate PR/CI; merge manual sesuai kebijakan lalu verifikasi CI postmerge sebelum menandai parent VERIFIED. 2B-09 belum dimulai.
+Next executable: 2B-09a real API browser E2E. 2B-09b dan gate parent belum dimulai.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## 2B-09a — real API browser E2E (2026-11-18)
+
+- Prasyarat parent 2B-08 **VERIFIED**: [PR #37](https://github.com/dejul/senkom/pull/37) MERGED manual pada `b7a6fba7c7c05bed95e00cc3f4e5e3d3460f2a74`; final head `80b1ba8bee3cdd8d6db4daf63c9a7dabf6c1309c` terintegrasi. [CI postmerge `44285811651`](https://github.com/dejul/senkom/actions/runs/44285811651) pada merge SHA SUCCESS, 16/16 mandatory PASS, 0 skip. Snapshot WIP parent di bawah historis.
+- Branch `feature/phase-2b-09a` dari merge SHA itu, worktree awal bersih; tiga worktree lain dan dua stash historis utuh. V2 baris 95: E2E editor→draft→validate→publish memakai API Laravel nyata, flow lengkap dan negative tests. Parent 2B-09 tetap WIP; 2B-09b dan gate parent tidak dikerjakan.
+- E2E memakai MySQL disposable loopback `senkom_ci_http_test`, Laravel `APP_ENV=testing`, fixture DEMO acak, storage sesi terisolasi, Vite proxy loopback dan Chromium Electron. `powershell -NoProfile -File scripts/phase2-browser-e2e.ps1` exit 0 dua kali: draft/reload, validasi positif/negatif, publish, 11 revisi/pagination, konflik dua editor HTTP 409 dan Undo/Redo/recovery, rollback cancel/stale/sukses, role/viewer/anonim. MySQL/env/port runner bersih setelah tes; [matriks lengkap](phase-2-verification.md#2b-09a--real-api-browser-e2e-2026-11-18).
+- Full frontend 165/165, lint/kontrak, typecheck/build, Electron smoke, Composer validate/audit dan npm production audit exit 0. PHPUnit/MySQL/HTTP/schema/PHP lint lokal **NOT RUN**; CI PR wajib membuktikan. CI 16-check existing belum menjalankan suite browser API nyata.
+- Implementasi commit `56a4d0ec93230cc2953ddc26b3bdb6318c7f6484` pushed; [PR #38](https://github.com/dejul/senkom/pull/38) OPEN. [CI PR implementation-head `44290153808`](https://github.com/dejul/senkom/actions/runs/44290153808) SUCCESS 16/16 mandatory PASS, 0 skip; PHPUnit 141/4.133, frontend 165, schema 33, HTTP/MySQL, lint/build/Electron/kontrak/audit PASS. [Auto-Merge V2 `44291159476`](https://github.com/dejul/senkom/actions/runs/44291159476) memblokir klaim VERIFIED yang sengaja tidak dibuat; merge manual. CI exact-head evidence commit masih diperlukan.
+- Status **WIP — local gate dan implementation-head CI PASS; awaiting manual merge**. 2B-09a belum VERIFIED sebelum integrasi dan CI postmerge. Parent 2B-09 WIP; 2B-09b tidak dimulai.
 
 ## Parent 2B-08 gate (2026-11-18)
 
+- Closure: PR #37 MERGED pada `b7a6fba7c7c05bed95e00cc3f4e5e3d3460f2a74`; [CI postmerge `44285811651`](https://github.com/dejul/senkom/actions/runs/44285811651) SUCCESS tepat pada SHA itu, **16/16 mandatory PASS, 0 skip**. **Parent 2B-08 VERIFIED**; status WIP berikut snapshot pra-merge.
 - Branch `feature/phase-2b-08-gate` dari `origin/main` `b7cf2da83520d76edd690c9698f9320fbd2d82e8`; worktree awal bersih, tiga worktree lain dan dua stash historis utuh. Scope parent `docs/codegen-plan.md` baris 148: preview/history published dan rollback sesuai role; snapshot immutable, konfirmasi/audit, draft terpisah. Hanya bukti dokumentasi, tidak ada product change atau 2B-09.
 - Prasyarat 2B-08b [PR #36](https://github.com/dejul/senkom/pull/36) MERGED manual pada SHA itu; final head `b780c88608929578d5d70bd2daf27e1f16960b02` ancestor `origin/main`. [CI PR exact-head `44238332704`](https://github.com/dejul/senkom/actions/runs/44238332704) dan [CI postmerge `44240949024`](https://github.com/dejul/senkom/actions/runs/44240949024) SUCCESS, masing-masing **16/16 mandatory PASS, 0 skip**; postmerge PHPUnit 141/4.133, MySQL/HTTP, frontend 165, schema 33, lint/build/Electron/OpenAPI/audit PASS. [Auto-Merge V2 `44239073232`](https://github.com/dejul/senkom/actions/runs/44239073232) memblokir klaim verifikasi ambigu; merge manual. **2B-08b VERIFIED**; snapshot WIP di bawah historis.
 - Parent fokus 32/32, full frontend 165/165; lint, kontrak, build/typecheck, Electron smoke, PHP lint, Composer validate/audit dan npm production audit exit 0. Dua preview Electron Chromium + API mock exit 0: pagination, immutable preview, cancel 0 write, stale 409 0 mutasi, dua rollback sukses, role, dirty Undo/Redo/Save, 376 px, 0 error konsol. Backend/MySQL/HTTP lokal dan browser API nyata **NOT RUN**; CI merged baseline membuktikan backend, browser API nyata tetap 2B-09a. [Matriks rinci](phase-2-verification.md#parent-2b-08-gate-2026-11-18).
-- Status **WIP** sampai PR gate MERGED dan CI postmerge pada SHA merge PASS. PR parent-only perlu merge manual; 2B-09 belum dimulai.
+- Snapshot pra-merge: status **WIP** sampai PR gate MERGED dan CI postmerge pada SHA merge PASS. PR parent-only memerlukan merge manual; 2B-09 belum dimulai saat catatan ini ditulis.
 - Bukti gate commit `ead99f60314b762df1241f6ff576e7de4e885acb`; dua dokumen scope, `git diff --cached --check` exit 0, 28 added lines/0 high-confidence secret hit. Evidence commit/push/PR/CI exact-head menyusul.
 
 ## 2B-08b - Rollback UI confirmation/role (2026-11-18)
