@@ -13,9 +13,9 @@ import {
   loadDraft,
   loadMap,
   publishDraft,
+  type DraftMap,
   saveDraft,
   validateDraft,
-  type DraftMap,
   type MapSource,
   type ValidationResult,
 } from './map-api';
@@ -874,10 +874,12 @@ export function MapCanvas({
   source,
   editable = false,
   publishable = false,
+  rollback,
 }: {
   source: MapSource;
   editable?: boolean;
   publishable?: boolean;
+  rollback?: { before: string; after: DraftMap } | undefined;
 }) {
   const kind = source.kind;
   const canEdit = kind === 'draft' && editable;
@@ -889,6 +891,7 @@ export function MapCanvas({
   const [error, setError] = useState('');
   const [etag, setEtag] = useState<string | null>(null);
   const pendingRef = useRef(false);
+  const handledRollback = useRef<typeof rollback>(undefined);
   const [pending, setPending] = useState<
     'save' | 'validate' | 'publish' | null
   >(null);
@@ -982,6 +985,27 @@ export function MapCanvas({
 
   const map = history?.present;
   const dirty = useMemo(() => (history ? isDirty(history) : false), [history]);
+
+  useEffect(() => {
+    if (!rollback || !history || !etag || handledRollback.current === rollback)
+      return;
+    handledRollback.current = rollback;
+    setValidation(null);
+    if (
+      etag === rollback.after.etag &&
+      JSON.stringify(history.baseline) ===
+        JSON.stringify(rollback.after.content)
+    )
+      return;
+    if (
+      etag === rollback.before &&
+      !pendingRef.current &&
+      JSON.stringify(history.baseline) ===
+        JSON.stringify(rollback.after.content)
+    )
+      setEtag(rollback.after.etag);
+    else setConflict(true);
+  }, [rollback, etag, history]);
 
   async function save() {
     if (

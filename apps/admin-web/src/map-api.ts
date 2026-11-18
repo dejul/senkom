@@ -51,9 +51,10 @@ async function adminMapRequest(
     | '/map/draft'
     | '/map/validate'
     | '/map/publish'
+    | '/map/rollback'
     | `/map-revisions?page=${number}&perPage=10`,
   method: 'GET' | 'PUT' | 'POST',
-  content?: MapContentV2,
+  content?: MapContentV2 | { revisionId: string },
   etag?: string,
 ): Promise<{ payload: unknown; response: Response }> {
   if (method !== 'GET' && !etag)
@@ -206,6 +207,40 @@ export async function publishDraft(etag: string): Promise<PublicationResult> {
       'Respons publikasi tidak valid.',
     );
   return data as PublicationResult;
+}
+
+export async function rollbackRevision(
+  revisionId: string,
+  etag: string,
+): Promise<DraftMap> {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      revisionId,
+    )
+  )
+    throw new ApiError(0, 'INVALID_REVISION', 'ID revisi tidak valid.');
+  const { payload, response } = await adminMapRequest(
+    '/map/rollback',
+    'POST',
+    { revisionId },
+    etag,
+  );
+  if (
+    response.status !== 200 ||
+    !payload ||
+    typeof payload !== 'object' ||
+    !('data' in payload) ||
+    !payload.data ||
+    typeof payload.data !== 'object' ||
+    !('activeRevisionId' in payload.data) ||
+    payload.data.activeRevisionId !== revisionId
+  )
+    throw new ApiError(
+      response.status,
+      'INVALID_RESPONSE',
+      'Respons rollback tidak valid.',
+    );
+  return parseDraft(payload, response);
 }
 
 export async function loadRevisions(page: number): Promise<RevisionPage> {
