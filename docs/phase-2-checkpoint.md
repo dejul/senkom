@@ -14,6 +14,7 @@ Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimul
 - Branch `feature/phase-2b-08b` dari SHA merge #35, worktree awal bersih; tiga worktree lain dan dua stash historis utuh. V2 baris 94: rollback UI dengan konfirmasi dan role. Publisher/admin memilih revision history, membaca draft ETag, mengonfirmasi lalu POST dengan CSRF/`If-Match`; API existing menjaga audit, revision immutable, map scope dan atomisitas. Dirty draft/Undo/Redo dipertahankan; mismatch memakai recovery 409 existing. Backend/schema/OpenAPI/dependency tidak berubah.
 - Fokus 27/27, full frontend 165/165, lint/kontrak/typecheck/build/Electron/PHP lint/Composer validate+audit/npm production audit exit 0, 0 vulnerability. Mock Electron Chromium exit 0: cancel 0 write, 409 tanpa mutasi, dua rollback sukses, role, snapshot/draft terpisah, dirty Undo/Redo/Save, 376 px, 0 console error. PHPUnit/MySQL/HTTP lokal dan browser API nyata **NOT RUN**; CI PR wajib membuktikan backend. [Matriks rinci](phase-2-verification.md#2b-08b---rollback-ui-confirmation-and-role).
 - Status **WIP** sampai PR exact-head CI 16/16 tanpa skip, merge, dan CI postmerge. Parent 2B-08 WIP; 2B-09a UI API nyata tetap deferred.
+- Implementasi commit `2b4443835052420b42406cf7044dfd4aea370ac8`; staged review enam path/336 added lines, `git diff --cached --check` exit 0, 0 high-confidence secret hit. Evidence commit/push/PR/CI exact-head menyusul.
 
 ## 2B-08a - Published preview/history (2026-11-18)
 
