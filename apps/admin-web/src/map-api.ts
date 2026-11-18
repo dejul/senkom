@@ -1,11 +1,15 @@
 import { parseMapContent, parsePublishedMapV2 } from '@senkom/map-schema';
-import type { MapContentV2 } from '@senkom/shared-types';
+import type { components, MapContentV2 } from '@senkom/shared-types';
 import { adminApi, ApiError } from './api';
 
 export type MapSource =
   { kind: 'draft' } | { kind: 'published'; token: string };
 
 export type DraftMap = { content: MapContentV2; etag: string };
+export type ValidationResult =
+  components['schemas']['ValidationResponse']['data'];
+export type PublicationResult =
+  components['schemas']['PublicationResponse']['data'];
 
 function parseDraft(payload: unknown, response: Response): DraftMap {
   try {
@@ -34,29 +38,32 @@ function parseDraft(payload: unknown, response: Response): DraftMap {
   }
 }
 
-async function draftRequest(
-  method: 'GET' | 'PUT',
+async function adminMapRequest(
+  path: '/map/draft' | '/map/validate' | '/map/publish',
+  method: 'GET' | 'PUT' | 'POST',
   content?: MapContentV2,
   etag?: string,
-): Promise<DraftMap> {
+): Promise<{ payload: unknown; response: Response }> {
+  if (method !== 'GET' && !etag)
+    throw new ApiError(0, 'MISSING_ETAG', 'Versi draft tidak tersedia.');
   const csrfToken =
-    method === 'PUT' ? (await adminApi.session()).csrfToken : undefined;
+    method !== 'GET' ? (await adminApi.session()).csrfToken : undefined;
   let response: Response;
   try {
-    response = await fetch('/api/v1/admin/map/draft', {
+    response = await fetch(`/api/v1/admin${path}`, {
       method,
       credentials: 'same-origin',
       cache: 'no-store',
       redirect: 'error',
       headers: {
         Accept: 'application/json',
-        ...(method === 'PUT'
+        ...(method !== 'GET'
           ? {
-              'Content-Type': 'application/json',
               'X-CSRF-TOKEN': csrfToken!,
               'If-Match': etag!,
             }
           : {}),
+        ...(content ? { 'Content-Type': 'application/json' } : {}),
       },
       ...(content ? { body: JSON.stringify(content) } : {}),
     });
@@ -84,9 +91,25 @@ async function draftRequest(
         ? error.message
         : method === 'GET'
           ? 'Peta tidak dapat dimuat.'
-          : 'Draft tidak dapat disimpan.',
+          : path === '/map/draft'
+            ? 'Draft tidak dapat disimpan.'
+            : 'Operasi draft gagal.',
     );
   }
+  return { payload, response };
+}
+
+async function draftRequest(
+  method: 'GET' | 'PUT',
+  content?: MapContentV2,
+  etag?: string,
+): Promise<DraftMap> {
+  const { payload, response } = await adminMapRequest(
+    '/map/draft',
+    method,
+    content,
+    etag,
+  );
   return parseDraft(payload, response);
 }
 
@@ -99,6 +122,78 @@ export function saveDraft(
   etag: string,
 ): Promise<DraftMap> {
   return draftRequest('PUT', content, etag);
+}
+
+export async function validateDraft(etag: string): Promise<ValidationResult> {
+  const { payload, response } = await adminMapRequest(
+    '/map/validate',
+    'POST',
+    undefined,
+    etag,
+  );
+  const data =
+    payload && typeof payload === 'object' && 'data' in payload
+      ? payload.data
+      : null;
+  if (
+    response.status !== 200 ||
+    !data ||
+    typeof data !== 'object' ||
+    !('valid' in data) ||
+    typeof data.valid !== 'boolean' ||
+    !('version' in data) ||
+    !Number.isSafeInteger(data.version) ||
+    etag !== `"draft:${data.version}"` ||
+    !('issues' in data) ||
+    !Array.isArray(data.issues) ||
+    !data.issues.every(
+      (issue: unknown) =>
+        issue &&
+        typeof issue === 'object' &&
+        'path' in issue &&
+        typeof issue.path === 'string' &&
+        'code' in issue &&
+        typeof issue.code === 'string' &&
+        'message' in issue &&
+        typeof issue.message === 'string',
+    )
+  )
+    throw new ApiError(
+      response.status,
+      'INVALID_RESPONSE',
+      'Respons validasi tidak valid.',
+    );
+  return data as ValidationResult;
+}
+
+export async function publishDraft(etag: string): Promise<PublicationResult> {
+  const { payload, response } = await adminMapRequest(
+    '/map/publish',
+    'POST',
+    undefined,
+    etag,
+  );
+  const data =
+    payload && typeof payload === 'object' && 'data' in payload
+      ? payload.data
+      : null;
+  if (
+    response.status !== 201 ||
+    !data ||
+    typeof data !== 'object' ||
+    !('revisionId' in data) ||
+    typeof data.revisionId !== 'string' ||
+    !data.revisionId ||
+    !('publishedAt' in data) ||
+    typeof data.publishedAt !== 'string' ||
+    !data.publishedAt
+  )
+    throw new ApiError(
+      response.status,
+      'INVALID_RESPONSE',
+      'Respons publikasi tidak valid.',
+    );
+  return data as PublicationResult;
 }
 
 export async function loadMap(source: MapSource): Promise<MapContentV2> {

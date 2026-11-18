@@ -109,6 +109,9 @@ export function Workspace({
               editable={user.roles.some((role) =>
                 ['infrastructure_editor', 'system_admin'].includes(role),
               )}
+              publishable={user.roles.some((role) =>
+                ['publisher', 'system_admin'].includes(role),
+              )}
             />
           </section>
           <aside

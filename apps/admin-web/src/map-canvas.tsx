@@ -1,18 +1,23 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
   type PointerEvent,
 } from 'react';
 import { parseMapContent } from '@senkom/map-schema';
 import type { MapContentV2 } from '@senkom/shared-types';
+import { ApiError } from './api';
 import {
   loadDraft,
   loadMap,
+  publishDraft,
   saveDraft,
+  validateDraft,
   type DraftMap,
   type MapSource,
+  type ValidationResult,
 } from './map-api';
 import { FoForms } from './fo-forms';
 import { LogicalForms } from './logical-forms';
@@ -860,20 +865,32 @@ function pointerPoint(svg: SVGSVGElement, x: number, y: number) {
 export function MapCanvas({
   source,
   editable = false,
+  publishable = false,
 }: {
   source: MapSource;
   editable?: boolean;
+  publishable?: boolean;
 }) {
   const kind = source.kind;
   const canEdit = kind === 'draft' && editable;
+  const canPublish = kind === 'draft' && publishable;
   const token = source.kind === 'published' ? source.token : '';
   // ponytail: Unsaved draft lives in page memory; add durable local storage only if reload recovery enters approved scope.
   const [history, setHistory] = useState<EditHistory | null>(null);
   const [error, setError] = useState('');
   const [etag, setEtag] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const pendingRef = useRef(false);
+  const [pending, setPending] = useState<
+    'save' | 'validate' | 'publish' | null
+  >(null);
   const [saveError, setSaveError] = useState('');
   const [saveFeedback, setSaveFeedback] = useState('');
+  const [validation, setValidation] = useState<{
+    etag: string;
+    result: ValidationResult;
+  } | null>(null);
+  const [workflowError, setWorkflowError] = useState('');
+  const [publishFeedback, setPublishFeedback] = useState('');
   const [view, setView] = useState<View | null>(null);
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   const [nodeDrag, setNodeDrag] = useState<{
@@ -951,11 +968,15 @@ export function MapCanvas({
   const dirty = useMemo(() => (history ? isDirty(history) : false), [history]);
 
   async function save() {
-    if (!canEdit || !history || !dirty || !etag || saving) return;
+    if (!canEdit || !history || !dirty || !etag || pendingRef.current) return;
     const submitted = history.present;
-    setSaving(true);
+    pendingRef.current = true;
+    setPending('save');
     setSaveError('');
     setSaveFeedback('');
+    setValidation(null);
+    setWorkflowError('');
+    setPublishFeedback('');
     try {
       const saved = await saveDraft(submitted, etag);
       setHistory(
@@ -968,7 +989,77 @@ export function MapCanvas({
         cause instanceof Error ? cause.message : 'Draft tidak dapat disimpan.',
       );
     } finally {
-      setSaving(false);
+      pendingRef.current = false;
+      setPending(null);
+    }
+  }
+
+  async function validate() {
+    if (!canPublish || !history || dirty || !etag || pendingRef.current) return;
+    pendingRef.current = true;
+    setPending('validate');
+    setValidation(null);
+    setWorkflowError('');
+    setPublishFeedback('');
+    try {
+      const result = await validateDraft(etag);
+      setValidation({ etag, result });
+    } catch (cause) {
+      setWorkflowError(
+        cause instanceof Error ? cause.message : 'Validasi gagal.',
+      );
+    } finally {
+      pendingRef.current = false;
+      setPending(null);
+    }
+  }
+
+  async function publish() {
+    if (
+      !canPublish ||
+      !history ||
+      dirty ||
+      !etag ||
+      pendingRef.current ||
+      !validation?.result.valid ||
+      validation.etag !== etag
+    )
+      return;
+    const submitted = history.present;
+    pendingRef.current = true;
+    setPending('publish');
+    setWorkflowError('');
+    setPublishFeedback('');
+    try {
+      const published = await publishDraft(etag);
+      setValidation(null);
+      setPublishFeedback(
+        `Revisi ${published.revisionId} dipublikasikan pada ${published.publishedAt}.`,
+      );
+      try {
+        const fresh = await loadDraft();
+        setHistory(
+          (current) => current && acceptSavedDraft(current, submitted, fresh),
+        );
+        setEtag(fresh.etag);
+      } catch {
+        setEtag(null);
+        setWorkflowError(
+          'Publikasi berhasil, tetapi versi draft terbaru gagal dimuat. Perubahan lokal tetap ada; muat ulang halaman sebelum operasi berikutnya.',
+        );
+      }
+    } catch (cause) {
+      setValidation(null);
+      setWorkflowError(
+        cause instanceof ApiError && cause.code === 'INVALID_RESPONSE'
+          ? 'Status publikasi belum pasti. Periksa server sebelum mengulangi publikasi.'
+          : cause instanceof Error
+            ? cause.message
+            : 'Publikasi gagal.',
+      );
+    } finally {
+      pendingRef.current = false;
+      setPending(null);
     }
   }
   const layout = map?.layout;
@@ -1542,10 +1633,10 @@ export function MapCanvas({
           </span>
           <button
             type="button"
-            disabled={!dirty || saving || !etag}
+            disabled={!dirty || pending !== null || !etag}
             onClick={save}
           >
-            {saving ? 'Menyimpan draft…' : 'Simpan draft'}
+            {pending === 'save' ? 'Menyimpan draft…' : 'Simpan draft'}
           </button>
           {saveError && (
             <p role="alert" className="error">
@@ -1553,6 +1644,54 @@ export function MapCanvas({
             </p>
           )}
           {saveFeedback && <p role="status">{saveFeedback}</p>}
+        </div>
+      )}
+      {canPublish && history && (
+        <div className="map-controls" aria-label="Validasi dan publikasi draft">
+          <button
+            type="button"
+            disabled={!etag || dirty || pending !== null}
+            onClick={validate}
+          >
+            {pending === 'validate' ? 'Memvalidasi draft…' : 'Validasi draft'}
+          </button>
+          <button
+            type="button"
+            disabled={
+              !etag ||
+              dirty ||
+              pending !== null ||
+              !validation?.result.valid ||
+              validation.etag !== etag
+            }
+            onClick={publish}
+          >
+            {pending === 'publish' ? 'Mempublikasikan…' : 'Publikasikan draft'}
+          </button>
+          {dirty && (
+            <p role="status">Simpan draft sebelum validasi dan publikasi.</p>
+          )}
+          {validation &&
+            (validation.result.valid ? (
+              <p role="status">Draft valid dan siap dipublikasikan.</p>
+            ) : (
+              <div role="alert" className="error">
+                <p>Draft belum valid:</p>
+                <ul>
+                  {validation.result.issues.map((issue, index) => (
+                    <li key={`${issue.path}:${issue.code}:${index}`}>
+                      {issue.path}: {issue.code} — {issue.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          {workflowError && (
+            <p role="alert" className="error">
+              {workflowError}
+            </p>
+          )}
+          {publishFeedback && <p role="status">{publishFeedback}</p>}
         </div>
       )}
       {layout && view && !loading && !empty && (
