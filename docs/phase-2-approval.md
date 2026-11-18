@@ -7,6 +7,8 @@ per sesi menurut [rencana batch](codegen-plan.md), dengan batas internal empat j
 
 Status: **Phase 2A COMPLETE**
 
+Update 2026-11-18: Phase 2B parent 2B-01–09 **VERIFIED** setelah PR #41 merge `8360510092c409fc7459cebb727050a37b70c37a` dan CI postmerge `44316726467` PASS 16/16, 0 skip. Gate 2B-09 menutup 2B tanpa gate closure tambahan. Phase 2C-01a sedang WIP pada PR #42; Phase 2 keseluruhan belum COMPLETE.
+
 Final Acceptance 2026-11-12: parent 2A-01–11 VERIFIED; integrated `main`
 `34f3986be27a2602f1a227bbc6870d9c34eacb5d` lulus clean checkout,
 install/build, MySQL disposable, backend 141 tes/4.133 asersi/0 skip, HTTP
