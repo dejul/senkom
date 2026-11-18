@@ -24,8 +24,8 @@ disetujui untuk micro-batch 2B-01a; Phase 2C belum dimulai.
 - [x] Tutup gap per batch pada matriks WIP, termasuk kontrak `CablePatch` (2A-06).
 - [x] Phase 2A: database, API, authorization, draft/validate/publish, history/rollback.
 - [x] Gate 2A-11: seluruh batch 2A, pengujian MySQL/HTTP/kontrak dan laporan selesai.
-- [ ] Phase 2B: editor visual, undo/redo, concurrency dan workflow publikasi.
-- [ ] Gate 2B-09: seluruh batch 2B, pengujian UI/API dan laporan selesai.
+- [x] Phase 2B: editor visual, undo/redo, concurrency dan workflow publikasi.
+- [x] Gate 2B-09: seluruh batch 2B, pengujian UI/API dan laporan selesai; PR #41 merge `8360510092c409fc7459cebb727050a37b70c37a`, CI postmerge `44316726467` 16/16 PASS, 0 skip.
 - [ ] Phase 2C: sinkronisasi published map, cache atomik, offline dan penolakan payload.
 - [ ] Gate 2C-05: seluruh batch 2C, regresi Phase 0/1, Electron smoke dan dokumentasi akhir selesai.
 - [ ] UAT empat monitor fisik pada PC Senkom RTX 3060.
