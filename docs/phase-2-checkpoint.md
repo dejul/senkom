@@ -5,15 +5,16 @@ Phase 2B: **parent 2B-01 sampai 2B-08 VERIFIED/terintegrasi**; 2B-09 WIP.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next executable: 2B-09b UI regression, responsive screenshots, dan operator SOP. Gate parent 2B-09 belum dimulai.
+Next permitted: parent 2B-09 gate setelah closure evidence terintegrasi; gate itu belum dimulai.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
 
 ## 2B-09b — UI regression, responsive screenshots, SOP (2026-11-18)
 
+- Closure: [PR #39](https://github.com/dejul/senkom/pull/39) MERGED manual pada `03cb968445075566b5ca058f1ab2a77f04a2e76c`; final head `364d7c761e8e86a73d5133980ac8597970a7e416` terintegrasi. [CI postmerge `44297273822`](https://github.com/dejul/senkom/actions/runs/44297273822) SUCCESS tepat pada merge SHA, **16/16 mandatory PASS, 0 skip**. Approval SOP/screenshot pengguna PASS; **2B-09b VERIFIED**. Catatan OPEN/WIP di bawah snapshot pra-merge. Parent 2B-09 tetap WIP sampai gate terpisah.
 - Prasyarat **2B-09a VERIFIED**: [PR #38](https://github.com/dejul/senkom/pull/38) MERGED manual pada `40478ef5cc6056ae06594cb6bc661e0ae834c025`; final head `6799d265c18a0ca13fdd10833790308217d61983` terintegrasi. [CI PR exact-head `44291626090`](https://github.com/dejul/senkom/actions/runs/44291626090) dan [CI postmerge `44293444089`](https://github.com/dejul/senkom/actions/runs/44293444089) SUCCESS pada SHA masing-masing, 16/16 mandatory PASS, 0 skip. Browser API nyata tetap bukti lokal terpisah dari matriks CI.
 - Branch `feature/phase-2b-09b` dari SHA merge #38, worktree awal bersih; tiga worktree lain dan dua stash historis utuh. Scope V2 baris 96: regresi UI, screenshot desktop/narrow, SOP operator, full UI/backend/contract tests dan approval. Parent gate 2B-09/Phase 2C tidak dikerjakan.
 - `powershell -NoProfile -File scripts/phase2-browser-e2e.ps1`: exit 0 dengan API Laravel/MySQL nyata, seluruh skenario 2B-09a tetap PASS; screenshot DEMO desktop 1583×942 dan narrow 453×922 pada display scale, CSS viewport narrow 376 px tanpa horizontal overflow. Keduanya diperiksa visual; map/history dan panel properti tampil. Label peta pada fit zoom kecil di narrow, kontrol zoom tersedia. MySQL/env/port runner bersih. Fokus UI 32/32, frontend 165/165, lint/kontrak, typecheck/build, Electron smoke, PHP lint, Composer validate/audit, npm production audit exit 0. [SOP operator](phase-2b-operator-sop.md) tersedia; [matriks](phase-2-verification.md#2b-09b--ui-regression-responsive-screenshots-sop-2026-11-18).
-- Status **WIP — local gate PASS; PR CI, approval hasil, merge dan postmerge CI pending**. Parent 2B-09 tetap WIP; gate parent/Phase 2C tidak dimulai.
+- Snapshot pra-merge: pengguna menyetujui SOP dan kedua screenshot DEMO pada 2026-11-18. Implementation commit `364d7c761e8e86a73d5133980ac8597970a7e416` pushed; [CI PR implementation-head `44296133008`](https://github.com/dejul/senkom/actions/runs/44296133008) SUCCESS 16/16 mandatory PASS, 0 skip; PHPUnit 141/4.133, frontend 165, schema 33, MySQL/HTTP, lint/build/Electron/kontrak/audit PASS. [Auto-Merge V2 `44297158439`](https://github.com/dejul/senkom/actions/runs/44297158439) memblokir klaim VERIFIED yang belum dibuat saat itu; merge manual. Status WIP saat catatan ini ditulis; parent gate/Phase 2C tidak dimulai.
 
 ## 2B-09a — real API browser E2E (2026-11-18)
 
