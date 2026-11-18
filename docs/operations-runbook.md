@@ -20,6 +20,12 @@ task scheduler, service, firewall rule, atau perubahan OS yang dipasang.
 - Smoke gagal: perlu sesi desktop Windows yang dapat membuat Electron window;
   `.artifacts/*.png` berisi capture uji, bukan bukti hardware acceptance.
 
+## Phase 2C-01a: provisi origin API desktop
+
+Operator Windows menaruh `api-origin.json` di `%APPDATA%\SENKOM` (Electron `userData`) sebelum menjalankan desktop. Isi hanya origin HTTPS tepercaya, misalnya `{"origin":"https://api.example.test"}`. Jangan masukkan token, username, password, path, query, atau fragment. Batasi akses berkas dengan izin akun operator OS; restart desktop setelah mengganti berkas.
+
+Main process membaca berkas maksimal 2 KiB dan menolak field tambahan atau origin invalid; berkas absen berarti API belum dikonfigurasi. Log hanya mencatat `api-origin-ready` atau `api-origin-rejected`, tanpa nilai origin. Guard request main process menerima path pada origin tersebut saja, memakai `redirect: 'error'`, dan menolak respons dari origin lain. Renderer/IPC tidak menerima konfigurasi. 2C-01a belum melakukan fetch otomatis; token viewer, timeout/batas respons, snapshot, dan sync masuk batch berikutnya.
+
 ## SOP yang masih harus dibangun
 
 Main process menyimpan cache/config di `app.getPath('userData')`, menggunakan atomic

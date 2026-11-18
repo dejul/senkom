@@ -1,12 +1,23 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 sampai 2B-08 VERIFIED/terintegrasi**; parent 2B-09 gate PASS lokal, **WIP menunggu merge dan CI postmerge**.
+Phase 2B: **parent 2B-01 sampai 2B-09 VERIFIED/terintegrasi**; tidak ada gate closure 2B terpisah. Phase 2C-01a WIP.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next permitted: review/merge manual PR parent 2B-09 setelah CI exact-head PASS; verifikasi CI postmerge sebelum status VERIFIED.
-Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+Next permitted: hanya micro-batch 2C-01a sesuai [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md) baris 102. 2C-01b dan batch berikutnya belum dimulai.
+
+## 2C-01a — main-process API origin provisioning/allowlist (2026-11-18)
+
+- Branch `feature/phase-2c-01a` dari `origin/main` `8360510092c409fc7459cebb727050a37b70c37a`; worktree awal bersih, tiga worktree dan dua stash historis tidak diubah. Scope V2 baris 102: origin API pada main process; HTTPS, redirect, dan origin invalid ditolak. Parent 2C-01 menambahkan token/DPAPI, timeout, dan batas respons di batch berikutnya; 2C-01b dan fetch/cache/sync belum dikerjakan.
+- `%APPDATA%\SENKOM\api-origin.json` hanya memuat origin HTTPS, maksimum 2 KiB, field tambahan ditolak; absent berarti unconfigured, invalid ditolak dengan log generik tanpa origin. Main process tidak meneruskan origin atau token melalui renderer/IPC. Guard request hanya menerima path pada origin tersebut, mengirim `redirect: 'error'`, dan menolak URL respons berbeda. [Provisi operator](operations-runbook.md#phase-2c-01a-provisi-origin-api-desktop).
+- Fokus `npm test -- tests/desktop-api-origin.test.ts`: 2/2 PASS; full frontend 167/167, lint/kontrak, typecheck/build desktop+admin, Electron smoke, PHP lint, Composer validate/audit, npm production audit exit 0; audit 0 temuan. Browser E2E Laravel/MySQL nyata exit 0, seluruh skenario editor/publish/rollback dan screenshot desktop/narrow PASS; disposable MySQL dihapus. Backend PHPUnit/MySQL/HTTP/schema lokal mandiri **NOT RUN**; mandatory PR CI masih diperlukan. [Matriks](phase-2-verification.md#2c-01a--main-process-api-origin-provisioningallowlist-2026-11-18).
+- Implementation commit `777be3aa18807198b065cb1636985b75e07b5ff4` pushed pada [PR #42](https://github.com/dejul/senkom/pull/42), target `main`. Status **WIP — local gate PASS; PR exact-head CI, merge, dan postmerge CI pending**. Tidak ada API fetch otomatis, token viewer, atau perubahan perilaku renderer. Next hanya menyelesaikan gate 2C-01a; 2C-01b memerlukan permintaan terpisah.
+
+## Closure Phase 2B dan entry 2C (2026-11-18)
+
+- [PR parent #41](https://github.com/dejul/senkom/pull/41) MERGED manual pada `8360510092c409fc7459cebb727050a37b70c37a`; final head `fa4fbb705971e9a2813d39823cef30b9cc4bd79b` terintegrasi. [CI PR exact-head `44312920056`](https://github.com/dejul/senkom/actions/runs/44312920056) dan [CI postmerge `44316726467`](https://github.com/dejul/senkom/actions/runs/44316726467) SUCCESS pada SHA masing-masing: **16/16 mandatory PASS, 0 skip**. Parent **2B-09 VERIFIED**; browser Laravel/MySQL, screenshot/SOP disetujui, UI/backend/kontrak/security tetap PASS.
+- `docs/codegen-plan.md` baris 149–157 dan V2 baris 95–103: gate 2B-09/child 2B-09b menutup 2B dan membuka 2C; **tidak ada gate closure 2B tambahan**. Phase 2 secara keseluruhan belum COMPLETE (2C-05 tetap pending). Phase 2C telah disetujui di `docs/phase-2-approval.md`; first batch resmi **2C-01a**, main-process API origin provisioning/allowlist, exit HTTPS serta redirect/origin invalid ditolak. Token viewer/DPAPI milik 2C-01b; fetch/cache/sync milik batch berikutnya.
 
 ## Parent 2B-09 gate (2026-11-18)
 

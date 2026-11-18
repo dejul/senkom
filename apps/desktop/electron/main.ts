@@ -26,6 +26,7 @@ import {
 import { planDisplays } from './displays';
 import { loadSnapshot } from './storage';
 import { AdminGate, readAdminCredential } from './admin';
+import { readApiOrigin } from './api-origin';
 import { createLogger, frameSample, readProfile } from './diagnostics';
 import demoMap from '../../../tests/fixtures/demo-map.v1.json';
 
@@ -60,6 +61,9 @@ if (!app.requestSingleInstanceLock()) {
       );
       const { profile, invalid } = await readProfile(directory);
       if (invalid) logger.write('view-profile-rejected');
+      const api = await readApiOrigin(directory);
+      if (api.invalid) logger.write('api-origin-rejected');
+      else if (api.origin) logger.write('api-origin-ready');
       const map = await loadSnapshot(
         directory,
         process.argv.includes('--cache-only') ? undefined : demoMap,
