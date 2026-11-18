@@ -84,8 +84,13 @@ export function createLogger(directory: string, maxBytes = 5 * 1024 * 1024) {
   return {
     write(event: string, fields: Record<string, unknown> = {}): void {
       const line =
-        JSON.stringify({ at: new Date().toISOString(), event, ...fields }) +
-        '\n';
+        JSON.stringify(
+          { at: new Date().toISOString(), event, ...fields },
+          (key, value) =>
+            /token|authorization|secret|password/i.test(key)
+              ? '[REDACTED]'
+              : value,
+        ) + '\n';
       queue = queue
         .then(async () => {
           await mkdir(directory, { recursive: true });
