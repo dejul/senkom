@@ -629,12 +629,53 @@ app.whenReady().then(async () => {
       ),
       false,
     );
-    await writeFile(
-      join(directory, 'browser-e2e.png'),
-      (await admin.webContents.capturePage()).toPNG(),
+    assert.ok(
+      await js(
+        admin,
+        "document.querySelector('#canvas .map-viewport') !== null && document.querySelector('.inventory-forms') !== null && document.querySelector('#published-history') !== null",
+      ),
+    );
+    await js(
+      admin,
+      "document.querySelector('#canvas .map-viewport').scrollIntoView()",
+    );
+    await js(
+      admin,
+      'new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done)))',
+    );
+    const desktop = (await admin.webContents.capturePage()).toPNG();
+    assert.ok(desktop.readUInt32BE(16) >= 1200);
+    await writeFile(join(directory, 'admin-desktop.png'), desktop);
+    admin.setSize(376, 800);
+    await until(admin, 'window.innerWidth <= 376');
+    assert.equal(
+      await js(
+        admin,
+        'document.documentElement.scrollWidth <= window.innerWidth + 2',
+      ),
+      true,
+    );
+    await js(
+      admin,
+      "document.querySelector('#canvas .map-viewport').scrollIntoView()",
+    );
+    await js(
+      admin,
+      'new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done)))',
+    );
+    const narrow = (await admin.webContents.capturePage()).toPNG();
+    await writeFile(join(directory, 'admin-narrow.png'), narrow);
+    const narrowSize = await js(
+      admin,
+      '({width:window.innerWidth,scale:window.devicePixelRatio})',
+    );
+    assert.ok(
+      Math.abs(narrow.readUInt32BE(16) - narrowSize.width * narrowSize.scale) <=
+        4,
+      `Narrow screenshot width ${narrow.readUInt32BE(16)} vs CSS width ${narrowSize.width} at scale ${narrowSize.scale}`,
     );
     console.log(
-      'PASS real API browser: draft/reload, validation errors, publish, immutable paginated history, two-editor 409/recovery, rollback cancel/stale/confirm, role/viewer/anonymous checks',
+      'PASS real API browser: draft/reload, validation errors, publish, immutable paginated history, two-editor 409/recovery, rollback cancel/stale/confirm, role/viewer/anonymous checks, desktop/narrow screenshots without overflow',
     );
   } catch (error) {
     failed = true;
