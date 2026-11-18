@@ -30,7 +30,9 @@ try {
     $browser = Start-Process -FilePath (Join-Path $root 'node_modules/electron/dist/electron.exe') -ArgumentList (Join-Path $PSScriptRoot 'phase2-browser-e2e.cjs') -WindowStyle Hidden -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     Get-Content -LiteralPath $stdout -ErrorAction SilentlyContinue
     Get-Content -LiteralPath $stderr -ErrorAction SilentlyContinue
-    if ($browser.ExitCode -ne 0) { throw "Real API browser E2E failed: exit $($browser.ExitCode)" }
+    if ($browser.ExitCode -ne 0 -or (Get-Content -LiteralPath $stdout -Raw) -notmatch '(?m)^PASS real API browser:' -or -not [string]::IsNullOrWhiteSpace((Get-Content -LiteralPath $stderr -Raw))) {
+        throw "Real API browser E2E failed: exit $($browser.ExitCode)"
+    }
 } catch {
     [Console]::Error.WriteLine($_)
     $exitCode = 1
