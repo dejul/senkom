@@ -1,12 +1,21 @@
 # Checkpoint Phase 2
 
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 sampai 2B-08 VERIFIED/terintegrasi**; 2B-09 WIP.
+Phase 2B: **parent 2B-01 sampai 2B-08 VERIFIED/terintegrasi**; parent 2B-09 gate PASS lokal, **WIP menunggu merge dan CI postmerge**.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next permitted: parent 2B-09 gate setelah closure evidence terintegrasi; gate itu belum dimulai.
+Next permitted: review/merge manual PR parent 2B-09 setelah CI exact-head PASS; verifikasi CI postmerge sebelum status VERIFIED.
 Ikuti [Micro-Batch Plan V2](codegen-microbatch-plan-v2.md). Phase 2C belum dimulai.
+
+## Parent 2B-09 gate (2026-11-18)
+
+- Prasyarat: 2B-09a dan 2B-09b **VERIFIED**. [PR #40](https://github.com/dejul/senkom/pull/40) MERGED manual pada `59d28b9107e3d4f59d0534aad7c9f7d6625ab538`; final head `49490717206a14cba6b8e6fdf52461a720b01ba6` ancestor `origin/main`. [CI postmerge `44310516992`](https://github.com/dejul/senkom/actions/runs/44310516992) SUCCESS tepat pada merge SHA: **16/16 mandatory PASS, 0 skip**, PHPUnit 141 tes/4.133 asersi. Closure evidence terintegrasi.
+- Branch gate `feature/phase-2b-09-gate` dari `origin/main` SHA merge #40; worktree awal bersih, tiga worktree lain dan dua stash historis utuh. Scope hanya gate parent `docs/codegen-plan.md` baris 149; tidak ada perubahan produk/Phase 2C.
+- Browser API nyata `powershell -NoProfile -File scripts/phase2-browser-e2e.ps1`: exit 0; draft/reload, error validasi, publish, history paginated dan preview immutable, dua editor 409/recovery, Undo/Redo, rollback cancel/stale/confirm, role/viewer/anonim PASS. MySQL loopback `_test`, sesi/fixture DEMO terisolasi; runner menghapus MySQL dan kredensial sementara. Browser E2E lokal **di luar matriks CI**.
+- Screenshot DEMO baru `.artifacts/browser-e2e-aHjbBc/admin-desktop.png` dan `admin-narrow.png` diperiksa: desktop dan CSS narrow 376 px, tanpa overflow horizontal/clipping kontrol penting. Label peta fit zoom kecil pada narrow; zoom tersedia. SOP operator disetujui pengguna dan cocok dengan role, Save Draft, validasi, publish, history, rollback, konflik, dan batas operasi.
+- Fokus UI 32/32, frontend 165/165, `npm run lint`, `npm run build` (kontrak/typecheck/build desktop+admin), `npm run smoke:desktop`, PHP lint, Composer validate/audit, npm production audit: exit 0; audit 0 temuan. PHPUnit/MySQL/HTTP/schema lokal mandiri **NOT RUN**; CI postmerge #40 membuktikan semua pada SHA merge. [Matriks parent](phase-2-verification.md#parent-2b-09-gate-2026-11-18).
+- Evidence commit `aada9a61aefb481e64302ce338f233274d6de750` pada [PR parent #41](https://github.com/dejul/senkom/pull/41), target `main`; CI exact-head final menunggu. **2B-09 PARENT GATE PASSED — AWAITING MERGE**. Status parent **WIP** sampai PR gate merge dan CI postmerge PASS. PR parent-only memerlukan merge manual; Phase 2C tidak dimulai.
 
 ## 2B-09b — UI regression, responsive screenshots, SOP (2026-11-18)
 
