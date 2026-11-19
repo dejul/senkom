@@ -1,5 +1,34 @@
 # Verifikasi Phase 2
 
+## 2C-03b — hot swap published revision (2026-11-19)
+
+Status: **VERIFIED** untuk acceptance lokal 2C-03b; integrasi tetap WIP sampai PR merge dan CI postmerge PASS. Prasyarat [PR #52](https://github.com/dejul/senkom/pull/52) MERGED pada `b8929b3e324399d33492d0c453614434300724b4` dan [CI postmerge `44534985286`](https://github.com/dejul/senkom/actions/runs/44534985286) exact merge SHA, 16/16 mandatory PASS, 0 skip. Lima dokumen closure terintegrasi; 2C-03a VERIFIED. Branch `feature/phase-2c-03b` dari merge SHA, worktree awal bersih.
+
+| Kriteria 2C-03b       | Bukti lokal                                                                                                                  | Status |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Restore published v2  | Startup membaca cache tervalidasi; origin absen tetap menampilkan cache valid, korup/first-run tidak memakai DEMO produksi   | PASS   |
+| Swap tanpa restart    | Refresh manual main-process 200 tervalidasi menyimpan cache atomik lalu mengganti state renderer; kanvas remount per revisi  | PASS   |
+| Gagal tetap peta lama | Checksum/schema/304 invalid atau fetch/write gagal menolak kandidat; state lama tidak diganti                                | PASS   |
+| Schema dan view-only  | Label node/edge serta simbol v2 tampil; v1 DEMO tetap didukung; renderer hanya menerima snapshot, tanpa token atau write API | PASS   |
+| Batas scope           | Tidak ada scheduler, backoff, reconnect otomatis, parent gate, atau batch 2C-04                                              | PASS   |
+
+| Perintah lokal                                                                                                          | Hasil                                                                                                                |
+| ----------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `npm test -- tests/desktop-published-viewer.test.ts`; `npm test -- tests/desktop-published-render.test.ts`              | exit 0; 3/3                                                                                                          |
+| `npm test`                                                                                                              | exit 0; 190/190, 33 file                                                                                             |
+| `npm run lint`                                                                                                          | exit 0; ESLint, Prettier, OpenAPI contract                                                                           |
+| `npm run build`                                                                                                         | exit 0; contract, typecheck, desktop/admin production build                                                          |
+| `npm run smoke:desktop`                                                                                                 | exit 0; Windows Electron DEMO, offline, corrupt, empty, published v2, first-run published kosong; sandbox/bridge/CSP |
+| `composer --working-dir apps/api validate --no-check-publish`; `composer --working-dir apps/api audit --no-interaction` | exit 0; 0 advisory                                                                                                   |
+| `npm audit --omit=dev --audit-level=high`                                                                               | exit 0; 0 vulnerability                                                                                              |
+| PHPUnit, MySQL integration, HTTP smoke, real Laravel/MySQL browser E2E                                                  | NOT RUN lokal; backend tidak berubah, CI PR awal PASS; final head pending                                            |
+
+Keamanan: token dibaca hanya pada Electron main dan dikirim sebagai Bearer lewat `fetchPublishedMap`; renderer/IPC/log tidak memuat nilainya. Origin HTTPS, redirect/cross-origin guard, timeout 10 detik, 8 MiB streaming, checksum/ETag, schema v2, dan atomic cache tetap dipakai. Refresh berulang serentak ditolak. Perubahan Electron main/preload serta script smoke memerlukan merge manual menurut Auto-Merge V2. Parent 2C-03 WIP; 2C-04 NOT STARTED.
+
+Commit implementasi `eb3bd4a427453330d53c155a339cdafbd78b7d0d` pada `feature/phase-2c-03b`. Dua puluh path staged sesuai scope; `git diff --cached --check` exit 0 dan scan signature rahasia high-confidence 0 hit. Tidak ada credential, `.env`, DB, log, dependency, atau build output staged. Commit bukti ini memerlukan CI exact-head PR tersendiri.
+
+[PR #53](https://github.com/dejul/senkom/pull/53) dibuka dari branch tersebut. CI PR pada head bukti awal `e30ecd92c2f30df5ae1ced2b3c3d4f8c990e23a4`, [run `44538422039`](https://github.com/dejul/senkom/actions/runs/44538422039), PASS 16/16 mandatory, 0 skip; PHPUnit/MySQL/HTTP/schema, lint/build/Electron/audit lulus di CI. [Auto-Merge V2 `44539259840`](https://github.com/dejul/senkom/actions/runs/44539259840) memblokir merge otomatis dengan alasan `Wrong branch for verified work`; perubahan Electron main/preload juga memerlukan merge manual. Commit bukti CI ini memerlukan exact-head CI ulang. Parent 2C-03 tetap WIP.
+
 ## 2C-03a — closure pascamerge (2026-11-19)
 
 Status: **VERIFIED**. [PR #51](https://github.com/dejul/senkom/pull/51) merge manual pada `5f221249cf7b8d5320d49efa208dba975d1409c7`; head `8504a2e23d891aebcd1b83210bccff1c5c25e37a` ancestor dan tujuh path batch terintegrasi identik. [CI exact-head `44529679554`](https://github.com/dejul/senkom/actions/runs/44529679554) serta [CI postmerge `44530790514`](https://github.com/dejul/senkom/actions/runs/44530790514) masing-masing PASS 16/16 mandatory, 0 skip; postmerge event `push` pada exact merge SHA. [Auto-Merge V2 `44530609527`](https://github.com/dejul/senkom/actions/runs/44530609527) berhenti karena klaim otomatis tidak ada; Electron main storage memerlukan merge manual. Matriks acceptance dan tes lokal tercatat di bagian batch historis di bawah. Parent 2C-03 WIP; 2C-03b NOT STARTED.
@@ -21,16 +50,16 @@ Prasyarat: [PR #50](https://github.com/dejul/senkom/pull/50) MERGED pada `f789de
 | First run dan keamanan     | File absen menghasilkan `snapshot: null`, tanpa fallback DEMO; tidak ada token dalam envelope, IPC baru, fetch, atau scheduler                 | PASS   |
 | Isolasi scope              | Main startup, DEMO cache Phase 1, renderer, dan jalur fetch 2C-02 tidak berubah; hot swap milik 2C-03b                                         | PASS   |
 
-| Perintah lokal                                                                                                                                       | Hasil                                                                       |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `npm test -- tests/desktop-published-cache.test.ts tests/viewer-storage.test.ts tests/desktop-api-origin.test.ts tests/desktop-viewer-token.test.ts` | exit 0; 32/32                                                               |
-| `npm test`                                                                                                                                           | exit 0; 187/187, 31 file                                                    |
-| `npm run lint`                                                                                                                                       | exit 0; ESLint, Prettier, OpenAPI contract                                  |
-| `npm run build`                                                                                                                                      | exit 0; contracts, typecheck, desktop/admin production build                |
-| `npm run smoke:desktop`                                                                                                                              | exit 0; Windows Electron Phase 1, sandbox/bridge/CSP, offline/corrupt/empty |
-| `composer --working-dir apps/api validate --strict`; `composer --working-dir apps/api audit --locked`                                                | exit 0; 0 advisory                                                          |
-| `npm audit --omit=dev --audit-level=low`                                                                                                             | exit 0; 0 vulnerability                                                     |
-| PHPUnit, MySQL integration, HTTP smoke, schema standalone, real Laravel/MySQL browser E2E                                                            | NOT RUN lokal; batch hanya storage Electron main; PR CI mandatory pending   |
+| Perintah lokal                                                                                                                                       | Hasil                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `npm test -- tests/desktop-published-cache.test.ts tests/viewer-storage.test.ts tests/desktop-api-origin.test.ts tests/desktop-viewer-token.test.ts` | exit 0; 32/32                                                                         |
+| `npm test`                                                                                                                                           | exit 0; 187/187, 31 file                                                              |
+| `npm run lint`                                                                                                                                       | exit 0; ESLint, Prettier, OpenAPI contract                                            |
+| `npm run build`                                                                                                                                      | exit 0; contracts, typecheck, desktop/admin production build                          |
+| `npm run smoke:desktop`                                                                                                                              | exit 0; Windows Electron Phase 1, sandbox/bridge/CSP, offline/corrupt/empty           |
+| `composer --working-dir apps/api validate --strict`; `composer --working-dir apps/api audit --locked`                                                | exit 0; 0 advisory                                                                    |
+| `npm audit --omit=dev --audit-level=low`                                                                                                             | exit 0; 0 vulnerability                                                               |
+| PHPUnit, MySQL integration, HTTP smoke, schema standalone, real Laravel/MySQL browser E2E                                                            | NOT RUN lokal; batch hanya storage Electron main; CI PR awal PASS; final head pending |
 
 Status 2C-03a **WIP** sampai PR merge dan CI postmerge PASS. Parent 2C-03 WIP; 2C-03b NOT STARTED. PR exact-head CI dan Auto-Merge V2 pending.
 

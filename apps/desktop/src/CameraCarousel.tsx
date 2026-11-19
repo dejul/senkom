@@ -24,7 +24,7 @@ export function CameraTile({
         <strong>{camera.code}</strong>
         <span>{camera.enabled ? 'PLACEHOLDER' : 'PLACEHOLDER / NONAKTIF'}</span>
       </div>
-      <span className="camera-note">DEMO / TIDAK ADA STREAM</span>
+      <span className="camera-note">TIDAK ADA STREAM</span>
     </div>
   );
 }

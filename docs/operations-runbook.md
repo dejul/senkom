@@ -54,6 +54,10 @@ Helper Electron main `savePublishedCache` menulis `published-map-cache.v2.json` 
 
 PR #51 merge `5f221249cf7b8d5320d49efa208dba975d1409c7` dan CI postmerge `44530790514` PASS 16/16, 0 skip: 2C-03a VERIFIED. Helper masih belum dipanggil saat startup; 2C-03b belum dimulai.
 
+## Phase 2C-03b: refresh manual published map
+
+Saat origin HTTPS dan token viewer terprovisi, viewer memulihkan cache published v2 valid saat startup. Tanpa cache valid, peta produksi kosong dengan pesan; DEMO hanya berjalan tanpa konteks published. Tombol `Perbarui peta` mengirim permintaan read-only ke Electron main. Main mengambil token dari Windows safeStorage, memanggil GET published yang dibatasi 10 detik dan 8 MiB, serta memeriksa checksum, ETag, API/schema v2. Respons 200 disimpan atomik sebelum snapshot baru tampil; 304 diterima hanya jika ETag/checksum cocok dengan cache valid. Kegagalan membiarkan peta lama terlihat. Tidak ada refresh berkala; scheduler/backoff/status koneksi milik 2C-04. PR #52 merge `b8929b3e324399d33492d0c453614434300724b4` dan CI postmerge `44534985286` PASS 16/16, 0 skip menutup prasyarat 2C-03a.
+
 ## SOP yang masih harus dibangun
 
 Main process menyimpan cache/config di `app.getPath('userData')`, menggunakan atomic

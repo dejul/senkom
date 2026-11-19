@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('senkom', bridge);
 
 const viewer: ViewerBridge = Object.freeze({
   bootstrap: () => ipcRenderer.invoke('viewer:bootstrap'),
+  refreshPublished: () => ipcRenderer.invoke('viewer:refresh-published'),
   status: () => ipcRenderer.invoke('viewer:status'),
   reportFrame: (sample: { fps: number; painted: boolean }) =>
     ipcRenderer.invoke('viewer:frame', sample),

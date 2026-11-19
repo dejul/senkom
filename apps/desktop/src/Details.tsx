@@ -1,4 +1,4 @@
-import type { PublishedMap } from '@senkom/shared-types';
+import type { PublishedMap, PublishedMapV2 } from '@senkom/shared-types';
 import type { Selection } from './map-model';
 
 export function Details({
@@ -6,7 +6,7 @@ export function Details({
   selection,
   onClose,
 }: {
-  map: PublishedMap;
+  map: PublishedMap | PublishedMapV2;
   selection: NonNullable<Selection>;
   onClose: () => void;
 }) {
@@ -32,7 +32,7 @@ export function Details({
         </button>
       </div>
       <h2>{site?.name ?? cable?.code ?? edge?.connectionId}</h2>
-      <p className="notice">DEMO / data inventaris, bukan telemetry</p>
+      <p className="notice">Data inventaris, bukan telemetry</p>
       {site && (
         <>
           <dl>

@@ -16,6 +16,7 @@ import type {
   DisplayInfo,
   PerformanceSample,
   ViewerBootstrap,
+  SnapshotState,
   ViewerStatus,
 } from '@senkom/shared-types/viewer';
 import {
@@ -25,10 +26,14 @@ import {
   rendererUrl,
 } from './security';
 import { planDisplays } from './displays';
-import { loadSnapshot } from './storage';
+import { loadPublishedCache, loadSnapshot } from './storage';
 import { AdminGate, readAdminCredential } from './admin';
 import { readApiOrigin } from './api-origin';
-import { prepareViewerToken } from './viewer-token';
+import {
+  refreshPublishedSnapshot,
+  restorePublishedSnapshot,
+} from './published-viewer';
+import { prepareViewerToken, readViewerToken } from './viewer-token';
 import { createLogger, frameSample, readProfile } from './diagnostics';
 import demoMap from '../../../tests/fixtures/demo-map.v1.json';
 
@@ -72,10 +77,14 @@ if (!app.requestSingleInstanceLock()) {
       } catch {
         logger.write('viewer-token-rejected');
       }
-      const map = await loadSnapshot(
-        directory,
-        process.argv.includes('--cache-only') ? undefined : demoMap,
-      );
+      const published = await loadPublishedCache(directory);
+      let map: SnapshotState =
+        api.origin || published.snapshot || published.invalid
+          ? await restorePublishedSnapshot(directory)
+          : await loadSnapshot(
+              directory,
+              process.argv.includes('--cache-only') ? undefined : demoMap,
+            );
       logger.write('snapshot-loaded', {
         source: map.source,
         revision: map.snapshot?.revision ?? null,
@@ -230,8 +239,32 @@ if (!app.requestSingleInstanceLock()) {
         phase: 1,
         version: app.getVersion(),
         map,
+        publishedConfigured: Boolean(api.origin),
         profile,
       }));
+      let refreshing = false;
+      handle(
+        'viewer:refresh-published',
+        0,
+        async (): Promise<SnapshotState> => {
+          if (!api.origin || refreshing) throw new Error('Refresh unavailable');
+          refreshing = true;
+          try {
+            const token = await readViewerToken(directory, safeStorage);
+            if (!token) throw new Error('Refresh unavailable');
+            map = await refreshPublishedSnapshot(directory, api.origin, token);
+            logger.write('published-map-loaded', {
+              revision: map.snapshot?.revision,
+            });
+            return map;
+          } catch {
+            logger.write('published-map-refresh-failed');
+            throw new Error('Refresh peta gagal; peta lama dipertahankan.');
+          } finally {
+            refreshing = false;
+          }
+        },
+      );
       handle('viewer:status', 0, status);
       handle('viewer:frame', 1, (input) => {
         const value = frameSample(input);

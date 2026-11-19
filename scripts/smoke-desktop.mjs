@@ -81,10 +81,53 @@ await writeFile(
   }),
 );
 try {
-  for (const scenario of ['demo', 'offline', 'corrupt', 'empty']) {
+  for (const scenario of [
+    'demo',
+    'offline',
+    'corrupt',
+    'empty',
+    'published',
+    'published-empty',
+  ]) {
     const cachePath = join(userData, 'demo-map-cache.v1.json');
     if (scenario === 'corrupt') await writeFile(cachePath, '{invalid-cache');
     if (scenario === 'empty') await unlink(cachePath);
+    if (scenario === 'published') {
+      const snapshot = {
+        ...JSON.parse(
+          await readFile(
+            new URL('../tests/fixtures/demo-map.v1.json', import.meta.url),
+          ),
+        ),
+        schemaVersion: 2,
+        mapId: 'main',
+        revision: 'published-smoke',
+        dataOrigin: 'production',
+      };
+      delete snapshot.demoLabel;
+      snapshot.layout.nodes[0].label = 'Published Smoke Node';
+      snapshot.layout.nodes[0].symbol = 'router';
+      await writeFile(
+        join(userData, 'published-map-cache.v2.json'),
+        JSON.stringify({
+          cacheVersion: 1,
+          revision: snapshot.revision,
+          fetchedAt: new Date().toISOString(),
+          checksum: createHash('sha256')
+            .update(JSON.stringify(snapshot))
+            .digest('hex'),
+          etag: `"sha256:${'a'.repeat(64)}"`,
+          snapshot,
+        }),
+      );
+    }
+    if (scenario === 'published-empty') {
+      await unlink(join(userData, 'published-map-cache.v2.json'));
+      await writeFile(
+        join(userData, 'api-origin.json'),
+        JSON.stringify({ origin: 'https://viewer.example.test' }),
+      );
+    }
     const child = spawn(
       electron,
       [appData, ...(scenario === 'demo' ? [] : ['--cache-only'])],
