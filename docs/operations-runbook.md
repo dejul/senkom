@@ -46,6 +46,8 @@ Setelah respons 200 dibaca dengan batas 2C-02a, Electron main mencocokkan SHA-25
 
 PR #48 merge `f532c0c21d56151011d87a7fb07faca245c81273` dan CI postmerge `44484587079` PASS 16/16, 0 skip: 2C-02b VERIFIED. Helper tetap belum dipanggil otomatis; parent 2C-02 masih menunggu gate terpisah.
 
+Parent 2C-02 kemudian VERIFIED/CLOSED melalui PR #49 merge `355ce33271685cf436be4cbe778b0d0b728dab7f` dan CI postmerge `44486785441` PASS 16/16, 0 skip. Helper tetap belum dipanggil otomatis; 2C-03a cache restore/write belum dimulai.
+
 ## SOP yang masih harus dibangun
 
 Main process menyimpan cache/config di `app.getPath('userData')`, menggunakan atomic
