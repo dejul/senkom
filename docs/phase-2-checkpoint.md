@@ -8,7 +8,9 @@ Branch `feature/phase-2c-03b` dari `origin/main` merge SHA; worktree awal bersih
 
 Commit implementasi `eb3bd4a427453330d53c155a339cdafbd78b7d0d`; commit bukti dan CI exact-head PR menyusul.
 
-Fokus published viewer/render 3/3, frontend 190/190, lint/OpenAPI, typecheck/build desktop+admin, Windows Electron smoke DEMO/offline/corrupt/empty/published/published-empty, Composer validate/audit, npm production audit PASS lokal; audit 0 temuan. PHPUnit/MySQL/HTTP dan browser Laravel/MySQL nyata **NOT RUN lokal**; CI PR mandatory pending. [Matriks](phase-2-verification.md#2c-03b--hot-swap-published-revision-2026-11-19). Parent 2C-03 dan Phase 2C tetap WIP; 2C-04 tidak dimulai.
+Fokus published viewer/render 3/3, frontend 190/190, lint/OpenAPI, typecheck/build desktop+admin, Windows Electron smoke DEMO/offline/corrupt/empty/published/published-empty, Composer validate/audit, npm production audit PASS lokal; audit 0 temuan. PHPUnit/MySQL/HTTP dan browser Laravel/MySQL nyata **NOT RUN lokal**; CI PR awal PASS; final head pending. [Matriks](phase-2-verification.md#2c-03b--hot-swap-published-revision-2026-11-19). Parent 2C-03 dan Phase 2C tetap WIP; 2C-04 tidak dimulai.
+
+[PR #53](https://github.com/dejul/senkom/pull/53) CI awal `44538422039` pada `e30ecd92c2f30df5ae1ced2b3c3d4f8c990e23a4` PASS 16/16 mandatory, 0 skip. Auto-Merge V2 `44539259840` memblokir merge otomatis (`Wrong branch for verified work`); perubahan Electron main/preload juga perlu merge manual. Commit bukti ini perlu exact-head CI ulang; 2C-03b WIP sampai merge dan CI postmerge PASS.
 
 ## 2C-03a — closure setelah PR merge (2026-11-19)
 
