@@ -1,5 +1,37 @@
 # Verifikasi Phase 2
 
+## Parent 2C-02 — verification gate (2026-11-19)
+
+Prasyarat: [PR #48](https://github.com/dejul/senkom/pull/48) MERGED pada `f532c0c21d56151011d87a7fb07faca245c81273`; head `bbeff39d486b761c91fd581def12f727cc6701a4` ancestor. [CI postmerge `44484587079`](https://github.com/dejul/senkom/actions/runs/44484587079) event `push`, exact merge SHA, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. Tujuh berkas 2C-02b terintegrasi identik; **2C-02b VERIFIED**. 2C-02a sudah VERIFIED, sehingga parent gate 2C-02 adalah langkah berikut menurut V2 dan `docs/codegen-plan.md`. Branch `feature/phase-2c-02-gate` dari merge SHA, worktree awal bersih; worktree dan stash lain dipertahankan.
+
+| Acceptance parent                   | Bukti                                                                                                                                                           | Status |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| GET published HTTPS/main/token      | `fetchPublishedMap` GET schema v2; Bearer hanya di main; origin/path/redirect tidak tepercaya ditolak                                                           | PASS   |
+| 200/304 dan ETag                    | Respons 200 dengan checksum/ETag sesuai body diterima; 304 tanpa body dan `If-None-Match` teruji                                                                | PASS   |
+| Checksum dan kompatibilitas         | SHA-256 exact bytes, ETag hash, API v1/schema v2, `parsePublishedMapV2` serta referensi; mismatch, missing/malformed, unknown schema, dan payload rusak ditolak | PASS   |
+| Unauthorized dan keamanan error     | 401/403 ditolak; transport/status error generik; token tidak masuk renderer/IPC/log                                                                             | PASS   |
+| Timeout/abort dan ukuran            | 10 detik sampai body selesai, caller cancel; 8 MiB tepat batas diterima, stream berlebih ditolak walau `Content-Length` hilang/palsu                            | PASS   |
+| Regresi desktop dan fase sebelumnya | Windows Electron smoke, frontend, API nyata browser, dan CI postmerge #48 lulus                                                                                 | PASS   |
+| Scope                               | Tidak ada cache, sync otomatis, fetch startup, atau IPC baru; 2C-03/04 tetap terpisah                                                                           | PASS   |
+
+| Perintah lokal pada merge SHA                                                                         | Hasil                                                                       |
+| ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `npm test -- tests/desktop-api-origin.test.ts tests/desktop-viewer-token.test.ts`                     | exit 0; 10/10                                                               |
+| `npm test`                                                                                            | exit 0; 175/175, 30 file                                                    |
+| `npm run lint`                                                                                        | exit 0; ESLint, Prettier, OpenAPI contract                                  |
+| `npm run build`                                                                                       | exit 0; contract, typecheck, desktop/admin production build                 |
+| `npm run smoke:desktop`                                                                               | exit 0; Windows Electron Phase 1, sandbox/bridge/CSP, offline/corrupt/empty |
+| `composer --working-dir apps/api validate --strict`; `composer --working-dir apps/api audit --locked` | exit 0; 0 advisory                                                          |
+| `npm audit --omit=dev --audit-level=low`                                                              | exit 0; 0 vulnerability                                                     |
+| `powershell -NoProfile -File scripts/phase2-browser-e2e.ps1`                                          | exit 0; real Laravel/MySQL browser PASS; disposable DB stopped/removed      |
+| PHPUnit, MySQL integration, HTTP smoke, schema standalone                                             | NOT RUN lokal; CI postmerge #48 PASS, PR gate CI pending                    |
+
+Status parent **WIP** sampai PR gate merge dan CI postmerge PASS. Gate ini hanya bukti acceptance; tidak mengubah produk atau memulai 2C-03a. CI PR exact-head dan Auto-Merge V2 pending.
+
+Review lima staged path hanya dokumen in-scope; `git diff --cached --check` exit 0, scan signature rahasia high-confidence 0 hit. Tidak ada perubahan produk atau hasil tes yang ditandai PASS tanpa eksekusi.
+
+Commit gate `2ab2863c735a75f89fe40b6396361537ff399f95` didorong ke `feature/phase-2c-02-gate`; [PR #49](https://github.com/dejul/senkom/pull/49) dibuka ke `main`. Commit catatan PR ini memerlukan CI exact-head ulang. Parent gate tetap WIP sampai merge dan CI postmerge PASS; PR docs-only memerlukan merge manual.
+
 ## 2C-02b — validasi checksum dan schema published (2026-11-19)
 
 Prasyarat: PR #47 MERGED pada `b7039830ff558dc7ad3b8c233ded8956bac4e0bc`; [CI postmerge `44468345655`](https://github.com/dejul/senkom/actions/runs/44468345655) event `push`, exact SHA, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. Implementasi 2C-02a dan enam dokumen terkait terintegrasi. **2C-02a VERIFIED**; Parent 2C-02 tetap WIP. Branch baru `feature/phase-2c-02b` dari `origin/main` merge SHA, worktree awal bersih; tiga worktree dan dua stash lain utuh.

@@ -44,6 +44,8 @@ Helper Electron main `fetchPublishedMap` memakai GET viewer map schema v2 pada o
 
 Setelah respons 200 dibaca dengan batas 2C-02a, Electron main mencocokkan SHA-256 byte body dengan `X-Content-SHA256` dan `ETag` `"sha256:<hash>"`. Envelope JSON harus berisi tepat `data` dan `meta`; metadata harus API v1/schema v2; `data` lulus schema published v2 termasuk referensi. Nilai yang hilang, tidak cocok, atau schema tak dikenal ditolak dengan error generik. Respons 304 tidak memiliki body untuk divalidasi; pengikatan 304 dengan revisi cache dilakukan pada 2C-03a. Helper belum dijalankan otomatis. Jangan aktifkan sinkronisasi sebelum gate 2C-02b merge dan CI postmerge PASS.
 
+PR #48 merge `f532c0c21d56151011d87a7fb07faca245c81273` dan CI postmerge `44484587079` PASS 16/16, 0 skip: 2C-02b VERIFIED. Helper tetap belum dipanggil otomatis; parent 2C-02 masih menunggu gate terpisah.
+
 ## SOP yang masih harus dibangun
 
 Main process menyimpan cache/config di `app.getPath('userData')`, menggunakan atomic
