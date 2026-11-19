@@ -1,5 +1,13 @@
 # Checkpoint Phase 2
 
+## Parent 2C-01 gate — Stage B (2026-11-19)
+
+Status: **WIP — local gate PASS; PR exact-head CI, merge, dan postmerge CI pending**. [PR #45](https://github.com/dejul/senkom/pull/45) MERGED pada `bb785652f90237f1c8355ddb5b739992804cd4d8`; final head `8f99e0eb679a41c76021f88c27d620d17ebfd014` ancestor `origin/main`, dan enam dokumen realignment sama pada head dan merge. [CI postmerge `44457252842`](https://github.com/dejul/senkom/actions/runs/44457252842) SUCCESS pada exact merge SHA: 16/16 mandatory PASS, 0 skip. Branch gate `feature/phase-2c-01-gate` dari merge itu; worktree awal bersih, tiga worktree dan dua stash historis utuh.
+
+Kriteria revisi: origin HTTPS operator pada main process; origin invalid, path lintas-origin, dan redirect ditolak; token viewer Windows `safeStorage` tersimpan terlindung, rotasi gagal mempertahankan token lama, tanpa token pada renderer/IPC/log. Fokus desktop/security 25/25 dan full frontend 170/170 PASS lokal. Lint, typecheck/build desktop+admin, kontrak OpenAPI, PHP lint, Composer validate/audit, npm production audit, dan Windows Electron smoke PASS lokal; audit 0 temuan. Browser Laravel/MySQL nyata PASS (editor/publish/history/409/rollback/role/viewer, desktop/narrow); database disposable dihapus. PHPUnit/MySQL/HTTP/schema standalone lokal **NOT RUN**; CI postmerge #45 membuktikan baseline, CI exact-head PR gate masih diperlukan. [Matriks dan perintah](phase-2-verification.md#parent-2c-01-gate-stage-b-2026-11-19).
+
+Review repository Public: tracked paths dan riwayat `origin/main` tidak memuat `.env` aktual, key, database, dependency, atau log; hanya `.env.example` historis. Scan signature key/provider token pada tracked dan relevant history 0 hit; delapan assignment panjang adalah fixture sintetis pada tes/smoke. CI `contents: read`; trusted auto-merge `actions: read`, `contents: write`, `pull-requests: read` dan menjalankan script dari `main`. Log token viewer direduksi, IPC/bootstrap tidak membawanya. Tidak ditemukan host produksi/credential operasional dalam pemeriksaan terarah. Tidak ada nilai secret ditampilkan. Timeout request dan batas body HTTP tetap **NOT IMPLEMENTED**, wajib 2C-02a; published fetch/sync tidak boleh dikirim sebelum keduanya terverifikasi. Parent 2C-01 tetap WIP sampai PR gate merge dan CI postmerge PASS; 2C-02a NOT STARTED.
+
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
 Phase 2B: **parent 2B-01 sampai 2B-09 VERIFIED/terintegrasi**; tidak ada gate closure 2B terpisah. 2C-01a dan 2C-01b VERIFIED; parent 2C-01 WIP.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
