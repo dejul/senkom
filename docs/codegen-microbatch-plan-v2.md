@@ -101,8 +101,8 @@
 | ----------- | ---------------------------------------------- | ------------ | ------------------------------------------- |
 | `2C-01a`    | Main-process API origin provisioning/allowlist | NOT STARTED  | HTTPS, redirect/origin invalid ditolak      |
 | `2C-01b`    | Viewer token OS-protection, IPC/log redaction  | NOT STARTED  | Token tak mencapai renderer                 |
-| `2C-02a`    | HTTP published fetch + ETag/304 + guard        | NOT STARTED  | Timeout/abort/size/304 teruji               |
-| `2C-02b`    | Checksum/schema compatibility validation       | NOT STARTED  | Hash mismatch dan unknown schema ditolak    |
+| `2C-02a`    | HTTP published fetch + ETag/304 + guard        | VERIFIED     | Timeout/abort/size/304 teruji               |
+| `2C-02b`    | Checksum/schema compatibility validation       | WIP          | Hash mismatch dan unknown schema ditolak    |
 | `2C-03a`    | Cache restore dan atomic disk write            | NOT STARTED  | Corrupt/write fail mempertahankan last good |
 | `2C-03b`    | Hot swap revision dan schema-compatible render | NOT STARTED  | Peta tidak blank; view-only tetap           |
 | `2C-04a`    | Scheduler sync no-overlap, backoff/jitter      | NOT STARTED  | Tidak membuat request storm                 |

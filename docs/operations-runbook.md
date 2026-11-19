@@ -40,6 +40,10 @@ Pengguna menyetujui Option B untuk konflik rencana: parent 2C-01 hanya menutup p
 
 Helper Electron main `fetchPublishedMap` memakai GET viewer map schema v2 pada origin HTTPS operator dengan token viewer dan `If-None-Match` bila ada ETag. Default timeout 10 detik berlaku sampai body selesai; request dan pembaca stream dibatalkan saat timeout atau caller membatalkan. Body dibatasi 8 MiB saat dibaca; `Content-Length` hilang atau menyesatkan tidak melewati batas, dan stream berlebih dibatalkan. Error hanya kode generik tanpa token, URL, atau body. Kedua nilai adalah default konservatif untuk batch ini, bukan konfigurasi operator. Helper belum dipanggil saat startup; tidak ada fetch/sinkronisasi otomatis, cache, atau perubahan renderer. Checksum/schema validation milik 2C-02b. Jangan aktifkan fetch published sebelum gate 2C-02a merge dan CI postmerge PASS serta validasi 2C-02b yang relevan.
 
+## Phase 2C-02b: validasi respons published
+
+Setelah respons 200 dibaca dengan batas 2C-02a, Electron main mencocokkan SHA-256 byte body dengan `X-Content-SHA256` dan `ETag` `"sha256:<hash>"`. Envelope JSON harus berisi tepat `data` dan `meta`; metadata harus API v1/schema v2; `data` lulus schema published v2 termasuk referensi. Nilai yang hilang, tidak cocok, atau schema tak dikenal ditolak dengan error generik. Respons 304 tidak memiliki body untuk divalidasi; pengikatan 304 dengan revisi cache dilakukan pada 2C-03a. Helper belum dijalankan otomatis. Jangan aktifkan sinkronisasi sebelum gate 2C-02b merge dan CI postmerge PASS.
+
 ## SOP yang masih harus dibangun
 
 Main process menyimpan cache/config di `app.getPath('userData')`, menggunakan atomic
