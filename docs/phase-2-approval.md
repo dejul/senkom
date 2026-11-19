@@ -9,6 +9,8 @@ Status: **Phase 2A COMPLETE**
 
 Update 2026-11-18: Phase 2B parent 2B-01–09 **VERIFIED** setelah PR #41 merge `8360510092c409fc7459cebb727050a37b70c37a` dan CI postmerge `44316726467` PASS 16/16, 0 skip. Gate 2B-09 menutup 2B tanpa gate closure tambahan. 2C-01a **VERIFIED** setelah PR #42 merge `5e55dc67c39f1cc06e7d2af7a7bf9fe254949230` dan CI postmerge `44322957575` PASS 16/16, 0 skip. 2C-01b WIP; Phase 2 keseluruhan belum COMPLETE.
 
+Keputusan pengguna 2026-11-19 — **Option B disetujui** untuk konflik rencana Phase 2C. Parent 2C-01 memverifikasi provisi origin HTTPS dan token Windows yang aman pada main process, penolakan origin/path/redirect tak tepercaya, isolasi renderer/IPC/log, dan rotasi token aman. Timeout request dan batas ukuran body HTTP dipindah secara eksplisit ke acceptance wajib 2C-02a, tempat fetch published pertama dikerjakan; keduanya tidak dihapus atau dijadikan opsional. Fetch HTTP published/sinkronisasi tidak boleh dikirim sebelum kedua kontrol diimplementasi dan diverifikasi. Revisi rencana harus merge dan CI postmerge PASS, lalu parent 2C-01 lulus gate terpisah sebelum 2C-02a dimulai. Parent 2C-01 masih WIP; 2C-02a NOT STARTED. Status 2C-01b WIP pada update 2026-11-18 di atas historis; closure VERIFIED tercatat pada checkpoint/verifikasi.
+
 Final Acceptance 2026-11-12: parent 2A-01–11 VERIFIED; integrated `main`
 `34f3986be27a2602f1a227bbc6870d9c34eacb5d` lulus clean checkout,
 install/build, MySQL disposable, backend 141 tes/4.133 asersi/0 skip, HTTP
