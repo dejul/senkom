@@ -1,6 +1,16 @@
 # Checkpoint Phase 2
 
+## 2C-02a — bounded published HTTP fetch (2026-11-19)
+
+Status: **WIP — local gate PASS; PR exact-head CI, merge, dan postmerge CI pending**. Branch `feature/phase-2c-02a` dari `origin/main` `bcee41c8a768aad6c66cdcddb2350920a3ec9763` sesudah parent 2C-01 VERIFIED. Worktree awal bersih; tiga worktree lain dan dua stash historis utuh. Scope hanya GET published viewer v2 dengan Bearer token pada Electron main module, `ETag`/`If-None-Match`, respons 200/304, timeout dan batas ukuran respons. Belum ada fetch otomatis, scheduler, cache, checksum/schema validation, atau IPC baru.
+
+`fetchAllowedApi` kini mengembalikan byte bounded, bukan `Response` yang dapat dibaca tanpa batas. Timeout 10.000 ms berlaku sampai body selesai; abort request/reader pada timeout atau pembatalan caller. Maksimum body 8 MiB; `Content-Length` besar ditolak awal, pembacaan stream tetap menghitung byte untuk header hilang/menyesatkan, stream berlebih dibatalkan. Origin HTTPS, path, redirect, dan URL respons tetap divalidasi. Error transport/status generik tidak memuat token. Kedua limit adalah default konservatif 2C-02a, bukan angka spesifikasi produk.
+
+Fokus origin/fetch 6/6, full frontend 174/174, lint, OpenAPI, typecheck/build desktop+admin, PHP lint, Composer validate/audit, npm production audit, Windows Electron smoke dan browser Laravel/MySQL nyata exit 0; audit 0 temuan, database disposable dihapus. Enam staged path in-scope, `git diff --cached --check` exit 0, 347 added lines/0 high-confidence secret-pattern hit. PHPUnit/MySQL/HTTP/schema standalone lokal **NOT RUN**; mandatory PR CI diperlukan. [Matriks dan perintah](phase-2-verification.md#2c-02a--bounded-published-http-fetch-2026-11-19). Parent 2C-02 WIP; 2C-02b NOT STARTED.
+
 ## Parent 2C-01 gate — Stage B (2026-11-19)
+
+Closure: **PARENT 2C-01 VERIFIED — CLOSED**. [PR #46](https://github.com/dejul/senkom/pull/46) MERGED manual pada `bcee41c8a768aad6c66cdcddb2350920a3ec9763`; final head `61839c5344da5170604cc9f3aa157b472cacaace` ancestor. [CI postmerge `44464371849`](https://github.com/dejul/senkom/actions/runs/44464371849) SUCCESS tepat pada merge SHA: 16/16 mandatory PASS, 0 skip. Status WIP di bawah adalah snapshot pra-merge.
 
 Status: **WIP — local gate PASS; PR exact-head CI, merge, dan postmerge CI pending**. [PR #45](https://github.com/dejul/senkom/pull/45) MERGED pada `bb785652f90237f1c8355ddb5b739992804cd4d8`; final head `8f99e0eb679a41c76021f88c27d620d17ebfd014` ancestor `origin/main`, dan enam dokumen realignment sama pada head dan merge. [CI postmerge `44457252842`](https://github.com/dejul/senkom/actions/runs/44457252842) SUCCESS pada exact merge SHA: 16/16 mandatory PASS, 0 skip. Branch gate `feature/phase-2c-01-gate` dari merge itu; worktree awal bersih, tiga worktree dan dua stash historis utuh.
 
@@ -9,11 +19,11 @@ Kriteria revisi: origin HTTPS operator pada main process; origin invalid, path l
 Review repository Public: tracked paths dan riwayat `origin/main` tidak memuat `.env` aktual, key, database, dependency, atau log; hanya `.env.example` historis. Scan signature key/provider token pada tracked dan relevant history 0 hit; delapan assignment panjang adalah fixture sintetis pada tes/smoke. CI `contents: read`; trusted auto-merge `actions: read`, `contents: write`, `pull-requests: read` dan menjalankan script dari `main`. Log token viewer direduksi, IPC/bootstrap tidak membawanya. Tidak ditemukan host produksi/credential operasional dalam pemeriksaan terarah. Tidak ada nilai secret ditampilkan. Timeout request dan batas body HTTP tetap **NOT IMPLEMENTED**, wajib 2C-02a; published fetch/sync tidak boleh dikirim sebelum keduanya terverifikasi. Parent 2C-01 tetap WIP sampai PR gate merge dan CI postmerge PASS; 2C-02a NOT STARTED.
 
 Tanggal: 2026-11-17. Status: **Phase 2A COMPLETE**.
-Phase 2B: **parent 2B-01 sampai 2B-09 VERIFIED/terintegrasi**; tidak ada gate closure 2B terpisah. 2C-01a dan 2C-01b VERIFIED; parent 2C-01 WIP.
+Phase 2B: **parent 2B-01 sampai 2B-09 VERIFIED/terintegrasi**; tidak ada gate closure 2B terpisah. 2C-01a, 2C-01b dan parent 2C-01 VERIFIED; 2C-02a WIP.
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next permitted setelah Stage A merge dan CI postmerge PASS: parent 2C-01 gate terpisah. 2C-02 dan parent gate belum dimulai.
+Next permitted: selesaikan gate 2C-02a; 2C-02b dan parent 2C-02 belum dimulai. Catatan Stage A berikut historis.
 
 ## Realignment rencana 2C-01/2C-02a — Stage A (2026-11-19)
 
