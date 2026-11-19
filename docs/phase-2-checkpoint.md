@@ -1,5 +1,13 @@
 # Checkpoint Phase 2
 
+## Parent 2C-02 — verification gate (2026-11-19)
+
+PR #48 **MERGED** pada `f532c0c21d56151011d87a7fb07faca245c81273`; [CI postmerge `44484587079`](https://github.com/dejul/senkom/actions/runs/44484587079) event `push` pada SHA tersebut, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. Head PR `bbeff39d486b761c91fd581def12f727cc6701a4` adalah ancestor; tujuh berkas kode, tes, dan dokumen terintegrasi tanpa perubahan. **2C-02b VERIFIED**. Dua anak 2C-02a/b VERIFIED; rencana V2 menjadikan parent gate langkah berikutnya. Branch `feature/phase-2c-02-gate` dari merge SHA, worktree awal bersih, tiga worktree dan dua stash lain utuh.
+
+Parent 2C-02 **WIP — acceptance lokal PASS; PR gate, CI exact-head, merge, dan CI postmerge pending**. GET published v2 pada Electron main memegang Bearer token, HTTPS origin, path/redirect guard, 200/304 dan ETag; 200 memerlukan checksum SHA-256 exact body, ETag cocok, API/schema v2, dan snapshot valid. Unauthorized, timeout/abort, body >8 MiB, hash mismatch, schema tak dikenal, dan payload rusak ditolak. Tidak ada fetch startup/sync/cache atau IPC baru. [Matriks dan tes](phase-2-verification.md#parent-2c-02--verification-gate-2026-11-19).
+
+Lokal: fokus origin/token 10/10, frontend 175/175, lint/OpenAPI, typecheck/build, Windows Electron smoke, Composer validate/audit, npm production audit, dan browser Laravel/MySQL nyata PASS; audit 0 temuan. Browser E2E mencakup editor, publish, history, konflik 409, rollback, role/viewer dan layout desktop/narrow; MySQL disposable dihentikan/dihapus. PHPUnit/MySQL/HTTP/schema standalone lokal **NOT RUN**; CI postmerge #48 membuktikan baseline, CI PR gate masih diperlukan. Parent 2C-02 belum VERIFIED; 2C-03a belum dimulai.
+
 ## 2C-02b — checksum dan schema published (2026-11-19)
 
 PR #47 **MERGED** pada `b7039830ff558dc7ad3b8c233ded8956bac4e0bc`; [CI postmerge `44468345655`](https://github.com/dejul/senkom/actions/runs/44468345655) berjalan pada SHA itu, 16/16 mandatory PASS, 0 skip. Implementasi dan enam dokumen 2C-02a terintegrasi; **2C-02a VERIFIED**. Branch 2C-02b `feature/phase-2c-02b` dibuat dari `origin/main` pada merge SHA; tiga worktree lain dan dua stash historis dipertahankan.
