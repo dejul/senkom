@@ -1,6 +1,7 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { afterEach, expect, it, vi } from 'vitest';
 import {
   fetchAllowedApi,
@@ -10,6 +11,7 @@ import {
   readApiOrigin,
   REQUEST_TIMEOUT_MS,
 } from '../apps/desktop/electron/api-origin';
+import fixture from './fixtures/demo-map.v1.json';
 
 const directories: string[] = [];
 afterEach(async () => {
@@ -108,39 +110,116 @@ function apiResponse(
   return response;
 }
 
-it('fetches bounded published bytes with bearer and ETag; handles 304 and unauthorized', async () => {
+it('validates published bytes with bearer and ETag; handles 304 and unauthorized', async () => {
   const token = 'a'.repeat(64);
   const origin = 'https://api.example.test';
+  const snapshot = {
+    ...structuredClone(fixture),
+    schemaVersion: 2,
+    mapId: 'main',
+  };
+  const bytes = Buffer.from(
+    JSON.stringify({
+      data: snapshot,
+      meta: { apiVersion: '1', schemaVersion: 2 },
+    }),
+  );
+  const checksum = createHash('sha256').update(bytes).digest('hex');
+  const etag = `"sha256:${checksum}"`;
   const fetcher = vi
     .fn<typeof fetch>()
     .mockResolvedValueOnce(
-      apiResponse('map', undefined, { headers: { ETag: '"v1"' } }),
+      apiResponse(bytes, undefined, {
+        headers: { ETag: etag, 'X-Content-SHA256': checksum },
+      }),
     )
     .mockResolvedValueOnce(apiResponse(null, undefined, { status: 304 }))
     .mockResolvedValueOnce(apiResponse('denied', undefined, { status: 401 }));
   const first = await fetchPublishedMap(origin, token, { fetcher });
-  expect(first).toEqual({
-    status: 200,
-    etag: '"v1"',
-    bytes: Buffer.from('map'),
-  });
+  expect(first).toEqual({ status: 200, etag, checksum, bytes, snapshot });
   expect(fetcher.mock.calls[0]?.[0]).toBe(
     `${origin}/api/v1/viewer/map?schemaVersion=2`,
   );
   expect(
     new Headers(fetcher.mock.calls[0]?.[1]?.headers).get('Authorization'),
   ).toBe(`Bearer ${token}`);
-  expect(
-    await fetchPublishedMap(origin, token, { etag: '"v1"', fetcher }),
-  ).toEqual({ status: 304, etag: null, bytes: new Uint8Array() });
+  expect(await fetchPublishedMap(origin, token, { etag, fetcher })).toEqual({
+    status: 304,
+    etag: null,
+    checksum: null,
+    bytes: new Uint8Array(),
+  });
   expect(
     new Headers(fetcher.mock.calls[1]?.[1]?.headers).get('If-None-Match'),
-  ).toBe('"v1"');
+  ).toBe(etag);
   await expect(fetchPublishedMap(origin, token, { fetcher })).rejects.toThrow(
     'Viewer API unauthorized',
   );
-  expect(() => fetchPublishedMap(origin, 'bad', { fetcher })).toThrow(
+  await expect(fetchPublishedMap(origin, 'bad', { fetcher })).rejects.toThrow(
     'Invalid viewer token',
+  );
+});
+
+it('rejects mismatched checksum, unknown schema and malformed published envelopes', async () => {
+  const origin = 'https://api.example.test';
+  const token = 'a'.repeat(64);
+  const snapshot = {
+    ...structuredClone(fixture),
+    schemaVersion: 2,
+    mapId: 'main',
+  };
+  const valid = { data: snapshot, meta: { apiVersion: '1', schemaVersion: 2 } };
+  for (const [body, header, error] of [
+    [JSON.stringify(valid), '0'.repeat(64), 'checksum'],
+    [JSON.stringify(valid), null, 'checksum'],
+    [JSON.stringify(valid), 'bad', 'checksum'],
+    [
+      JSON.stringify({ ...valid, meta: { apiVersion: '1', schemaVersion: 3 } }),
+      undefined,
+      'schema',
+    ],
+    [
+      JSON.stringify({ ...valid, meta: { apiVersion: '2', schemaVersion: 2 } }),
+      undefined,
+      'schema',
+    ],
+    [
+      JSON.stringify({ ...valid, data: { ...snapshot, schemaVersion: 3 } }),
+      undefined,
+      'schema',
+    ],
+    [
+      JSON.stringify({ ...valid, data: { ...snapshot, sites: null } }),
+      undefined,
+      'schema',
+    ],
+    ['{', undefined, 'schema'],
+  ] as const) {
+    const bytes = Buffer.from(body);
+    const checksum = createHash('sha256').update(bytes).digest('hex');
+    const claimed = header === undefined ? checksum : header;
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      apiResponse(bytes, undefined, {
+        headers: {
+          ...(claimed
+            ? { 'X-Content-SHA256': claimed, ETag: `"sha256:${claimed}"` }
+            : {}),
+        },
+      }),
+    );
+    await expect(fetchPublishedMap(origin, token, { fetcher })).rejects.toThrow(
+      `Invalid published map ${error}`,
+    );
+  }
+  const body = Buffer.from(JSON.stringify(valid));
+  const checksum = createHash('sha256').update(body).digest('hex');
+  const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+    apiResponse(body, undefined, {
+      headers: { 'X-Content-SHA256': checksum, ETag: '"sha256:wrong"' },
+    }),
+  );
+  await expect(fetchPublishedMap(origin, token, { fetcher })).rejects.toThrow(
+    'Invalid published map checksum',
   );
 });
 

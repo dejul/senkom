@@ -1,5 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { parsePublishedMapV2 } from '@senkom/map-schema';
 
 export function parseApiOrigin(input: unknown): string {
   if (
@@ -51,6 +53,7 @@ type FetchOptions = {
 type BoundedResponse = {
   status: 200 | 304;
   etag: string | null;
+  checksum: string | null;
   bytes: Uint8Array;
 };
 
@@ -118,9 +121,10 @@ export async function fetchAllowedApi(
       );
     }
     const etag = response.headers.get('ETag');
+    const checksum = response.headers.get('X-Content-SHA256');
     if (response.status === 304) {
       await response.body?.cancel().catch(() => undefined);
-      return { status: 304, etag, bytes: new Uint8Array() };
+      return { status: 304, etag, checksum, bytes: new Uint8Array() };
     }
     const declared = response.headers.get('Content-Length');
     if (
@@ -131,7 +135,8 @@ export async function fetchAllowedApi(
       await response.body?.cancel().catch(() => undefined);
       throw new Error('Viewer API response too large');
     }
-    if (!response.body) return { status: 200, etag, bytes: new Uint8Array() };
+    if (!response.body)
+      return { status: 200, etag, checksum, bytes: new Uint8Array() };
     reader = response.body.getReader();
     const chunks: Uint8Array[] = [];
     let size = 0;
@@ -159,7 +164,7 @@ export async function fetchAllowedApi(
       reader.releaseLock();
       reader = null;
     }
-    return { status: 200, etag, bytes: Buffer.concat(chunks, size) };
+    return { status: 200, etag, checksum, bytes: Buffer.concat(chunks, size) };
   };
 
   try {
@@ -170,12 +175,14 @@ export async function fetchAllowedApi(
   }
 }
 
-// ponytail: fetch-only layer; add scheduled calls after 2C-02b and cache work.
-export function fetchPublishedMap(
+// ponytail: no cache binding yet; validate 304 against stored revision in 2C-03a.
+export async function fetchPublishedMap(
   origin: string,
   token: string,
   { etag, signal, fetcher }: FetchOptions & { etag?: string } = {},
-): Promise<BoundedResponse> {
+): Promise<
+  BoundedResponse & { snapshot?: ReturnType<typeof parsePublishedMapV2> }
+> {
   if (!/^[a-f0-9]{64}$/.test(token)) throw new Error('Invalid viewer token');
   const headers = new Headers({ Authorization: `Bearer ${token}` });
   if (etag) {
@@ -183,9 +190,43 @@ export function fetchPublishedMap(
       throw new Error('Invalid ETag');
     headers.set('If-None-Match', etag);
   }
-  return fetchAllowedApi(origin, '/api/v1/viewer/map?schemaVersion=2', {
-    headers,
-    signal,
-    fetcher,
-  });
+  const response = await fetchAllowedApi(
+    origin,
+    '/api/v1/viewer/map?schemaVersion=2',
+    {
+      headers,
+      signal,
+      fetcher,
+    },
+  );
+  if (response.status === 304) return response;
+  const { checksum, etag: responseEtag, bytes } = response;
+  if (
+    !checksum ||
+    !/^[a-f0-9]{64}$/.test(checksum) ||
+    responseEtag !== `"sha256:${checksum}"` ||
+    createHash('sha256').update(bytes).digest('hex') !== checksum
+  )
+    throw new Error('Invalid published map checksum');
+  try {
+    const envelope: unknown = JSON.parse(
+      new TextDecoder('utf-8', { fatal: true }).decode(bytes),
+    );
+    if (!envelope || typeof envelope !== 'object' || Array.isArray(envelope))
+      throw new Error();
+    const { data, meta } = envelope as Record<string, unknown>;
+    if (
+      Object.keys(envelope).sort().join(',') !== 'data,meta' ||
+      !meta ||
+      typeof meta !== 'object' ||
+      Array.isArray(meta) ||
+      Object.keys(meta).sort().join(',') !== 'apiVersion,schemaVersion' ||
+      (meta as Record<string, unknown>).apiVersion !== '1' ||
+      (meta as Record<string, unknown>).schemaVersion !== 2
+    )
+      throw new Error();
+    return { ...response, snapshot: parsePublishedMapV2(data) };
+  } catch {
+    throw new Error('Invalid published map schema');
+  }
 }

@@ -1,5 +1,13 @@
 # Checkpoint Phase 2
 
+## 2C-02b — checksum dan schema published (2026-11-19)
+
+PR #47 **MERGED** pada `b7039830ff558dc7ad3b8c233ded8956bac4e0bc`; [CI postmerge `44468345655`](https://github.com/dejul/senkom/actions/runs/44468345655) berjalan pada SHA itu, 16/16 mandatory PASS, 0 skip. Implementasi dan enam dokumen 2C-02a terintegrasi; **2C-02a VERIFIED**. Branch 2C-02b `feature/phase-2c-02b` dibuat dari `origin/main` pada merge SHA; tiga worktree lain dan dua stash historis dipertahankan.
+
+2C-02b **WIP — tes lokal PASS; PR exact-head CI, merge, dan CI postmerge pending**. Electron main memeriksa SHA-256 atas byte respons 200, header checksum dan ETag, envelope `data`/`meta` API v1/schema v2, serta validasi snapshot v2 dan referensinya. Hash mismatch, header hilang/rusak, ETag tidak cocok, schema tak dikenal, dan payload rusak ditolak dengan error generik. Respons 304 tetap tanpa body; cache/revision binding, scheduler, dan renderer/sync milik batch berikutnya. Timeout 10 detik, batas 8 MiB, origin HTTPS, redirect, dan isolasi token tetap berlaku. Parent 2C-02 WIP.
+
+Tes fokus 7/7, frontend 175/175, lint/kontrak, typecheck/build desktop+admin, Windows Electron smoke, Composer validate/audit, npm production audit PASS lokal; audit 0 temuan. PHPUnit/MySQL/HTTP/schema standalone dan browser Laravel/MySQL lokal **NOT RUN**; mandatory PR CI pending. [Perintah dan hasil](phase-2-verification.md#2c-02b--validasi-checksum-dan-schema-published-2026-11-19).
+
 ## 2C-02a — bounded published HTTP fetch (2026-11-19)
 
 Status: **WIP — local gate PASS; PR exact-head CI, merge, dan postmerge CI pending**. Branch `feature/phase-2c-02a` dari `origin/main` `bcee41c8a768aad6c66cdcddb2350920a3ec9763` sesudah parent 2C-01 VERIFIED. Worktree awal bersih; tiga worktree lain dan dua stash historis utuh. Scope hanya GET published viewer v2 dengan Bearer token pada Electron main module, `ETag`/`If-None-Match`, respons 200/304, timeout dan batas ukuran respons. Belum ada fetch otomatis, scheduler, cache, checksum/schema validation, atau IPC baru.

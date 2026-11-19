@@ -1,5 +1,30 @@
 # Verifikasi Phase 2
 
+## 2C-02b — validasi checksum dan schema published (2026-11-19)
+
+Prasyarat: PR #47 MERGED pada `b7039830ff558dc7ad3b8c233ded8956bac4e0bc`; [CI postmerge `44468345655`](https://github.com/dejul/senkom/actions/runs/44468345655) event `push`, exact SHA, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. Implementasi 2C-02a dan enam dokumen terkait terintegrasi. **2C-02a VERIFIED**; Parent 2C-02 tetap WIP. Branch baru `feature/phase-2c-02b` dari `origin/main` merge SHA, worktree awal bersih; tiga worktree dan dua stash lain utuh.
+
+| Kriteria 2C-02b           | Bukti lokal                                                                                                                                            | Status |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| Hash byte respons 200     | SHA-256 atas body bounded dibanding `X-Content-SHA256`; header hilang, malformed, dan mismatch ditolak                                                 | PASS   |
+| ETag konsisten            | `ETag` wajib `"sha256:<hash>"` pada 200; mismatch ditolak                                                                                              | PASS   |
+| Schema/version compatible | Envelope persis `data` + `meta`, API v1/schema v2; `parsePublishedMapV2` memvalidasi snapshot dan referensi; schema 3, API lain, payload rusak ditolak | PASS   |
+| 304 dan keamanan 2C-02a   | 304 tanpa body tetap diterima; origin HTTPS/redirect, 10 detik, 8 MiB, Bearer di main, dan error generik tetap diuji                                   | PASS   |
+| Scope                     | Tidak ada cache, scheduler, fetch startup, renderer IPC baru, atau perubahan backend                                                                   | PASS   |
+
+| Perintah lokal                                                                                           | Hasil                                                                                 |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `npm test -- tests/desktop-api-origin.test.ts`                                                           | exit 0; 7/7                                                                           |
+| `npm test`                                                                                               | exit 0; 175/175, 30 file                                                              |
+| `npm run lint`                                                                                           | exit 0; ESLint, Prettier, OpenAPI contract                                            |
+| `npm run build`                                                                                          | exit 0; contracts, typecheck, desktop/admin production build                          |
+| `npm run smoke:desktop`                                                                                  | exit 0; Windows Electron Phase 1, sandbox/bridge/CSP, recovery, offline/corrupt/empty |
+| `composer --working-dir apps/api validate --strict` dan `composer --working-dir apps/api audit --locked` | exit 0; 0 advisory                                                                    |
+| `npm audit --omit=dev --audit-level=low`                                                                 | exit 0; 0 vulnerability                                                               |
+| PHPUnit, MySQL integration, HTTP smoke, schema standalone, browser Laravel/MySQL nyata                   | NOT RUN lokal; mandatory PR CI pending                                                |
+
+Review diff dan tujuh staged path in-scope selesai; `git diff --cached --check` exit 0, scan signature rahasia high-confidence 0 hit. PR exact-head CI, Auto-Merge V2, merge, dan CI postmerge 2C-02b **NOT RUN** pada catatan awal ini. Status batch **WIP** sampai merge dan postmerge PASS.
+
 ## 2C-02a — bounded published HTTP fetch (2026-11-19)
 
 Status: **WIP — local gate PASS; PR exact-head CI, merge, dan postmerge CI pending**. Branch `feature/phase-2c-02a` dari `origin/main` `bcee41c8a768aad6c66cdcddb2350920a3ec9763`. Prasyarat parent 2C-01 VERIFIED setelah PR #46 merge dan CI postmerge. V2 2C-02a: HTTP published GET + ETag/304 dengan finite timeout dan bounded stream; 2C-02b checksum/schema compatibility, 2C-03 cache, dan 2C-04 scheduler di luar batch.
