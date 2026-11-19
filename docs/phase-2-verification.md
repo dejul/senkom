@@ -27,6 +27,8 @@ Review diff dan tujuh staged path in-scope selesai; `git diff --cached --check` 
 
 Implementasi commit `92bed015936d85964ed0107a77be4eee2f7213c4` didorong ke branch `feature/phase-2c-02b` dan [PR #48](https://github.com/dejul/senkom/pull/48) dibuka ke `main`. Dokumentasi evidence berikut ini memerlukan CI exact-head ulang. Perubahan Electron main dan tes security existing memerlukan merge manual menurut Auto-Merge V2.
 
+[CI PR `44474964614`](https://github.com/dejul/senkom/actions/runs/44474964614) pada head `f4d272dd7d05917172210863d5457d25b81958d4`: job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip; PHPUnit/MySQL/HTTP, frontend/schema, lint, build/Electron, OpenAPI, Composer/npm audit PASS. [Auto-Merge V2 `44475519547`](https://github.com/dejul/senkom/actions/runs/44475519547) berhenti dengan `PR head, base, or mergeability changed`; PR tetap OPEN. Gate keamanan Electron main/tes existing juga mewajibkan merge manual. Commit dokumentasi ini memerlukan CI exact-head ulang; 2C-02b tetap WIP sampai merge dan CI postmerge PASS.
+
 ## 2C-02a — bounded published HTTP fetch (2026-11-19)
 
 Status: **WIP — local gate PASS; PR exact-head CI, merge, dan postmerge CI pending**. Branch `feature/phase-2c-02a` dari `origin/main` `bcee41c8a768aad6c66cdcddb2350920a3ec9763`. Prasyarat parent 2C-01 VERIFIED setelah PR #46 merge dan CI postmerge. V2 2C-02a: HTTP published GET + ETag/304 dengan finite timeout dan bounded stream; 2C-02b checksum/schema compatibility, 2C-03 cache, dan 2C-04 scheduler di luar batch.

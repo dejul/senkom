@@ -8,6 +8,8 @@ PR #47 **MERGED** pada `b7039830ff558dc7ad3b8c233ded8956bac4e0bc`; [CI postmerge
 
 Implementasi commit `92bed015936d85964ed0107a77be4eee2f7213c4` pada [PR #48](https://github.com/dejul/senkom/pull/48); commit evidence dan CI exact-head final pending. Perubahan keamanan Electron main memerlukan merge manual.
 
+[CI PR `44474964614`](https://github.com/dejul/senkom/actions/runs/44474964614) pada head evidence `f4d272dd7d05917172210863d5457d25b81958d4` PASS 16/16 mandatory, 0 skip. [Auto-Merge V2 `44475519547`](https://github.com/dejul/senkom/actions/runs/44475519547) blocked karena `PR head, base, or mergeability changed`; PR tetap OPEN. CI exact-head ulang diperlukan setelah commit catatan ini.
+
 Tes fokus 7/7, frontend 175/175, lint/kontrak, typecheck/build desktop+admin, Windows Electron smoke, Composer validate/audit, npm production audit PASS lokal; audit 0 temuan. PHPUnit/MySQL/HTTP/schema standalone dan browser Laravel/MySQL lokal **NOT RUN**; mandatory PR CI pending. [Perintah dan hasil](phase-2-verification.md#2c-02b--validasi-checksum-dan-schema-published-2026-11-19).
 
 ## 2C-02a — bounded published HTTP fetch (2026-11-19)
