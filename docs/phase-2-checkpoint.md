@@ -5,7 +5,15 @@ Phase 2B: **parent 2B-01 sampai 2B-09 VERIFIED/terintegrasi**; tidak ada gate cl
 Baseline produk yang selesai mencakup Phase 2A. Status WIP pada [audit historis](phase-2-wip-audit.md) kini digantikan
 bukti gate parent 2A-01 sampai 2A-11 dan Final Acceptance terintegrasi.
 
-Next permitted: parent 2C-01 gate hanya atas permintaan terpisah. 2C-02 dan parent gate belum dimulai.
+Next permitted setelah Stage A merge dan CI postmerge PASS: parent 2C-01 gate terpisah. 2C-02 dan parent gate belum dimulai.
+
+## Realignment rencana 2C-01/2C-02a — Stage A (2026-11-19)
+
+Status: **WIP — menunggu CI PR dan merge**. Branch `feature/phase-2c-plan-realignment` dari `origin/main` `81accd0cfb3698c3d4dbc3e4d65274ad5222cf37`; worktree awal bersih, tiga worktree lain dan dua stash historis tidak diubah. [PR #44](https://github.com/dejul/senkom/pull/44) MERGED pada SHA tersebut. [CI postmerge `44430926308`, attempt 2](https://github.com/dejul/senkom/actions/runs/44430926308/attempts/2) SUCCESS pada SHA merge, 16/16 mandatory PASS, 0 skip; attempt 1 gagal sebelum job berjalan karena pembatasan billing GitHub Actions.
+
+Konflik: parent `docs/codegen-plan.md` dahulu menempatkan timeout dan batas respons pada 2C-01; V2 menempatkan timeout di 2C-02a tanpa menyebut batas respons. Pengguna menyetujui Option B: 2C-01 hanya provisi dan isolasi origin/token; timeout request dan batas body HTTP diwajibkan pada 2C-02a. Fetch published baru ada pada 2C-02a, sehingga kontrol ditempatkan pada jalur yang memakai respons, tanpa menghapus kewajiban keamanan. Fetch HTTP published/sinkronisasi dilarang dikirim sebelum kedua kontrol diimplementasi dan diverifikasi. Parent 2C-01 tetap WIP sampai revisi rencana merge, CI postmerge PASS, dan gate parent terpisah lulus. 2C-02a NOT STARTED.
+
+Stage A lokal: `npm run contracts:check` exit 0; schema `npm test -- tests/map-schema.test.ts tests/map-v2.test.ts tests/cable-patch.test.ts` exit 0, 33/33; Prettier dokumen, traceability/dependency, `git diff --check`, dan `git diff --cached --check` exit 0. Enam staged path hanya dokumen; 35 added lines, 0 high-confidence secret-pattern hit. Head PR CI **NOT RUN** sebelum PR dibuat; browser/MySQL lokal dan parent gate **NOT RUN** pada Stage A. Tidak ada perubahan produk.
 
 ## 2C-01b — viewer token OS-protection, IPC/log redaction (2026-11-18)
 

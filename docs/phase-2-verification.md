@@ -1,5 +1,20 @@
 # Verifikasi Phase 2
 
+## Realignment rencana Phase 2C — Stage A (2026-11-19)
+
+Status: **WIP — menunggu CI PR dan merge**. Baseline `origin/main` `81accd0cfb3698c3d4dbc3e4d65274ad5222cf37`; PR #44 MERGED pada SHA itu. CI postmerge run `44430926308` attempt 1 gagal sebelum job karena pembatasan billing GitHub Actions; [attempt 2](https://github.com/dejul/senkom/actions/runs/44430926308/attempts/2) SUCCESS pada SHA yang sama, 16/16 mandatory PASS, 0 skip. Hasil ini membuktikan baseline, bukan head PR revisi rencana.
+
+| Requirement                                                               | Sumber sebelum revisi                    | Pemilik setelah persetujuan Option B | Implementasi/bukti saat ini                       | Status                          |
+| ------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------ | ------------------------------------------------- | ------------------------------- |
+| Origin HTTPS; invalid/cross-origin/redirect ditolak                       | Parent 2C-01; V2 2C-01a                  | Parent 2C-01 / child 2C-01a          | Guard main process, test origin, CI 2C-01a        | Child VERIFIED; gate parent WIP |
+| Token Windows safeStorage; rotasi aman; tanpa token renderer/IPC/log      | Parent 2C-01; V2 2C-01b                  | Parent 2C-01 / child 2C-01b          | Proteksi main process, test token, Electron smoke | Child VERIFIED; gate parent WIP |
+| Timeout request HTTP hingga, abort, kegagalan aman                        | Parent lama 2C-01; V2 2C-02a             | 2C-02a wajib                         | Belum diimplementasi/diuji                        | NOT RUN; 2C-02a belum dimulai   |
+| Batas byte body HTTP, stream bounded termasuk Content-Length hilang/palsu | Parent lama 2C-01; belum eksplisit di V2 | 2C-02a wajib                         | Belum diimplementasi/diuji                        | NOT RUN; 2C-02a belum dimulai   |
+
+Pengguna menyetujui perubahan scope eksplisit, bukan waiver: fetch published baru dimulai pada 2C-02a. Tidak ada fetch/sync published yang boleh dikirim sebelum timeout dan batas respons sama-sama diimplementasi dan diverifikasi pada seluruh jalur respons. Revisi ini hanya dokumentasi; tidak mengubah runtime, API, schema, atau status parent. Parent 2C-01 memerlukan PR gate terpisah setelah PR rencana merge dan CI postmerge PASS. Catatan historis di bawah dipertahankan.
+
+Stage A lokal: `npm run contracts:check` exit 0 (OpenAPI/generated types cocok); `npm test -- tests/map-schema.test.ts tests/map-v2.test.ts tests/cable-patch.test.ts` exit 0 (3 file/33 tes); Prettier enam dokumen exit 0 setelah format; traceability/dependency assertions, `git diff --check`, dan `git diff --cached --check` exit 0. Enam staged path semuanya dokumen rencana/Phase 2; 35 added lines diperiksa, 0 high-confidence secret-pattern hit. Produk, schema, kontrak, dan tes tidak diubah. Full 16/16 mandatory CI pada head PR revisi **NOT RUN** sebelum PR dibuat; browser/MySQL lokal **NOT RUN** untuk perubahan dokumentasi ini. Parent security/regression gate **NOT RUN** pada Stage A.
+
 ## 2C-01b — Viewer token OS-protection, IPC/log redaction (2026-11-18)
 
 Closure: **VERIFIED** (2026-11-18). [PR #43](https://github.com/dejul/senkom/pull/43) MERGED manual pada `adb6cf172a5bed9ac9d35c51780b3403300ff70a`, head final `264980f9015328d684715591a49e722c2792dd6f` ancestor `main`. [CI PR exact-head `44326927940`](https://github.com/dejul/senkom/actions/runs/44326927940) dan [CI postmerge `44328358284`](https://github.com/dejul/senkom/actions/runs/44328358284) SUCCESS tepat pada SHA masing-masing, **16/16 mandatory PASS, 0 skip**. Postmerge mencakup PHPUnit/MySQL/HTTP, frontend 170, schema, lint, build, Electron smoke, OpenAPI, Composer/npm audit. [Auto-Merge V2 `44328216526`](https://github.com/dejul/senkom/actions/runs/44328216526) memblokir `Missing or ambiguous verification claim`; merge oleh `dejul`. Status WIP dan CI pending berikut adalah snapshot pra-merge. Parent 2C-01 WIP; parent gate dan 2C-02 belum dimulai.

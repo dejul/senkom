@@ -101,7 +101,7 @@
 | ----------- | ---------------------------------------------- | ------------ | ------------------------------------------- |
 | `2C-01a`    | Main-process API origin provisioning/allowlist | NOT STARTED  | HTTPS, redirect/origin invalid ditolak      |
 | `2C-01b`    | Viewer token OS-protection, IPC/log redaction  | NOT STARTED  | Token tak mencapai renderer                 |
-| `2C-02a`    | HTTP published fetch + ETag/304/timeouts       | NOT STARTED  | Unauthorized/timeout/304 teruji             |
+| `2C-02a`    | HTTP published fetch + ETag/304 + guard        | NOT STARTED  | Timeout/abort/size/304 teruji               |
 | `2C-02b`    | Checksum/schema compatibility validation       | NOT STARTED  | Hash mismatch dan unknown schema ditolak    |
 | `2C-03a`    | Cache restore dan atomic disk write            | NOT STARTED  | Corrupt/write fail mempertahankan last good |
 | `2C-03b`    | Hot swap revision dan schema-compatible render | NOT STARTED  | Peta tidak blank; view-only tetap           |
@@ -109,6 +109,14 @@
 | `2C-04b`    | Offline/STALE/last-sync dan reconnect          | NOT STARTED  | API outage/recovery; carousel tetap         |
 | `2C-05a`    | E2E publish→desktop dan failure matrix         | NOT STARTED  | Snapshot lama sampai publish; swap atomik   |
 | `2C-05b`    | Gate Phase 2 full regression + docs            | NOT STARTED  | 2A/2B/2C gates, Electron smoke, approval    |
+
+### Kriteria wajib 2C-02a — realignment Option B disetujui 2026-11-19
+
+Parent 2C-01 mencakup provisi dan isolasi keamanan origin/token, bukan timeout atau batas respons HTTP. Konflik dengan scope parent lama diselesaikan melalui revisi `docs/codegen-plan.md`: fetch published belum ada pada 2C-01; kedua kontrol berlaku sebelum fetch pertama pada 2C-02a. Parent 2C-01 harus VERIFIED berdasarkan kriteria revisi sebelum 2C-02a dimulai.
+
+- **Request timeout:** setiap request HTTP yang berlaku memiliki batas waktu hingga; request menggantung tidak menunggu tanpa akhir; kegagalan timeout ditangani aman; pembatalan/abort diuji; timeout tidak boleh mematikan validasi origin, redirect, atau keamanan lain.
+- **Batas ukuran respons:** setiap body HTTP memiliki batas byte hingga; respons berlebih ditolak; pembacaan stream dibatasi saat membaca, termasuk saat `Content-Length` hilang atau menyesatkan; satu respons tidak boleh menyebabkan pertumbuhan memori tanpa batas; kegagalan diuji.
+- Kontrol berlaku untuk seluruh jalur fetch published yang disetujui dan tidak dapat dilewati dengan penanganan respons alternatif. Fetch HTTP published atau sinkronisasi tidak boleh dikirim sampai kedua kontrol diimplementasi dan diverifikasi. Keduanya wajib, bukan opsional.
 
 ### Phase 3 — CCTV media gateway
 
@@ -196,8 +204,8 @@
 | `2B-07`     | `2B-07a`, `2B-07b`, `2B-07c`           | Acceptance criteria dan test gate parent asli tetap wajib |
 | `2B-08`     | `2B-08a`, `2B-08b`                     | Acceptance criteria dan test gate parent asli tetap wajib |
 | `2B-09`     | `2B-09a`, `2B-09b`                     | Acceptance criteria dan test gate parent asli tetap wajib |
-| `2C-01`     | `2C-01a`, `2C-01b`                     | Acceptance criteria dan test gate parent asli tetap wajib |
-| `2C-02`     | `2C-02a`, `2C-02b`                     | Acceptance criteria dan test gate parent asli tetap wajib |
+| `2C-01`     | `2C-01a`, `2C-01b`                     | Acceptance parent revisi Option B wajib                   |
+| `2C-02`     | `2C-02a`, `2C-02b`                     | Timeout dan batas respons wajib pada 2C-02a               |
 | `2C-03`     | `2C-03a`, `2C-03b`                     | Acceptance criteria dan test gate parent asli tetap wajib |
 | `2C-04`     | `2C-04a`, `2C-04b`                     | Acceptance criteria dan test gate parent asli tetap wajib |
 | `2C-05`     | `2C-05a`, `2C-05b`                     | Acceptance criteria dan test gate parent asli tetap wajib |
