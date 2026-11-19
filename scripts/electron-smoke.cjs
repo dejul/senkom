@@ -22,7 +22,14 @@ app.once('browser-window-created', (_event, window) => {
       const result = await window.webContents.executeJavaScript(`(async () => {
         const info = await window.senkom.getInfo();
         for (let attempt = 0; attempt < 100; attempt++) {
-          if (document.querySelector('footer')?.textContent.includes('renderer terisolasi')) break;
+          if (document.querySelector('footer')?.textContent.includes('renderer terisolasi') &&
+            ${
+              process.env.SENKOM_SMOKE_SCENARIO === 'published'
+                ? "document.body.innerText.includes('Published Smoke Node')"
+                : process.env.SENKOM_SMOKE_SCENARIO === 'published-empty'
+                  ? "document.body.innerText.includes('Peta belum tersedia')"
+                  : 'true'
+            }) break;
           await new Promise(resolve => setTimeout(resolve, 25));
         }
         return { info, keys: Object.keys(window.senkom), requireType: typeof require, processType: typeof process,
@@ -35,7 +42,12 @@ app.once('browser-window-created', (_event, window) => {
       assert.equal(result.requireType, 'undefined');
       assert.equal(result.processType, 'undefined');
       assert.equal(result.networkBlocked, true);
-      assert.match(result.text, /DEMO \/ BUKAN MONITORING LIVE/);
+      assert.match(
+        result.text,
+        process.env.SENKOM_SMOKE_SCENARIO?.startsWith('published')
+          ? /PUBLISHED \/ BUKAN MONITORING LIVE/
+          : /DEMO \/ BUKAN MONITORING LIVE/,
+      );
       assert.match(result.text, /renderer terisolasi/);
       assert.deepEqual(errors, []);
       if (process.env.SENKOM_SMOKE_SCENARIO === 'demo') {
@@ -68,6 +80,34 @@ app.once('browser-window-created', (_event, window) => {
         );
       }
       await mkdir(artifacts, { recursive: true });
+      if (process.env.SENKOM_SMOKE_SCENARIO === 'published') {
+        const bootstrap = await window.webContents.executeJavaScript(
+          '(async () => await window.senkomViewer.bootstrap())()',
+        );
+        assert.equal(bootstrap.map.source, 'published');
+        assert.equal(bootstrap.map.snapshot.revision, 'published-smoke');
+        assert.match(result.text, /Published Smoke Node/);
+        assert.doesNotMatch(result.text, /CACHE DEMO/);
+        console.log(
+          'PASS Electron published cache: v2 restore, label, view-only, no DEMO fallback.',
+        );
+        app.exit(0);
+        return;
+      }
+      if (process.env.SENKOM_SMOKE_SCENARIO === 'published-empty') {
+        const bootstrap = await window.webContents.executeJavaScript(
+          '(async () => await window.senkomViewer.bootstrap())()',
+        );
+        assert.equal(bootstrap.publishedConfigured, true);
+        assert.equal(bootstrap.map.snapshot, null);
+        assert.match(result.text, /PUBLISHED \/ BELUM TERSEDIA/);
+        assert.doesNotMatch(result.text, /DEMO \/ VIEW ONLY/);
+        console.log(
+          'PASS Electron published first-run: empty state, no DEMO fallback.',
+        );
+        app.exit(0);
+        return;
+      }
       await verifyPhase1(window, artifacts);
       if (process.env.SENKOM_SMOKE_SCENARIO !== 'demo') {
         app.exit(0);

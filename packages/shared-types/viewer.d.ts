@@ -1,4 +1,4 @@
-import type { PublishedMap } from './index';
+import type { PublishedMap, PublishedMapV2 } from './index';
 
 export interface Bounds {
   x: number;
@@ -29,8 +29,8 @@ export interface ViewProfile {
   carouselSlots: number;
 }
 export interface SnapshotState {
-  snapshot: PublishedMap | null;
-  source: 'cache' | 'fixture' | 'none';
+  snapshot: PublishedMap | PublishedMapV2 | null;
+  source: 'cache' | 'fixture' | 'published' | 'none';
   savedAt: string | null;
   warning: string | null;
 }
@@ -53,6 +53,7 @@ export interface ViewerBootstrap extends ViewerStatus {
   phase: 1;
   version: string;
   map: SnapshotState;
+  publishedConfigured: boolean;
   profile: ViewProfile;
 }
 export interface Diagnostics extends ViewerStatus {
@@ -62,6 +63,7 @@ export interface Diagnostics extends ViewerStatus {
 }
 export interface ViewerBridge {
   bootstrap(): Promise<ViewerBootstrap>;
+  refreshPublished(): Promise<SnapshotState>;
   status(): Promise<ViewerStatus>;
   reportFrame(sample: { fps: number; painted: boolean }): Promise<void>;
   onAdminPrompt(callback: () => void): () => void;

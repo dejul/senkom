@@ -1,5 +1,13 @@
 # Checkpoint Phase 2
 
+## 2C-03b — hot swap published revision (2026-11-19)
+
+[PR #52](https://github.com/dejul/senkom/pull/52) **MERGED** pada `b8929b3e324399d33492d0c453614434300724b4`; head `79010bc9844a962dd96f0a70740d176273685568` ancestor dan lima dokumen closure terintegrasi. [CI postmerge `44534985286`](https://github.com/dejul/senkom/actions/runs/44534985286) event `push` pada exact merge SHA, 16/16 mandatory PASS, 0 skip. **2C-03a VERIFIED**.
+
+Branch `feature/phase-2c-03b` dari `origin/main` merge SHA; worktree awal bersih. **2C-03b WIP sampai PR merge dan CI postmerge PASS**; acceptance lokal PASS. Startup memulihkan cache published v2 tervalidasi tanpa fallback DEMO produksi. Tombol `Perbarui peta` meminta main process melakukan satu GET manual melalui jalur HTTPS/timeout 10 detik/batas 8 MiB/checksum/schema existing. Respons 200 disimpan atomik sebelum revisi tampil; 304 harus cocok dengan cache valid. Kegagalan mempertahankan peta lama. Viewer tetap view-only; scheduler, reconnect/backoff, dan parent gate belum dimulai.
+
+Fokus published viewer/render 3/3, frontend 190/190, lint/OpenAPI, typecheck/build desktop+admin, Windows Electron smoke DEMO/offline/corrupt/empty/published/published-empty, Composer validate/audit, npm production audit PASS lokal; audit 0 temuan. PHPUnit/MySQL/HTTP dan browser Laravel/MySQL nyata **NOT RUN lokal**; CI PR mandatory pending. [Matriks](phase-2-verification.md#2c-03b--hot-swap-published-revision-2026-11-19). Parent 2C-03 dan Phase 2C tetap WIP; 2C-04 tidak dimulai.
+
 ## 2C-03a — closure setelah PR merge (2026-11-19)
 
 [PR #51](https://github.com/dejul/senkom/pull/51) merge manual pada `5f221249cf7b8d5320d49efa208dba975d1409c7`; head `8504a2e23d891aebcd1b83210bccff1c5c25e37a` ancestor. [CI postmerge `44530790514`](https://github.com/dejul/senkom/actions/runs/44530790514) event `push`, exact merge SHA, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. Kode cache, tes, dan lima dokumen batch terintegrasi identik. **2C-03a VERIFIED**; status WIP historis di bawah tidak lagi berlaku. Parent 2C-03 WIP; 2C-03b NOT STARTED. Branch closure `fix/phase-2c-03a-closure` dari merge SHA; PR dokumentasi closure pending.

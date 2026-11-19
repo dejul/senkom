@@ -254,6 +254,12 @@ input[type='checkbox'] {
 .node-center {
   fill: #bed0df;
 }
+.node-symbol {
+  fill: #e8f1f7;
+  font-size: 7px;
+  text-anchor: middle;
+  pointer-events: none;
+}
 .site-node:hover .node-ring,
 .site-node.selected .node-ring,
 .site-node:focus .node-ring {

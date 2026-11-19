@@ -8,6 +8,20 @@ export const layerNames = {
 } as const;
 export type Layer = keyof typeof layerNames;
 export type Selection = { kind: 'site' | 'edge'; id: string } | null;
+export const symbolCodes = {
+  site: 'S',
+  router: 'R',
+  switch: 'SW',
+  otb: 'OTB',
+  odf: 'ODF',
+  splice_closure: 'SC',
+  power_panel: 'P',
+  ups: 'UPS',
+  source: 'SRC',
+  junction: 'J',
+  pdu: 'PDU',
+  other: '?',
+} as const;
 
 export function projection(
   view: Bounds,

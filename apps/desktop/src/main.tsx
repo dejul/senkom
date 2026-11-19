@@ -4,6 +4,7 @@ import type { DesktopBridge } from '@senkom/shared-types';
 import type {
   ViewerBootstrap,
   ViewerBridge,
+  SnapshotState,
   ViewerStatus,
 } from '@senkom/shared-types/viewer';
 import { MapCanvas } from './MapCanvas';
@@ -22,12 +23,14 @@ declare global {
 
 function App() {
   const [bootstrap, setBootstrap] = useState<ViewerBootstrap | null>(null);
+  const [map, setMap] = useState<SnapshotState | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [status, setStatus] = useState<ViewerStatus | null>(null);
   const [error, setError] = useState('');
   const [selection, setSelection] = useState<Selection>(null);
   const [admin, setAdmin] = useState(false);
   const [clock, setClock] = useState(new Date());
-  const ready = Boolean(bootstrap?.map.snapshot);
+  const ready = Boolean(map?.snapshot);
   useEffect(() => {
     let active = true;
     void Promise.resolve()
@@ -35,6 +38,7 @@ function App() {
       .then((value) => {
         if (active) {
           setBootstrap(value);
+          setMap(value.map);
           setStatus(value);
         }
       })
@@ -91,10 +95,13 @@ function App() {
     return () => cancelAnimationFrame(id);
   }, [ready]);
 
-  const snapshot = bootstrap?.map.snapshot;
+  const snapshot = map?.snapshot;
   const current = status ?? bootstrap;
   const metrics = current?.performance;
   const rows = bootstrap?.profile.rows;
+  const publishedContext = Boolean(
+    bootstrap?.publishedConfigured || map?.source === 'published',
+  );
   return (
     <main
       className="video-wall"
@@ -122,12 +129,40 @@ function App() {
           <small>INFRASTRUCTURE CENTER</small>
         </div>
         <div className="header-status">
-          <span className="demo-badge">DEMO / VIEW ONLY</span>
-          <span className="connection-label">
-            {bootstrap?.map.source === 'cache'
-              ? 'OFFLINE / CACHE DEMO'
-              : 'BACKEND BELUM TERHUBUNG'}
+          <span className="demo-badge">
+            {publishedContext ? 'PUBLISHED / VIEW ONLY' : 'DEMO / VIEW ONLY'}
           </span>
+          <span className="connection-label">
+            {map?.source === 'published'
+              ? 'CACHE PUBLISHED'
+              : publishedContext
+                ? 'PUBLISHED / BELUM TERSEDIA'
+                : map?.source === 'cache'
+                  ? 'OFFLINE / CACHE DEMO'
+                  : 'BACKEND BELUM TERHUBUNG'}
+          </span>
+          {bootstrap?.publishedConfigured && (
+            <button
+              type="button"
+              disabled={refreshing}
+              onClick={() => {
+                setRefreshing(true);
+                void window.senkomViewer
+                  .refreshPublished()
+                  .then((next) => {
+                    setMap(next);
+                    setSelection(null);
+                    setError('');
+                  })
+                  .catch(() =>
+                    setError('Refresh peta gagal; peta lama dipertahankan.'),
+                  )
+                  .finally(() => setRefreshing(false));
+              }}
+            >
+              {refreshing ? 'Memperbarui...' : 'Perbarui peta'}
+            </button>
+          )}
           <span data-testid="display-mode">
             {current?.display.displays.length ?? '-'} DISPLAY /{' '}
             {current?.display.mode.toUpperCase() ?? 'DETEKSI'}
@@ -149,6 +184,7 @@ function App() {
         {snapshot && current && bootstrap ? (
           <>
             <MapCanvas
+              key={`${snapshot.schemaVersion}:${snapshot.revision}`}
               map={snapshot}
               display={current.display}
               bezelSafeDip={bootstrap.profile.bezelSafeDip}
@@ -165,7 +201,7 @@ function App() {
           </>
         ) : (
           <section className="empty-state" role="status">
-            <span className="eyebrow">SENKOM / DEMO</span>
+            <span className="eyebrow">SENKOM / VIEW ONLY</span>
             <h1>
               {bootstrap
                 ? 'Peta belum tersedia'
@@ -175,10 +211,10 @@ function App() {
             </h1>
             <p>
               {error ||
-                bootstrap?.map.warning ||
+                map?.warning ||
                 'Memvalidasi snapshot dan konfigurasi display.'}
             </p>
-            {bootstrap && (
+            {bootstrap && !bootstrap.publishedConfigured && (
               <p>
                 Mode cache-only membutuhkan cache valid dari sesi DEMO
                 sebelumnya. Tutup aplikasi, lalu jalankan mode DEMO untuk
@@ -200,11 +236,13 @@ function App() {
       )}
       <footer className="wall-footer">
         <div className="status-line" role="status">
-          <span>DEMO / BUKAN MONITORING LIVE</span>
           <span>
-            {bootstrap?.map.savedAt
+            {publishedContext ? 'PUBLISHED' : 'DEMO'} / BUKAN MONITORING LIVE
+          </span>
+          <span>
+            {map?.savedAt
               ? 'DATA TERAKHIR ' +
-                new Date(bootstrap.map.savedAt).toLocaleString('id-ID', {
+                new Date(map.savedAt).toLocaleString('id-ID', {
                   timeZone: 'Asia/Jakarta',
                 }) +
                 ' WIB'
@@ -212,7 +250,7 @@ function App() {
           </span>
           <span>
             {error ||
-              bootstrap?.map.warning ||
+              map?.warning ||
               current?.display.warnings[0] ||
               'Inventaris manual / tidak ada telemetry'}
           </span>

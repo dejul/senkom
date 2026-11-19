@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import type { PublishedMap } from '@senkom/shared-types';
+import type { PublishedMap, PublishedMapV2 } from '@senkom/shared-types';
 import type { Bounds, DisplayPlan } from '@senkom/shared-types/viewer';
 import {
   layerNames,
   projection,
   safeLabel,
+  symbolCodes,
   zoomView,
   type Layer,
   type Selection,
 } from './map-model';
 
 interface Props {
-  map: PublishedMap;
+  map: PublishedMap | PublishedMapV2;
   display: DisplayPlan;
   bezelSafeDip: number;
   selection: Selection;
@@ -113,7 +114,8 @@ export function MapCanvas({
         <div>
           <span className="eyebrow">SKEMATIK INFRASTRUKTUR</span>
           <h1>
-            FO + Power <span>DEMO</span>
+            FO + Power{' '}
+            <span>{map.dataOrigin === 'demo' ? 'DEMO' : 'PUBLISHED'}</span>
           </h1>
         </div>
         <div className="map-tools" aria-label="Navigasi peta">
@@ -165,7 +167,7 @@ export function MapCanvas({
         data-testid="map-canvas"
         viewBox={`0 0 ${size.width} ${size.height}`}
         tabIndex={0}
-        aria-label="Kanvas peta DEMO; tombol panah untuk pan, plus minus untuk zoom, Home untuk fit"
+        aria-label="Kanvas peta; tombol panah untuk pan, plus minus untuk zoom, Home untuk fit"
         onKeyDown={(event) => {
           if (event.target !== event.currentTarget) return;
           const directions: Record<string, [number, number]> = {
@@ -226,7 +228,7 @@ export function MapCanvas({
           drag.current = null;
         }}
       >
-        <title>Peta sintetis, bukan telemetry perangkat</title>
+        <title>Peta inventaris, bukan telemetry perangkat</title>
         {regions.length > 1 &&
           regions.map((r, i) => (
             <rect
@@ -251,7 +253,7 @@ export function MapCanvas({
                 data-edge-id={edge.id}
                 role="button"
                 tabIndex={0}
-                aria-label={`Detail kabel ${cable?.code ?? edge.connectionId}`}
+                aria-label={`Detail kabel ${'label' in edge && typeof edge.label === 'string' ? edge.label : (cable?.code ?? edge.connectionId)}`}
                 onClick={() => onSelect({ kind: 'edge', id: edge.id })}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -263,10 +265,14 @@ export function MapCanvas({
                 <path d={path(edge.points)} className="edge-hit" />
                 <path d={path(edge.points)} className="network-edge" />
                 <title>
-                  {cable?.code ?? edge.connectionId} /{' '}
-                  {inactive ? 'inactive' : 'status inventaris, bukan live'}
+                  {('label' in edge &&
+                    typeof edge.label === 'string' &&
+                    edge.label) ||
+                    cable?.code ||
+                    edge.connectionId}{' '}
+                  / {inactive ? 'inactive' : 'status inventaris, bukan live'}
                 </title>
-                {zoom >= 1.4 && cable && (
+                {zoom >= 1.4 && (
                   <text
                     className="edge-label"
                     x={
@@ -278,7 +284,11 @@ export function MapCanvas({
                       15
                     }
                   >
-                    {cable.lengthM} m{inactive ? ' / inactive' : ''}
+                    {('label' in edge &&
+                      typeof edge.label === 'string' &&
+                      edge.label) ||
+                      (cable ? `${cable.lengthM} m` : edge.connectionId)}
+                    {inactive ? ' / inactive' : ''}
                   </text>
                 )}
               </g>
@@ -301,9 +311,10 @@ export function MapCanvas({
             point.y > size.height + 30
           )
             return null;
+          const name = ('label' in node && node.label) || site.name;
           const label = safeLabel(
             point,
-            site.name.length * 8,
+            name.length * 8,
             regions,
             bezelSafeDip,
           );
@@ -312,6 +323,10 @@ export function MapCanvas({
           const deviceCount = map.devices.filter(
             (d) => d.siteId === site.id,
           ).length;
+          const symbol =
+            'symbol' in node && typeof node.symbol === 'string'
+              ? (node.symbol as keyof typeof symbolCodes)
+              : 'site';
           return (
             <g
               key={node.id}
@@ -320,7 +335,7 @@ export function MapCanvas({
               data-site-id={site.id}
               role="button"
               tabIndex={0}
-              aria-label={`Detail ${site.name}`}
+              aria-label={`Detail ${name}`}
               onClick={() => onSelect({ kind: 'site', id: site.id })}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -330,10 +345,28 @@ export function MapCanvas({
               }}
             >
               <circle className="node-hit" cx={point.x} cy={point.y} r={22} />
-              <circle className="node-ring" cx={point.x} cy={point.y} r={10} />
-              <circle className="node-center" cx={point.x} cy={point.y} r={3} />
+              {symbol === 'site' ? (
+                <circle
+                  className="node-ring"
+                  cx={point.x}
+                  cy={point.y}
+                  r={10}
+                />
+              ) : (
+                <rect
+                  className="node-ring"
+                  x={point.x - 14}
+                  y={point.y - 12}
+                  width={28}
+                  height={24}
+                  rx={4}
+                />
+              )}
+              <text x={point.x} y={point.y + 3} className="node-symbol">
+                {symbolCodes[symbol]}
+              </text>
               <text x={label.x} y={label.y} className="site-label">
-                {site.name}
+                {name}
               </text>
               {zoom >= 2 && (
                 <text x={label.x} y={label.y + 18} className="site-subtitle">
