@@ -1,5 +1,9 @@
 # Checkpoint Phase 2
 
+## Parent 2C-02 — closure setelah gate merge (2026-11-19)
+
+[PR #49](https://github.com/dejul/senkom/pull/49) gate merge manual pada `355ce33271685cf436be4cbe778b0d0b728dab7f`; head `43fffd80c1bc1b38e2faf6dfe557dde8f85fcff4` ancestor. [CI postmerge `44486785441`](https://github.com/dejul/senkom/actions/runs/44486785441) event `push`, exact merge SHA, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. Gate acceptance GET published, 200/304, checksum/schema/ETag, unauthorized, timeout/abort, batas 8 MiB, Windows Electron, dan regresi lulus. **Parent 2C-02 VERIFIED/CLOSED**; status WIP di bagian historis di bawah tidak lagi berlaku. Phase 2C keseluruhan WIP; 2C-03a NOT STARTED. Branch closure `fix/phase-2c-02-closure` dibuat dari merge SHA; PR closure dokumentasi menunggu gate tersendiri.
+
 ## Parent 2C-02 — verification gate (2026-11-19)
 
 PR #48 **MERGED** pada `f532c0c21d56151011d87a7fb07faca245c81273`; [CI postmerge `44484587079`](https://github.com/dejul/senkom/actions/runs/44484587079) event `push` pada SHA tersebut, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. Head PR `bbeff39d486b761c91fd581def12f727cc6701a4` adalah ancestor; tujuh berkas kode, tes, dan dokumen terintegrasi tanpa perubahan. **2C-02b VERIFIED**. Dua anak 2C-02a/b VERIFIED; rencana V2 menjadikan parent gate langkah berikutnya. Branch `feature/phase-2c-02-gate` dari merge SHA, worktree awal bersih, tiga worktree dan dua stash lain utuh.
