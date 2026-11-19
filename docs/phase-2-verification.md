@@ -25,6 +25,8 @@ Status: **VERIFIED** untuk acceptance lokal 2C-03b; integrasi tetap WIP sampai P
 
 Keamanan: token dibaca hanya pada Electron main dan dikirim sebagai Bearer lewat `fetchPublishedMap`; renderer/IPC/log tidak memuat nilainya. Origin HTTPS, redirect/cross-origin guard, timeout 10 detik, 8 MiB streaming, checksum/ETag, schema v2, dan atomic cache tetap dipakai. Refresh berulang serentak ditolak. Perubahan Electron main/preload serta script smoke memerlukan merge manual menurut Auto-Merge V2. Parent 2C-03 WIP; 2C-04 NOT STARTED.
 
+Commit implementasi `eb3bd4a427453330d53c155a339cdafbd78b7d0d` pada `feature/phase-2c-03b`. Dua puluh path staged sesuai scope; `git diff --cached --check` exit 0 dan scan signature rahasia high-confidence 0 hit. Tidak ada credential, `.env`, DB, log, dependency, atau build output staged. Commit bukti ini memerlukan CI exact-head PR tersendiri.
+
 ## 2C-03a — closure pascamerge (2026-11-19)
 
 Status: **VERIFIED**. [PR #51](https://github.com/dejul/senkom/pull/51) merge manual pada `5f221249cf7b8d5320d49efa208dba975d1409c7`; head `8504a2e23d891aebcd1b83210bccff1c5c25e37a` ancestor dan tujuh path batch terintegrasi identik. [CI exact-head `44529679554`](https://github.com/dejul/senkom/actions/runs/44529679554) serta [CI postmerge `44530790514`](https://github.com/dejul/senkom/actions/runs/44530790514) masing-masing PASS 16/16 mandatory, 0 skip; postmerge event `push` pada exact merge SHA. [Auto-Merge V2 `44530609527`](https://github.com/dejul/senkom/actions/runs/44530609527) berhenti karena klaim otomatis tidak ada; Electron main storage memerlukan merge manual. Matriks acceptance dan tes lokal tercatat di bagian batch historis di bawah. Parent 2C-03 WIP; 2C-03b NOT STARTED.
