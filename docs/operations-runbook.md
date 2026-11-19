@@ -48,6 +48,10 @@ PR #48 merge `f532c0c21d56151011d87a7fb07faca245c81273` dan CI postmerge `444845
 
 Parent 2C-02 kemudian VERIFIED/CLOSED melalui PR #49 merge `355ce33271685cf436be4cbe778b0d0b728dab7f` dan CI postmerge `44486785441` PASS 16/16, 0 skip. Helper tetap belum dipanggil otomatis; 2C-03a cache restore/write belum dimulai.
 
+## Phase 2C-03a: cache published v2
+
+Helper Electron main `savePublishedCache` menulis `published-map-cache.v2.json` di direktori `userData` dengan `atomicJson`. Isi hanya snapshot published v2, revisi, `fetchedAt`, ETag dari GET tervalidasi, dan SHA-256 lokal atas serialisasi snapshot; token viewer tidak disimpan. Sebelum tulis dan saat restore, schema v2 dan referensi divalidasi. Cache korup, versi tak cocok, checksum/revisi/ETag salah, atau file >16 MiB ditolak; kandidat >8 MiB ditolak. `matchesPublishedCache304` menerima 304 hanya jika cache valid, ETag sama, dan checksum header cocok. Berkas absen menghasilkan status tanpa snapshot, bukan fallback DEMO. Tulis gagal atau kandidat invalid mempertahankan berkas lama. Helper belum dipanggil saat startup; 2C-03b menghubungkan restore/hot swap, sedangkan scheduler milik 2C-04.
+
 ## SOP yang masih harus dibangun
 
 Main process menyimpan cache/config di `app.getPath('userData')`, menggunakan atomic

@@ -1,7 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, open, readFile, rename, stat, unlink } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import { parsePublishedMap } from '@senkom/map-schema';
+import { parsePublishedMap, parsePublishedMapV2 } from '@senkom/map-schema';
+import type { PublishedMapV2 } from '@senkom/shared-types';
 import type { SnapshotState } from '@senkom/shared-types/viewer';
 
 export async function atomicJson(path: string, value: unknown): Promise<void> {
@@ -23,6 +24,96 @@ export async function atomicJson(path: string, value: unknown): Promise<void> {
 
 const checksum = (snapshot: unknown) =>
   createHash('sha256').update(JSON.stringify(snapshot)).digest('hex');
+
+const publishedCachePath = (directory: string) =>
+  join(directory, 'published-map-cache.v2.json');
+
+// ponytail: cache persistence only; connect restore and hot swap in 2C-03b.
+export async function savePublishedCache(
+  directory: string,
+  input: unknown,
+  etag: string,
+): Promise<void> {
+  const snapshot = parsePublishedMapV2(input);
+  if (!/^"sha256:[a-f0-9]{64}"$/.test(etag))
+    throw new Error('Invalid published cache ETag');
+  if (Buffer.byteLength(JSON.stringify(snapshot)) > 8 * 1024 * 1024)
+    throw new Error('Published cache too large');
+  await atomicJson(publishedCachePath(directory), {
+    cacheVersion: 1,
+    revision: snapshot.revision,
+    fetchedAt: new Date().toISOString(),
+    checksum: checksum(snapshot),
+    etag,
+    snapshot,
+  });
+}
+
+type PublishedCache = {
+  snapshot: PublishedMapV2 | null;
+  fetchedAt: string | null;
+  etag: string | null;
+  invalid: boolean;
+};
+
+export async function loadPublishedCache(
+  directory: string,
+): Promise<PublishedCache> {
+  const path = publishedCachePath(directory);
+  try {
+    if ((await stat(path)).size > 16 * 1024 * 1024)
+      throw new Error('Published cache too large');
+    const cache: unknown = JSON.parse(await readFile(path, 'utf8'));
+    if (!cache || typeof cache !== 'object' || Array.isArray(cache))
+      throw new Error('Invalid published cache');
+    const value = cache as Record<string, unknown>;
+    if (
+      Object.keys(value).sort().join(',') !==
+        'cacheVersion,checksum,etag,fetchedAt,revision,snapshot' ||
+      value.cacheVersion !== 1 ||
+      typeof value.fetchedAt !== 'string' ||
+      !Number.isFinite(Date.parse(value.fetchedAt)) ||
+      typeof value.checksum !== 'string' ||
+      !/^[a-f0-9]{64}$/.test(value.checksum) ||
+      typeof value.etag !== 'string' ||
+      !/^"sha256:[a-f0-9]{64}"$/.test(value.etag)
+    )
+      throw new Error('Invalid published cache');
+    const snapshot = parsePublishedMapV2(value.snapshot);
+    if (
+      value.revision !== snapshot.revision ||
+      value.checksum !== checksum(snapshot)
+    )
+      throw new Error('Invalid published cache');
+    return {
+      snapshot,
+      fetchedAt: value.fetchedAt,
+      etag: value.etag,
+      invalid: false,
+    };
+  } catch (error) {
+    return {
+      snapshot: null,
+      fetchedAt: null,
+      etag: null,
+      invalid: (error as NodeJS.ErrnoException).code !== 'ENOENT',
+    };
+  }
+}
+
+export function matchesPublishedCache304(
+  cache: PublishedCache,
+  response: { status: number; etag: string | null; checksum: string | null },
+): boolean {
+  return Boolean(
+    cache.snapshot &&
+    !cache.invalid &&
+    cache.etag &&
+    response.status === 304 &&
+    response.etag === cache.etag &&
+    response.etag === `"sha256:${response.checksum}"`,
+  );
+}
 
 export async function loadSnapshot(
   directory: string,

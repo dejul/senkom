@@ -1,5 +1,33 @@
 # Verifikasi Phase 2
 
+## 2C-03a — published cache restore dan atomic write (2026-11-19)
+
+Prasyarat: [PR #50](https://github.com/dejul/senkom/pull/50) MERGED pada `f789de5fc16973df51b61cf5de4130db428fd747`; head `dd594cfffae8f3e9143b58303ff161d9362ab98f` ancestor dan empat dokumen closure terintegrasi identik. [CI postmerge `44488893237`](https://github.com/dejul/senkom/actions/runs/44488893237) event `push`, exact merge SHA, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. **PARENT 2C-02 VERIFIED — CLOSED**. Branch `feature/phase-2c-03a` dari merge SHA, worktree awal bersih; tiga worktree dan dua stash lain utuh.
+
+| Kriteria 2C-03a            | Bukti lokal                                                                                                                                    | Status |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Restore published cache    | Cache v2 terpisah dari DEMO; revisi, `fetchedAt`, checksum lokal, ETag dan snapshot tersimpan; schema/checksum/ETag divalidasi ulang saat baca | PASS   |
+| Ikatan 304                 | 304 hanya diterima dengan cache valid, ETag sama, dan header checksum cocok; cache absen dan header salah ditolak                              | PASS   |
+| Atomic write dan last good | `atomicJson` dipakai; kandidat schema invalid atau rename gagal tidak mengganti file terakhir; temp file dibersihkan                           | PASS   |
+| Korup dan batas ukuran     | Checksum/revisi/schema/metadata/field rahasia/draft rusak ditolak; file >16 MiB dan kandidat valid >8 MiB ditolak                              | PASS   |
+| First run dan keamanan     | File absen menghasilkan `snapshot: null`, tanpa fallback DEMO; tidak ada token dalam envelope, IPC baru, fetch, atau scheduler                 | PASS   |
+| Isolasi scope              | Main startup, DEMO cache Phase 1, renderer, dan jalur fetch 2C-02 tidak berubah; hot swap milik 2C-03b                                         | PASS   |
+
+| Perintah lokal                                                                                                                                       | Hasil                                                                       |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `npm test -- tests/desktop-published-cache.test.ts tests/viewer-storage.test.ts tests/desktop-api-origin.test.ts tests/desktop-viewer-token.test.ts` | exit 0; 32/32                                                               |
+| `npm test`                                                                                                                                           | exit 0; 187/187, 31 file                                                    |
+| `npm run lint`                                                                                                                                       | exit 0; ESLint, Prettier, OpenAPI contract                                  |
+| `npm run build`                                                                                                                                      | exit 0; contracts, typecheck, desktop/admin production build                |
+| `npm run smoke:desktop`                                                                                                                              | exit 0; Windows Electron Phase 1, sandbox/bridge/CSP, offline/corrupt/empty |
+| `composer --working-dir apps/api validate --strict`; `composer --working-dir apps/api audit --locked`                                                | exit 0; 0 advisory                                                          |
+| `npm audit --omit=dev --audit-level=low`                                                                                                             | exit 0; 0 vulnerability                                                     |
+| PHPUnit, MySQL integration, HTTP smoke, schema standalone, real Laravel/MySQL browser E2E                                                            | NOT RUN lokal; batch hanya storage Electron main; PR CI mandatory pending   |
+
+Status 2C-03a **WIP** sampai PR merge dan CI postmerge PASS. Parent 2C-03 WIP; 2C-03b NOT STARTED. PR exact-head CI dan Auto-Merge V2 pending.
+
+Review tujuh staged path in-scope: `git diff --cached --check` exit 0; scan signature rahasia high-confidence 0 hit setelah nilai fixture sintetis dipendekkan. Tidak ada berkas credential, `.env`, database, log, dependency, atau build output staged.
+
 ## Parent 2C-02 — closure pascamerge (2026-11-19)
 
 Status: **VERIFIED**. [PR #49](https://github.com/dejul/senkom/pull/49) gate merge manual pada `355ce33271685cf436be4cbe778b0d0b728dab7f` dari head `43fffd80c1bc1b38e2faf6dfe557dde8f85fcff4`; head ancestor dan lima dokumen gate terintegrasi identik. [CI postmerge `44486785441`](https://github.com/dejul/senkom/actions/runs/44486785441) event `push`, exact merge SHA, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. CI PR exact-head `44486081978` juga PASS 16/16, 0 skip. [Auto-Merge V2 `44486714809`](https://github.com/dejul/senkom/actions/runs/44486714809) memblokir klaim otomatis yang tidak ada; merge dilakukan manual oleh `dejul`. Kriteria parent dan regresi lokal tercatat di gate historis di bawah. Tidak ada perubahan produk pada closure. Phase 2C tetap WIP; 2C-03a NOT STARTED.

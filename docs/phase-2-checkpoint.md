@@ -1,5 +1,13 @@
 # Checkpoint Phase 2
 
+## 2C-03a — published cache restore dan atomic write (2026-11-19)
+
+PR #50 **MERGED** pada `f789de5fc16973df51b61cf5de4130db428fd747`; [CI postmerge `44488893237`](https://github.com/dejul/senkom/actions/runs/44488893237) event `push` pada SHA itu, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. Head `dd594cfffae8f3e9143b58303ff161d9362ab98f` ancestor; empat dokumen closure terintegrasi identik. **PARENT 2C-02 VERIFIED — CLOSED**. Branch `feature/phase-2c-03a` dari merge SHA, worktree awal bersih; tiga worktree lain dan dua stash historis utuh.
+
+2C-03a **WIP — acceptance lokal PASS; PR exact-head CI, merge, dan CI postmerge pending**. `storage.ts` menyediakan save/restore cache published v2 terpisah dari cache DEMO. Snapshot divalidasi schema v2 sebelum tulis dan setelah baca; envelope menyimpan revisi, waktu fetch, checksum SHA-256 lokal, ETag, dan snapshot. Respons 304 hanya dapat dipakai bersama cache valid dengan ETag/checksum cocok. Batas kandidat 8 MiB dan berkas cache 16 MiB; write memakai `atomicJson` sehingga input invalid atau rename gagal mempertahankan cache terakhir. Berkas absen/korup mengembalikan status eksplisit tanpa fallback DEMO. Tidak ada fetch, startup restore, renderer IPC, hot swap, atau scheduler baru; 2C-03b NOT STARTED dan Parent 2C-03 WIP.
+
+Fokus storage/origin/token 32/32, frontend 187/187, lint/OpenAPI, typecheck/build desktop+admin, Windows Electron smoke, Composer validate/audit, npm production audit PASS lokal; audit 0 temuan. PHPUnit/MySQL/HTTP/schema standalone dan browser Laravel/MySQL nyata **NOT RUN** lokal karena batch hanya storage main; mandatory PR CI pending. [Matriks dan perintah](phase-2-verification.md#2c-03a--published-cache-restore-dan-atomic-write-2026-11-19).
+
 ## Parent 2C-02 — closure setelah gate merge (2026-11-19)
 
 [PR #49](https://github.com/dejul/senkom/pull/49) gate merge manual pada `355ce33271685cf436be4cbe778b0d0b728dab7f`; head `43fffd80c1bc1b38e2faf6dfe557dde8f85fcff4` ancestor. [CI postmerge `44486785441`](https://github.com/dejul/senkom/actions/runs/44486785441) event `push`, exact merge SHA, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. Gate acceptance GET published, 200/304, checksum/schema/ETag, unauthorized, timeout/abort, batas 8 MiB, Windows Electron, dan regresi lulus. **Parent 2C-02 VERIFIED/CLOSED**; status WIP di bagian historis di bawah tidak lagi berlaku. Phase 2C keseluruhan WIP; 2C-03a NOT STARTED. Branch closure `fix/phase-2c-02-closure` dibuat dari merge SHA; PR closure dokumentasi menunggu gate tersendiri.
