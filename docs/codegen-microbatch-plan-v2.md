@@ -110,6 +110,8 @@
 | `2C-05a`    | E2E publish→desktop dan failure matrix         | NOT STARTED  | Snapshot lama sampai publish; swap atomik   |
 | `2C-05b`    | Gate Phase 2 full regression + docs            | NOT STARTED  | 2A/2B/2C gates, Electron smoke, approval    |
 
+Parent 2C-04: acceptance lokal gate PASS pada 2026-11-20; status parent tetap WIP sampai PR gate merge dan CI postmerge PASS. 2C-05 belum dimulai.
+
 ### Kriteria wajib 2C-02a — realignment Option B disetujui 2026-11-19
 
 Parent 2C-01 mencakup provisi dan isolasi keamanan origin/token, bukan timeout atau batas respons HTTP. Konflik dengan scope parent lama diselesaikan melalui revisi `docs/codegen-plan.md`: fetch published belum ada pada 2C-01; kedua kontrol berlaku sebelum fetch pertama pada 2C-02a. Parent 2C-01 harus VERIFIED berdasarkan kriteria revisi sebelum 2C-02a dimulai.
