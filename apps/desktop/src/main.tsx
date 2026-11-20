@@ -60,11 +60,16 @@ function App() {
     const unsubscribe = window.senkomViewer?.onAdminPrompt(() =>
       setAdmin(true),
     );
+    const unsubscribeMap = window.senkomViewer?.onMapUpdated((next) => {
+      setMap(next);
+      setSelection(null);
+    });
     return () => {
       active = false;
       clearInterval(timer);
       clearInterval(clockTimer);
       unsubscribe?.();
+      unsubscribeMap?.();
     };
   }, []);
   useEffect(() => {

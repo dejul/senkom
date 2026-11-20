@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { DesktopBridge } from '@senkom/shared-types';
-import type { ViewerBridge } from '@senkom/shared-types/viewer';
+import type { SnapshotState, ViewerBridge } from '@senkom/shared-types/viewer';
 
 const bridge: DesktopBridge = Object.freeze({
   getInfo: () => ipcRenderer.invoke('foundation:info'),
@@ -10,6 +10,12 @@ contextBridge.exposeInMainWorld('senkom', bridge);
 const viewer: ViewerBridge = Object.freeze({
   bootstrap: () => ipcRenderer.invoke('viewer:bootstrap'),
   refreshPublished: () => ipcRenderer.invoke('viewer:refresh-published'),
+  onMapUpdated: (callback: (map: SnapshotState) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, map: SnapshotState) =>
+      callback(map);
+    ipcRenderer.on('viewer:map-updated', listener);
+    return () => ipcRenderer.removeListener('viewer:map-updated', listener);
+  },
   status: () => ipcRenderer.invoke('viewer:status'),
   reportFrame: (sample: { fps: number; painted: boolean }) =>
     ipcRenderer.invoke('viewer:frame', sample),

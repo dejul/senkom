@@ -90,6 +90,7 @@ async function verifyPhase1(window, artifacts) {
     await js('Object.keys(window.senkomViewer).sort()'),
     [
       'bootstrap',
+      'onMapUpdated',
       'refreshPublished',
       'status',
       'reportFrame',

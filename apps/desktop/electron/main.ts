@@ -34,6 +34,7 @@ import {
   restorePublishedSnapshot,
 } from './published-viewer';
 import { prepareViewerToken, readViewerToken } from './viewer-token';
+import { startPublishedSync } from './sync-scheduler';
 import { createLogger, frameSample, readProfile } from './diagnostics';
 import demoMap from '../../../tests/fixtures/demo-map.v1.json';
 
@@ -243,28 +244,47 @@ if (!app.requestSingleInstanceLock()) {
         profile,
       }));
       let refreshing = false;
-      handle(
-        'viewer:refresh-published',
-        0,
-        async (): Promise<SnapshotState> => {
-          if (!api.origin || refreshing) throw new Error('Refresh unavailable');
-          refreshing = true;
-          try {
-            const token = await readViewerToken(directory, safeStorage);
-            if (!token) throw new Error('Refresh unavailable');
-            map = await refreshPublishedSnapshot(directory, api.origin, token);
-            logger.write('published-map-loaded', {
-              revision: map.snapshot?.revision,
-            });
-            return map;
-          } catch {
-            logger.write('published-map-refresh-failed');
-            throw new Error('Refresh peta gagal; peta lama dipertahankan.');
-          } finally {
-            refreshing = false;
+      const refreshPublished = async (): Promise<SnapshotState> => {
+        if (!api.origin || refreshing) throw new Error('Refresh unavailable');
+        refreshing = true;
+        try {
+          const token = await readViewerToken(directory, safeStorage);
+          if (!token) throw new Error('Refresh unavailable');
+          const next = await refreshPublishedSnapshot(
+            directory,
+            api.origin,
+            token,
+          );
+          const changed =
+            next.source !== map.source ||
+            next.snapshot?.revision !== map.snapshot?.revision;
+          map = next;
+          if (changed && window && !window.isDestroyed()) {
+            window.webContents.send('viewer:map-updated', next);
           }
-        },
-      );
+          logger.write('published-map-loaded', {
+            revision: map.snapshot?.revision,
+          });
+          return map;
+        } catch {
+          logger.write('published-map-refresh-failed');
+          throw new Error('Refresh peta gagal; peta lama dipertahankan.');
+        } finally {
+          refreshing = false;
+        }
+      };
+      handle('viewer:refresh-published', 0, refreshPublished);
+      const stopSync = api.origin
+        ? startPublishedSync(async () => {
+            if (refreshing) return 'busy';
+            try {
+              await refreshPublished();
+              return 'ok';
+            } catch {
+              return 'failed';
+            }
+          })
+        : () => undefined;
       handle('viewer:status', 0, status);
       handle('viewer:frame', 1, (input) => {
         const value = frameSample(input);
@@ -365,6 +385,7 @@ if (!app.requestSingleInstanceLock()) {
       });
       window.once('ready-to-show', () => window?.show());
       window.on('closed', () => {
+        stopSync();
         window = null;
         admin.lock();
         clearTimeout(reflowTimer);
