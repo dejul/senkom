@@ -64,6 +64,8 @@ PR gate #54 merge `a6878e1a8723e6bf9cc900423fe59841cf4c76d5` dan CI postmerge `4
 
 PR closure #55 merge `53638954f633adda9698a9b3dafb383c46d611ef` dan CI postmerge `44681521170` PASS 16/16, 0 skip: Parent 2C-03 VERIFIED/CLOSED.
 
+PR #56 merge manual `58c24fdaaac19229aba096c8a352f1b4e251828f`. CI postmerge `44688783846` attempt 1 gagal pada Electron smoke (`UnknownVizError`); attempt 2 PASS 16/16 mandatory, 0 skip pada exact merge SHA. 2C-04a VERIFIED. Kegagalan pertama dicatat sebagai observasi stabilitas CI yang penyebab pastinya belum terkonfirmasi; lihat verifikasi Phase 2. Parent 2C-04 WIP dan 2C-04b belum dimulai.
+
 ## Phase 2C-04a: scheduler published
 
 Saat origin HTTPS terprovisi, Electron main menjadwalkan GET published melalui jalur refresh tervalidasi. Cadence dasar 5 menit dengan jitter ±20%; kegagalan berturut memakai backoff 10, 20, lalu 30 menit sebelum jitter (maksimal 36 menit aktual). Timer baru dipasang setelah request selesai; refresh manual memakai lock yang sama. Respons 200 valid disimpan atomik sebelum revisi baru dikirim ke renderer, sedangkan 304/same revision tidak memicu swap. Gagal atau token tidak tersedia mempertahankan peta lama. Timer dihentikan saat window ditutup. Indikator OFFLINE/STALE/last-sync dan reconnect UI milik 2C-04b.
