@@ -1,5 +1,23 @@
 # Verifikasi Phase 2
 
+## Parent 2C-04 — verification gate (2026-11-20)
+
+Commit gate: `0a5859fe1f00a446137e83e058f8af3b16a62990`.
+
+Status: **WIP sampai PR gate merge dan CI postmerge PASS**; acceptance lokal Parent 2C-04 PASS. Prasyarat: [PR closure #59](https://github.com/dejul/senkom/pull/59) merge manual pada `544bf3fb8032108387cc98cd1c494aaffd0ac33c`; head `4c55ed4393fd4d7dcf4ee74c8520dd60c4eff8e0` ancestor dan lima dokumen terintegrasi identik. [CI postmerge `44708132041`](https://github.com/dejul/senkom/actions/runs/44708132041) event `push`, exact merge SHA, 16/16 mandatory PASS, 0 skip. 2C-04a/b VERIFIED. Branch gate `feature/phase-2c-04-gate` dari merge SHA, worktree awal bersih.
+
+| Kriteria parent                         | Bukti acceptance                                                                                                                                   | Status |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Sync berkala dan tanpa overlap          | Scheduler main memakai cadence dasar 5 menit, jitter ±20%; timer berikut dibuat setelah request selesai; tes fake timer no-overlap dan stop        | PASS   |
+| Manual refresh, backoff, recovery       | Refresh manual dan scheduler berbagi lock; gagal beruntun menunda 10/20/30 menit sebelum jitter, sukses reset; tes scheduler busy/failure/recovery | PASS   |
+| API putus/pulih, revisi baru, token 401 | Smoke Windows memverifikasi 200 hot swap, 304, 401 menjaga peta/cache lama dan reconnect 200; tes origin menutup transport error/timeout           | PASS   |
+| ONLINE/STALE/OFFLINE dan last-sync      | Status milik main; 200/304 mencatat waktu sync, gagal menjaga waktu terakhir; smoke memeriksa status dan label UI sebelum/sesudah reconnect        | PASS   |
+| Snapshot v2 dan cache                   | Tes schema/checksum/ETag, cache korup/oversize, 304 terikat cache valid, atomic write failure, restore dan first-run tanpa DEMO                    | PASS   |
+| Keamanan HTTP dan token                 | Tes origin HTTPS, redirect/lintas-origin, timeout 10 detik, streaming 8 MiB; token safeStorage main-only, redaksi log, IPC renderer terisolasi     | PASS   |
+| View-only dan regresi                   | Smoke Windows memeriksa peta/CCTV tetap saat 401, seleksi/filter/pan, display reflow, CSP dan admin; suite frontend dan CI backend/HTTP lulus      | PASS   |
+
+Lokal pada `544bf3fb8032108387cc98cd1c494aaffd0ac33c`: `npm test -- tests/desktop-api-origin.test.ts tests/desktop-sync-scheduler.test.ts tests/desktop-published-viewer.test.ts tests/desktop-published-render.test.ts tests/desktop-published-cache.test.ts tests/desktop-viewer-token.test.ts` exit 0, 28/28, 6 file; `npm test` exit 0, 193/193, 34 file; `npm run lint` exit 0 (ESLint, Prettier, OpenAPI); `npm run build` exit 0 (kontrak, typecheck, desktop/admin); `npm run smoke:desktop` exit 0 (Windows Electron seluruh skenario); `composer --working-dir apps/api validate --strict` exit 0; `composer --working-dir apps/api audit --locked` exit 0, tidak ada advisory; `npm audit --omit=dev --audit-level=low` exit 0, 0 vulnerability. PHPUnit/MySQL/HTTP dan browser Laravel/MySQL nyata **NOT RUN lokal**; CI postmerge #59 pada source yang sama telah menjalankan backend/MySQL/HTTP 16/16, dan CI PR gate wajib mengulangnya. Browser admin nyata tidak menguji scheduler Electron. Tidak ada perubahan produk dalam gate ini. Parent 2C-04 tetap WIP; berikutnya hanya gate merge/postmerge, lalu keputusan terpisah untuk 2C-05.
+
 ## 2C-04b — closure setelah PR #58 (2026-11-20)
 
 Status: **2C-04b VERIFIED**. [PR #58](https://github.com/dejul/senkom/pull/58) merge manual pada `bcc4f4aeca4dbc01298b586f399eba948d9f8dca`; head `f7591a0dc6edf749d9275011a6107acf44d9c430` ancestor `origin/main`. [CI PR `44705348641`](https://github.com/dejul/senkom/actions/runs/44705348641) exact head PASS 16/16 mandatory, 0 skip; [CI postmerge `44706195556`](https://github.com/dejul/senkom/actions/runs/44706195556) event `push` pada exact merge SHA PASS 16/16 mandatory, 0 skip. Auto-Merge V2 `44706036864` memblokir karena klaim VERIFIED tidak dipakai saat batch masih WIP; merge dilakukan manual sesuai perubahan Electron main/smoke yang sensitif. Commit dokumen lanjutan `bec4342abd8bda048dba758167d348fd784231df` berada hanya pada branch lama setelah PR merge dan tidak dipakai sebagai bukti main. Acceptance lokal pada bagian historis di bawah tetap berlaku; Parent 2C-04 WIP dan gate parent belum dimulai.
