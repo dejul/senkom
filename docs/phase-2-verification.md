@@ -2,6 +2,8 @@
 
 ## 2C-04b — status koneksi dan recovery published (2026-11-20)
 
+Commit implementasi: `d4fae040bf38fa4b1fbccf43b559e52a3b150698`.
+
 Status: **WIP** sampai PR merge dan CI postmerge PASS; acceptance lokal 2C-04b PASS. Prasyarat: [PR rekonsiliasi #57](https://github.com/dejul/senkom/pull/57) merge manual pada `952c74fe99dbacbe9fc59964339e444286e8a61a`; [CI postmerge `44694442250`](https://github.com/dejul/senkom/actions/runs/44694442250) event `push` pada exact merge SHA PASS 16/16 mandatory, 0 skip. 2C-04a VERIFIED. Branch `feature/phase-2c-04b` dibuat dari merge SHA tersebut; worktree awal bersih.
 
 | Kriteria 2C-04b        | Bukti                                                                                                                                                           | Status |
