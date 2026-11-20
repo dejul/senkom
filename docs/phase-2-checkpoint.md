@@ -8,6 +8,8 @@
 
 Lokal closure: `npm run lint` exit 0; tes schema/cache/render 47/47, 5 file, 0 skip. Full backend/MySQL/HTTP/Electron lokal NOT RUN ulang; CI postmerge #54 PASS 16/16, 0 skip. CI PR closure dan postmerge masih wajib.
 
+Commit closure `c5c5613ff2b6f826f7cf8d2d21fff43cbfc07a1c`; commit bukti dan CI exact-head PR menyusul.
+
 ## Parent 2C-03 — verification gate (2026-11-20)
 
 [PR #53](https://github.com/dejul/senkom/pull/53) MERGED manual pada `5c278f6425b432f90d367cde7a9d92c65e2d895d`; head `441b140cf3b6bb70fdbfbf9669cd8fad6f9de7f0` ancestor, 20 path identik. [CI postmerge `44542722465`](https://github.com/dejul/senkom/actions/runs/44542722465) event `push`, exact merge SHA, 16/16 mandatory PASS, 0 skip. **2C-03b VERIFIED**; 2C-03a sudah VERIFIED.
