@@ -2,6 +2,8 @@
 
 ## Parent 2C-04 — verification gate (2026-11-20)
 
+Commit gate: `0a5859fe1f00a446137e83e058f8af3b16a62990`.
+
 Status: **WIP sampai PR gate merge dan CI postmerge PASS**; acceptance lokal Parent 2C-04 PASS. Prasyarat: [PR closure #59](https://github.com/dejul/senkom/pull/59) merge manual pada `544bf3fb8032108387cc98cd1c494aaffd0ac33c`; head `4c55ed4393fd4d7dcf4ee74c8520dd60c4eff8e0` ancestor dan lima dokumen terintegrasi identik. [CI postmerge `44708132041`](https://github.com/dejul/senkom/actions/runs/44708132041) event `push`, exact merge SHA, 16/16 mandatory PASS, 0 skip. 2C-04a/b VERIFIED. Branch gate `feature/phase-2c-04-gate` dari merge SHA, worktree awal bersih.
 
 | Kriteria parent                         | Bukti acceptance                                                                                                                                   | Status |

@@ -2,6 +2,8 @@
 
 ## Parent 2C-04 — verification gate (2026-11-20)
 
+Commit gate: `0a5859fe1f00a446137e83e058f8af3b16a62990`.
+
 [PR closure #59](https://github.com/dejul/senkom/pull/59) merge manual `544bf3fb8032108387cc98cd1c494aaffd0ac33c`; [CI postmerge `44708132041`](https://github.com/dejul/senkom/actions/runs/44708132041) exact merge SHA PASS 16/16 mandatory, 0 skip. Lima dokumen closure terintegrasi identik; 2C-04a/b VERIFIED. Branch `feature/phase-2c-04-gate` dari merge SHA, worktree awal bersih. **Parent 2C-04 WIP sampai gate PR merge dan CI postmerge PASS; acceptance lokal PASS.** Scheduler, no-overlap, backoff/jitter, status ONLINE/STALE/OFFLINE, last-sync, 200/304/401 dan recovery, cache last-good, HTTPS/token/timeout/size, view-only, carousel, dan regresi sebelumnya tercatat dalam [matriks](phase-2-verification.md#parent-2c-04--verification-gate-2026-11-20).
 
 Lokal: fokus 28/28 (6 file), frontend 193/193 (34 file), lint/OpenAPI, typecheck/build, Windows Electron smoke, Composer validate/audit dan npm audit PASS; audit 0 temuan. PHPUnit/MySQL/HTTP dan browser Laravel/MySQL nyata **NOT RUN lokal**; CI PR gate wajib mengulang semua mandatory. Tidak ada kode produk berubah; 2C-05 belum dimulai.
