@@ -62,6 +62,12 @@ PR #53 merge `5c278f6425b432f90d367cde7a9d92c65e2d895d` dan CI postmerge `445427
 
 PR gate #54 merge `a6878e1a8723e6bf9cc900423fe59841cf4c76d5` dan CI postmerge `44649328499` PASS 16/16, 0 skip. Acceptance parent terbukti; status formal VERIFIED/CLOSED berlaku setelah PR closure dokumentasi merge dan CI postmerge PASS. Scheduler 2C-04 tetap di luar closure ini.
 
+PR closure #55 merge `53638954f633adda9698a9b3dafb383c46d611ef` dan CI postmerge `44681521170` PASS 16/16, 0 skip: Parent 2C-03 VERIFIED/CLOSED.
+
+## Phase 2C-04a: scheduler published
+
+Saat origin HTTPS terprovisi, Electron main menjadwalkan GET published melalui jalur refresh tervalidasi. Cadence dasar 5 menit dengan jitter ±20%; kegagalan berturut memakai backoff 10, 20, lalu 30 menit sebelum jitter (maksimal 36 menit aktual). Timer baru dipasang setelah request selesai; refresh manual memakai lock yang sama. Respons 200 valid disimpan atomik sebelum revisi baru dikirim ke renderer, sedangkan 304/same revision tidak memicu swap. Gagal atau token tidak tersedia mempertahankan peta lama. Timer dihentikan saat window ditutup. Indikator OFFLINE/STALE/last-sync dan reconnect UI milik 2C-04b.
+
 ## SOP yang masih harus dibangun
 
 Main process menyimpan cache/config di `app.getPath('userData')`, menggunakan atomic

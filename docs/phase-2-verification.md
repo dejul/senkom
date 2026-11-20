@@ -1,5 +1,33 @@
 # Verifikasi Phase 2
 
+## 2C-04a — scheduler sinkronisasi published (2026-11-20)
+
+Status: **VERIFIED** untuk acceptance lokal 2C-04a; integrasi tetap WIP sampai PR merge dan CI postmerge PASS. Prasyarat: [PR closure #55](https://github.com/dejul/senkom/pull/55) MERGED manual pada `53638954f633adda9698a9b3dafb383c46d611ef`; head `e6b7db939ecd54118036ba1a67bf56423e531f5b` ancestor, empat dokumen terintegrasi identik. [CI postmerge `44681521170`](https://github.com/dejul/senkom/actions/runs/44681521170) event `push` pada exact merge SHA, 16/16 mandatory PASS, 0 skip. **PARENT 2C-03 VERIFIED — CLOSED**. Branch `feature/phase-2c-04a` dari merge SHA; worktree awal bersih, worktree/stash lain dipertahankan.
+
+| Kriteria 2C-04a             | Bukti                                                                                                                                                     | Status |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Sync berkala                | Main process menjadwalkan GET published lewat `refreshPublishedSnapshot` existing hanya saat origin terprovisi; interval dasar 5 menit dengan jitter ±20% | PASS   |
+| Tanpa overlap/request storm | Timer berikut dipasang setelah request selesai; lock bersama refresh manual menolak overlap; busy ditunda                                                 | PASS   |
+| Backoff/jitter              | Gagal berurutan menaikkan jeda 10/20/30 menit sebelum jitter, maksimum 36 menit aktual; sukses mengembalikan cadence dasar                                | PASS   |
+| Swap aman                   | Revisi baru dikirim main ke renderer setelah validasi dan atomic cache write; 304/same revision tidak mengirim swap; gagal mempertahankan peta lama       | PASS   |
+| Keamanan                    | HTTPS, token Windows main-only, timeout 10 detik, 8 MiB streaming, checksum/schema/ETag, view-only dan first-run tanpa DEMO tetap                         | PASS   |
+| Isolasi scope               | Tidak ada indikator OFFLINE/STALE/last-sync, kebijakan reconnect UI, config operator, atau 2C-04b                                                         | PASS   |
+
+| Perintah lokal                                                                                                                                                                                      | Hasil                                                                                                      |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `npm test -- tests/desktop-sync-scheduler.test.ts tests/desktop-api-origin.test.ts tests/desktop-published-cache.test.ts tests/desktop-published-viewer.test.ts tests/desktop-viewer-token.test.ts` | exit 0; 27/27, 5 file                                                                                      |
+| `npm test`                                                                                                                                                                                          | exit 0; 193/193, 34 file                                                                                   |
+| `npm run lint`; `npm run build`                                                                                                                                                                     | exit 0; ESLint, Prettier, OpenAPI, typecheck, desktop/admin production build                               |
+| `npm run smoke:desktop`                                                                                                                                                                             | exit 0; Windows Electron DEMO/offline/corrupt/empty/published/manual refresh/first-run; sandbox/bridge/CSP |
+| `composer --working-dir apps/api validate --strict`; `composer --working-dir apps/api audit --locked`; `npm audit --omit=dev --audit-level=low`                                                     | exit 0; 0 advisory/vulnerability                                                                           |
+| PHPUnit, MySQL integration, HTTP smoke, real Laravel/MySQL browser E2E lokal                                                                                                                        | NOT RUN; scheduler hanya Electron, CI PR wajib menjalankan backend/HTTP                                    |
+
+Keamanan: scheduler tidak membuat jalur jaringan kedua; setiap tick memanggil refresh main yang memakai `fetchPublishedMap` bounded dan cache tervalidasi. IPC baru hanya mengirim snapshot published ke renderer, tanpa token. Timer berhenti saat window ditutup; respons gagal tidak mengganti map. Tes fake timer membuktikan no-overlap, busy manual, jitter, cap backoff, dan reset sukses. Parent 2C-04 WIP; 2C-04b NOT STARTED.
+
+## Parent 2C-03 — closure setelah PR #55 (2026-11-20)
+
+Status: **PARENT 2C-03 VERIFIED — CLOSED**. PR #55 merge `53638954f633adda9698a9b3dafb383c46d611ef`; [CI postmerge `44681521170`](https://github.com/dejul/senkom/actions/runs/44681521170) exact merge SHA, 16/16 mandatory PASS, 0 skip. Empat dokumen closure terintegrasi identik. Kondisi closure pada catatan historis di bawah telah terpenuhi; tidak diperlukan PR closure tambahan. Phase 2C WIP; 2C-04a batch berikutnya.
+
 ## Parent 2C-03 — closure setelah gate merge (2026-11-20)
 
 Status: **WIP sampai PR closure ini merge dan CI postmerge PASS; kemudian PARENT 2C-03 VERIFIED — CLOSED**. [PR gate #54](https://github.com/dejul/senkom/pull/54) MERGED manual pada `a6878e1a8723e6bf9cc900423fe59841cf4c76d5`; head `e233b96fda8e973eae53707feb8468e1bbe2bddf` ancestor. [CI postmerge `44649328499`](https://github.com/dejul/senkom/actions/runs/44649328499) event `push` pada exact merge SHA, job `checks` SUCCESS, 16/16 mandatory PASS, 0 skip. Tujuh path gate terintegrasi identik. 2C-03a/b VERIFIED; [matriks acceptance dan tes parent](#parent-2c-03--verification-gate-2026-11-20) seluruhnya PASS. Tidak ada blocker keamanan/dependensi baru; kode produk tidak berubah pada PR gate maupun closure ini. Phase 2C tetap WIP; 2C-04 NOT STARTED.

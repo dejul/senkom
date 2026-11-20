@@ -1,5 +1,13 @@
 # Checkpoint Phase 2
 
+## 2C-04a — scheduler sinkronisasi published (2026-11-20)
+
+[PR #55](https://github.com/dejul/senkom/pull/55) MERGED manual pada `53638954f633adda9698a9b3dafb383c46d611ef`; head `e6b7db939ecd54118036ba1a67bf56423e531f5b` ancestor dan empat dokumen closure identik. [CI postmerge `44681521170`](https://github.com/dejul/senkom/actions/runs/44681521170) event `push`, exact merge SHA, 16/16 mandatory PASS, 0 skip. **PARENT 2C-03 VERIFIED — CLOSED**. Branch `feature/phase-2c-04a` dari merge SHA, worktree awal bersih.
+
+**2C-04a WIP sampai PR merge dan CI postmerge PASS; acceptance lokal PASS.** Main menjadwalkan refresh published tiap dasar 5 menit dengan jitter ±20%; gagal memakai backoff 10/20/30 menit sebelum jitter, maksimal 36 menit aktual. Timer berikut menunggu request selesai; lock bersama refresh manual mencegah overlap. Revisi baru dikirim ke renderer setelah validasi dan atomic cache write; 304 tidak memicu swap. Tidak ada status OFFLINE/STALE/last-sync atau reconnect UI; 2C-04b NOT STARTED, Parent 2C-04 WIP.
+
+Fokus scheduler/origin/cache/token 27/27, frontend 193/193, lint/OpenAPI, typecheck/build desktop+admin, Windows Electron smoke, Composer validate/audit dan npm production audit PASS lokal; audit 0 temuan. PHPUnit/MySQL/HTTP dan browser Laravel/MySQL nyata **NOT RUN lokal**; CI PR mandatory pending. [Matriks](phase-2-verification.md#2c-04a--scheduler-sinkronisasi-published-2026-11-20).
+
 ## Parent 2C-03 — closure setelah gate merge (2026-11-20)
 
 [PR #54](https://github.com/dejul/senkom/pull/54) MERGED manual pada `a6878e1a8723e6bf9cc900423fe59841cf4c76d5`; head `e233b96fda8e973eae53707feb8468e1bbe2bddf` ancestor dan tujuh path gate terintegrasi identik. [CI postmerge `44649328499`](https://github.com/dejul/senkom/actions/runs/44649328499) event `push`, exact merge SHA, 16/16 mandatory PASS, 0 skip. Acceptance Parent 2C-03 dan security/regresi sudah terbukti di gate; 2C-03a/b VERIFIED. Branch closure `fix/phase-2c-03-closure` dari merge SHA, worktree awal bersih.

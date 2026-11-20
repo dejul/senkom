@@ -64,6 +64,7 @@ export interface Diagnostics extends ViewerStatus {
 export interface ViewerBridge {
   bootstrap(): Promise<ViewerBootstrap>;
   refreshPublished(): Promise<SnapshotState>;
+  onMapUpdated(callback: (map: SnapshotState) => void): () => void;
   status(): Promise<ViewerStatus>;
   reportFrame(sample: { fps: number; painted: boolean }): Promise<void>;
   onAdminPrompt(callback: () => void): () => void;
