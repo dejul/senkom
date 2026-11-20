@@ -1,5 +1,13 @@
 # Verifikasi Phase 2
 
+## 2C-04a — rekonsiliasi setelah PR #56 (2026-11-20)
+
+Status: **2C-04a VERIFIED**. [PR #56](https://github.com/dejul/senkom/pull/56) merge manual pada `58c24fdaaac19229aba096c8a352f1b4e251828f`; head `06f316e0ced7eb54086204a03cf900f28feeb1b9` ancestor `origin/main`. Scheduler, tes, dan dokumen PR terintegrasi. [CI PR `44683404602`](https://github.com/dejul/senkom/actions/runs/44683404602) PASS 16/16 mandatory, 0 skip. [CI postmerge `44688783846` attempt 2](https://github.com/dejul/senkom/actions/runs/44688783846/attempts/2) event `push` pada exact merge SHA PASS 16/16 mandatory, 0 skip; tidak ada check wajib yang dilewati.
+
+Attempt 1 run yang sama gagal pada Electron smoke setelah skenario offline, sebelum laporan skenario corrupt, dengan `[Error: UnknownVizError]`; OpenAPI dan npm audit ter-skip akibat kegagalan job. Log tidak memberi penyebab internal. Catatan historis di bawah mencatat `UnknownVizError` pada skenario corrupt saat setup berat paralel. Smoke lokal 2C-04a, CI push branch, CI PR, dan postmerge attempt 2 lulus. **Klasifikasi: observasi stabilitas harness/runner belum terselesaikan; penyebab pasti tidak terbukti, regresi produk tidak terkonfirmasi.** Kegagalan tidak disembunyikan; attempt 2 memenuhi gate CI repo. Auto-Merge V2 `44684023189` memblokir PR dengan `Wrong branch for verified work`; merge manual dilakukan pengguna. Tidak ditemukan implementasi/PR 2C-04a ganda atau perubahan lokal dari eksekusi terputus.
+
+Rekonsiliasi dokumen pada branch `fix/phase-2c-04a-closure`; kode produk tidak berubah. Parent 2C-04 WIP; 2C-04b NOT STARTED. Acceptance parent yang tersisa: OFFLINE/STALE/last-sync, reconnect/recovery, API putus/pulih, token kedaluwarsa, dan kelangsungan carousel/interaksi peta. PR rekonsiliasi dokumentasi memerlukan merge manual dan CI postmerge sebelum memulai 2C-04b.
+
 ## 2C-04a — scheduler sinkronisasi published (2026-11-20)
 
 Commit implementasi: `5d4fcec4bd03b824eada365f303ba0ca3e1e9be2`.

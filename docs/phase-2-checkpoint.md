@@ -1,5 +1,9 @@
 # Checkpoint Phase 2
 
+## 2C-04a — rekonsiliasi merge dan CI (2026-11-20)
+
+[PR #56](https://github.com/dejul/senkom/pull/56) merge manual `58c24fdaaac19229aba096c8a352f1b4e251828f`; head `06f316e0ced7eb54086204a03cf900f28feeb1b9` terintegrasi. [CI postmerge `44688783846` attempt 2](https://github.com/dejul/senkom/actions/runs/44688783846/attempts/2) exact merge SHA PASS 16/16 mandatory, 0 skip. Attempt 1 gagal `UnknownVizError` pada Electron smoke; penyebab belum terkonfirmasi, dicatat sebagai observasi stabilitas CI di [verifikasi](phase-2-verification.md#2c-04a--rekonsiliasi-setelah-pr-56-2026-11-20). **2C-04a VERIFIED**. Branch rekonsiliasi `fix/phase-2c-04a-closure`, worktree awal bersih; worktree/stash lain dipertahankan. Parent 2C-04 WIP; 2C-04b NOT STARTED sampai PR rekonsiliasi merge dan CI postmerge PASS.
+
 ## 2C-04a — scheduler sinkronisasi published (2026-11-20)
 
 Commit implementasi: `5d4fcec4bd03b824eada365f303ba0ca3e1e9be2`.
