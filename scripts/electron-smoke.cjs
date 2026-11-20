@@ -2,12 +2,65 @@ const { app, BrowserWindow, safeStorage } = require('electron');
 const assert = require('node:assert/strict');
 const { Buffer } = require('node:buffer');
 const { createHash } = require('node:crypto');
+const { readFileSync } = require('node:fs');
 const { mkdir, readFile, stat, writeFile } = require('node:fs/promises');
 const { join, resolve } = require('node:path');
 const { verifyPhase1 } = require('./phase1-smoke.cjs');
 
 const artifacts = resolve(__dirname, '../.artifacts');
 app.setPath('appData', process.env.SENKOM_SMOKE_APP_DATA);
+if (process.env.SENKOM_SMOKE_SCENARIO === 'published-refresh') {
+  const snapshot = JSON.parse(
+    readFileSync(
+      resolve(__dirname, '../tests/fixtures/demo-map.v1.json'),
+      'utf8',
+    ),
+  );
+  snapshot.schemaVersion = 2;
+  snapshot.mapId = 'main';
+  snapshot.dataOrigin = 'production';
+  delete snapshot.demoLabel;
+  snapshot.revision = 'published-smoke-next';
+  snapshot.layout.nodes[0].label = 'Published Next Node';
+  snapshot.layout.nodes[0].symbol = 'switch';
+  const body = JSON.stringify({
+    data: snapshot,
+    meta: { apiVersion: '1', schemaVersion: 2 },
+  });
+  const hash = createHash('sha256').update(body).digest('hex');
+  let requestCount = 0;
+  global.fetch = async (url, options) => {
+    assert.equal(
+      url,
+      'https://viewer.example.test/api/v1/viewer/map?schemaVersion=2',
+    );
+    assert.equal(options.method, 'GET');
+    assert.equal(options.redirect, 'error');
+    assert.equal(
+      createHash('sha256')
+        .update(options.headers.get('Authorization').slice(7))
+        .digest('hex'),
+      process.env.SENKOM_SMOKE_TOKEN_HASH,
+    );
+    requestCount++;
+    if (requestCount === 2)
+      assert.equal(options.headers.get('If-None-Match'), `"sha256:${hash}"`);
+    const response =
+      requestCount === 1
+        ? new globalThis.Response(body, {
+            status: 200,
+            headers: { ETag: `"sha256:${hash}"`, 'X-Content-SHA256': hash },
+          })
+        : requestCount === 2
+          ? new globalThis.Response(null, {
+              status: 304,
+              headers: { ETag: `"sha256:${hash}"`, 'X-Content-SHA256': hash },
+            })
+          : new globalThis.Response(null, { status: 401 });
+    Object.defineProperty(response, 'url', { value: url });
+    return response;
+  };
+}
 app.once('browser-window-created', (_event, window) => {
   window.show = () => undefined;
   window.webContents.setBackgroundThrottling(false);
@@ -24,7 +77,9 @@ app.once('browser-window-created', (_event, window) => {
         for (let attempt = 0; attempt < 100; attempt++) {
           if (document.querySelector('footer')?.textContent.includes('renderer terisolasi') &&
             ${
-              process.env.SENKOM_SMOKE_SCENARIO === 'published'
+              ['published', 'published-refresh'].includes(
+                process.env.SENKOM_SMOKE_SCENARIO,
+              )
                 ? "document.body.innerText.includes('Published Smoke Node')"
                 : process.env.SENKOM_SMOKE_SCENARIO === 'published-empty'
                   ? "document.body.innerText.includes('Peta belum tersedia')"
@@ -90,6 +145,88 @@ app.once('browser-window-created', (_event, window) => {
         assert.doesNotMatch(result.text, /CACHE DEMO/);
         console.log(
           'PASS Electron published cache: v2 restore, label, view-only, no DEMO fallback.',
+        );
+        app.exit(0);
+        return;
+      }
+      if (process.env.SENKOM_SMOKE_SCENARIO === 'published-refresh') {
+        const oldCache = await readFile(
+          join(
+            process.env.SENKOM_SMOKE_APP_DATA,
+            'SENKOM',
+            'published-map-cache.v2.json',
+          ),
+          'utf8',
+        );
+        assert.match(result.text, /Published Smoke Node/);
+        const swapped = await window.webContents
+          .executeJavaScript(`(async () => {
+          const button = [...document.querySelectorAll('button')].find(item => item.textContent === 'Perbarui peta');
+          button.click();
+          for (let attempt = 0; attempt < 100; attempt++) {
+            if (document.body.innerText.includes('Published Next Node')) break;
+            await new Promise(resolve => setTimeout(resolve, 25));
+          }
+          return { text: document.body.innerText, map: (await window.senkomViewer.bootstrap()).map };
+        })()`);
+        assert.match(swapped.text, /Published Next Node/);
+        assert.doesNotMatch(swapped.text, /Published Smoke Node/);
+        assert.equal(swapped.map.snapshot.revision, 'published-smoke-next');
+        const cachePath = join(
+          process.env.SENKOM_SMOKE_APP_DATA,
+          'SENKOM',
+          'published-map-cache.v2.json',
+        );
+        const newCache = await readFile(cachePath, 'utf8');
+        assert.notEqual(newCache, oldCache);
+        assert.equal(JSON.parse(newCache).revision, 'published-smoke-next');
+        const unchanged = await window.webContents.executeJavaScript(
+          '(async () => await window.senkomViewer.refreshPublished())()',
+        );
+        assert.equal(unchanged.snapshot.revision, 'published-smoke-next');
+        assert.equal(await readFile(cachePath, 'utf8'), newCache);
+        const failed = await window.webContents
+          .executeJavaScript(`(async () => {
+          const button = [...document.querySelectorAll('button')].find(item => item.textContent === 'Perbarui peta');
+          button.click();
+          for (let attempt = 0; attempt < 100; attempt++) {
+            if (document.body.innerText.includes('Refresh peta gagal')) break;
+            await new Promise(resolve => setTimeout(resolve, 25));
+          }
+          return document.body.innerText;
+        })()`);
+        assert.match(failed, /Refresh peta gagal/);
+        assert.match(failed, /Published Next Node/);
+        assert.equal(await readFile(cachePath, 'utf8'), newCache);
+        const protectedToken = JSON.parse(
+          await readFile(
+            join(
+              process.env.SENKOM_SMOKE_APP_DATA,
+              'SENKOM',
+              'viewer-token.protected.json',
+            ),
+            'utf8',
+          ),
+        );
+        const { result: token } = await safeStorage.decryptStringAsync(
+          Buffer.from(protectedToken.ciphertext, 'base64'),
+        );
+        assert.ok(!JSON.stringify(swapped).includes(token));
+        assert.ok(!failed.includes(token));
+        assert.ok(
+          !(
+            await readFile(
+              join(
+                process.env.SENKOM_SMOKE_APP_DATA,
+                'SENKOM',
+                'logs/desktop.jsonl',
+              ),
+              'utf8',
+            )
+          ).includes(token),
+        );
+        console.log(
+          'PASS Electron published refresh: UI swap, atomic cache, 304, unauthorized keeps map.',
         );
         app.exit(0);
         return;

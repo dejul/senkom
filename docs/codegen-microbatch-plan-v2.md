@@ -104,7 +104,7 @@
 | `2C-02a`    | HTTP published fetch + ETag/304 + guard        | VERIFIED     | Timeout/abort/size/304 teruji               |
 | `2C-02b`    | Checksum/schema compatibility validation       | VERIFIED     | Hash mismatch dan unknown schema ditolak    |
 | `2C-03a`    | Cache restore dan atomic disk write            | VERIFIED     | Corrupt/write fail mempertahankan last good |
-| `2C-03b`    | Hot swap revision dan schema-compatible render | WIP          | Peta tidak blank; view-only tetap           |
+| `2C-03b`    | Hot swap revision dan schema-compatible render | VERIFIED     | Peta tidak blank; view-only tetap           |
 | `2C-04a`    | Scheduler sync no-overlap, backoff/jitter      | NOT STARTED  | Tidak membuat request storm                 |
 | `2C-04b`    | Offline/STALE/last-sync dan reconnect          | NOT STARTED  | API outage/recovery; carousel tetap         |
 | `2C-05a`    | E2E publish→desktop dan failure matrix         | NOT STARTED  | Snapshot lama sampai publish; swap atomik   |
