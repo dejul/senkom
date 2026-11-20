@@ -87,6 +87,7 @@ try {
     'corrupt',
     'empty',
     'published',
+    'published-refresh',
     'published-empty',
   ]) {
     const cachePath = join(userData, 'demo-map-cache.v1.json');
@@ -123,6 +124,12 @@ try {
     }
     if (scenario === 'published-empty') {
       await unlink(join(userData, 'published-map-cache.v2.json'));
+      await writeFile(
+        join(userData, 'api-origin.json'),
+        JSON.stringify({ origin: 'https://viewer.example.test' }),
+      );
+    }
+    if (scenario === 'published-refresh') {
       await writeFile(
         join(userData, 'api-origin.json'),
         JSON.stringify({ origin: 'https://viewer.example.test' }),

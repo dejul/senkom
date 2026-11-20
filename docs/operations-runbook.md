@@ -58,6 +58,8 @@ PR #51 merge `5f221249cf7b8d5320d49efa208dba975d1409c7` dan CI postmerge `445307
 
 Saat origin HTTPS dan token viewer terprovisi, viewer memulihkan cache published v2 valid saat startup. Tanpa cache valid, peta produksi kosong dengan pesan; DEMO hanya berjalan tanpa konteks published. Tombol `Perbarui peta` mengirim permintaan read-only ke Electron main. Main mengambil token dari Windows safeStorage, memanggil GET published yang dibatasi 10 detik dan 8 MiB, serta memeriksa checksum, ETag, API/schema v2. Respons 200 disimpan atomik sebelum snapshot baru tampil; 304 diterima hanya jika ETag/checksum cocok dengan cache valid. Kegagalan membiarkan peta lama terlihat. Tidak ada refresh berkala; scheduler/backoff/status koneksi milik 2C-04. PR #52 merge `b8929b3e324399d33492d0c453614434300724b4` dan CI postmerge `44534985286` PASS 16/16, 0 skip menutup prasyarat 2C-03a.
 
+PR #53 merge `5c278f6425b432f90d367cde7a9d92c65e2d895d` dan CI postmerge `44542722465` PASS 16/16, 0 skip menutup 2C-03b. Gate Parent 2C-03 menguji refresh manual 200/304/401, cache atomik, dan peta lama saat gagal; parent tetap WIP sampai gate PR merge serta CI postmerge PASS. Jangan mulai scheduler 2C-04 pada gate ini.
+
 ## SOP yang masih harus dibangun
 
 Main process menyimpan cache/config di `app.getPath('userData')`, menggunakan atomic
