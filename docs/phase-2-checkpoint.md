@@ -6,6 +6,8 @@
 
 Branch `feature/phase-2c-03-gate` dari merge SHA. **Parent 2C-03 WIP — acceptance lokal PASS; gate PR, merge, dan CI postmerge pending**. Restore v2, atomic write, swap revisi tanpa restart, render label/simbol, 304, last-valid-map, first-run produksi tanpa DEMO, view-only, dan kontrol keamanan lulus. Smoke Windows baru menguji klik refresh 200, 304, lalu 401 sambil memeriksa revisi/cache lama bertahan. Fokus 51/51, frontend 190/190, lint/OpenAPI, typecheck/build, Windows Electron, audit Composer/npm, dan browser Laravel/MySQL nyata PASS lokal. PHPUnit/MySQL/HTTP standalone lokal **NOT RUN**; CI postmerge #53 PASS, CI gate wajib mengulang. [Matriks](phase-2-verification.md#parent-2c-03--verification-gate-2026-11-20). Phase 2C WIP; 2C-04 NOT STARTED.
 
+Commit gate `ea53b5e09e7d85ed63c89ab17700639d1cbc50af`; commit bukti dan CI exact-head PR menyusul.
+
 ## 2C-03b — hot swap published revision (2026-11-19)
 
 [PR #52](https://github.com/dejul/senkom/pull/52) **MERGED** pada `b8929b3e324399d33492d0c453614434300724b4`; head `79010bc9844a962dd96f0a70740d176273685568` ancestor dan lima dokumen closure terintegrasi. [CI postmerge `44534985286`](https://github.com/dejul/senkom/actions/runs/44534985286) event `push` pada exact merge SHA, 16/16 mandatory PASS, 0 skip. **2C-03a VERIFIED**.
