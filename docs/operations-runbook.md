@@ -72,6 +72,8 @@ Saat origin HTTPS terprovisi, Electron main menjadwalkan GET published melalui j
 
 ## Phase 2C-04b: status koneksi published
 
+PR #58 merge manual `bcc4f4aeca4dbc01298b586f399eba948d9f8dca`; CI postmerge `44706195556` PASS 16/16 mandatory, 0 skip. 2C-04b VERIFIED; Parent 2C-04 WIP sampai gate terpisah.
+
 `PUBLISHED / OFFLINE` berarti belum ada peta published valid; `PUBLISHED / OFFLINE / STALE` berarti peta cache tetap tampil tanpa sync jaringan sukses dalam proses ini atau setelah request gagal. `PUBLISHED / ONLINE` berarti GET published terakhir berhasil, termasuk 304 dengan cache valid. Footer menunjukkan `SYNC TERAKHIR` dalam WIB; waktu ini hanya untuk proses berjalan dan tidak berubah saat gagal. Tombol `Perbarui peta` atau retry scheduler 2C-04a memulihkan ONLINE setelah API/token pulih. Token kedaluwarsa menahan peta lama; rotasi token tetap melalui jalur operator yang sudah ada. Waktu penyimpanan snapshot ditampilkan terpisah sebagai `DATA TERAKHIR`.
 
 ## SOP yang masih harus dibangun
