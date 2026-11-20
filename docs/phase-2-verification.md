@@ -4,6 +4,8 @@
 
 Commit implementasi: `d4fae040bf38fa4b1fbccf43b559e52a3b150698`.
 
+[PR #58](https://github.com/dejul/senkom/pull/58) terbuka; [CI PR `44705348641`](https://github.com/dejul/senkom/actions/runs/44705348641) pada head `f7591a0dc6edf749d9275011a6107acf44d9c430` PASS 16/16 mandatory, 0 skip. Auto-Merge V2 `44706036864` memblokir karena klaim VERIFIED belum digunakan selama batch WIP; perubahan Electron main dan smoke memerlukan merge manual. Commit dokumentasi ini memerlukan CI ulang pada head final PR. Parent 2C-04 tetap WIP.
+
 Status: **WIP** sampai PR merge dan CI postmerge PASS; acceptance lokal 2C-04b PASS. Prasyarat: [PR rekonsiliasi #57](https://github.com/dejul/senkom/pull/57) merge manual pada `952c74fe99dbacbe9fc59964339e444286e8a61a`; [CI postmerge `44694442250`](https://github.com/dejul/senkom/actions/runs/44694442250) event `push` pada exact merge SHA PASS 16/16 mandatory, 0 skip. 2C-04a VERIFIED. Branch `feature/phase-2c-04b` dibuat dari merge SHA tersebut; worktree awal bersih.
 
 | Kriteria 2C-04b        | Bukti                                                                                                                                                           | Status |
