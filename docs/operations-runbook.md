@@ -60,6 +60,8 @@ Saat origin HTTPS dan token viewer terprovisi, viewer memulihkan cache published
 
 PR #53 merge `5c278f6425b432f90d367cde7a9d92c65e2d895d` dan CI postmerge `44542722465` PASS 16/16, 0 skip menutup 2C-03b. Gate Parent 2C-03 menguji refresh manual 200/304/401, cache atomik, dan peta lama saat gagal; parent tetap WIP sampai gate PR merge serta CI postmerge PASS. Jangan mulai scheduler 2C-04 pada gate ini.
 
+PR gate #54 merge `a6878e1a8723e6bf9cc900423fe59841cf4c76d5` dan CI postmerge `44649328499` PASS 16/16, 0 skip. Acceptance parent terbukti; status formal VERIFIED/CLOSED berlaku setelah PR closure dokumentasi merge dan CI postmerge PASS. Scheduler 2C-04 tetap di luar closure ini.
+
 ## SOP yang masih harus dibangun
 
 Main process menyimpan cache/config di `app.getPath('userData')`, menggunakan atomic
