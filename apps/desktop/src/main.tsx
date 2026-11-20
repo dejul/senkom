@@ -138,13 +138,15 @@ function App() {
             {publishedContext ? 'PUBLISHED / VIEW ONLY' : 'DEMO / VIEW ONLY'}
           </span>
           <span className="connection-label">
-            {map?.source === 'published'
-              ? 'CACHE PUBLISHED'
-              : publishedContext
-                ? 'PUBLISHED / BELUM TERSEDIA'
-                : map?.source === 'cache'
-                  ? 'OFFLINE / CACHE DEMO'
-                  : 'BACKEND BELUM TERHUBUNG'}
+            {publishedContext
+              ? current?.sync?.state === 'online'
+                ? 'PUBLISHED / ONLINE'
+                : current?.sync?.state === 'stale'
+                  ? 'PUBLISHED / OFFLINE / STALE'
+                  : 'PUBLISHED / OFFLINE'
+              : map?.source === 'cache'
+                ? 'OFFLINE / CACHE DEMO'
+                : 'BACKEND BELUM TERHUBUNG'}
           </span>
           {bootstrap?.publishedConfigured && (
             <button
@@ -253,6 +255,17 @@ function App() {
                 ' WIB'
               : 'TIDAK ADA SNAPSHOT'}
           </span>
+          {publishedContext && (
+            <span>
+              {current?.sync?.lastSyncAt
+                ? 'SYNC TERAKHIR ' +
+                  new Date(current.sync.lastSyncAt).toLocaleString('id-ID', {
+                    timeZone: 'Asia/Jakarta',
+                  }) +
+                  ' WIB'
+                : 'BELUM TERSINKRONISASI'}
+            </span>
+          )}
           <span>
             {error ||
               map?.warning ||

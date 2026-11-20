@@ -70,6 +70,10 @@ PR #56 merge manual `58c24fdaaac19229aba096c8a352f1b4e251828f`. CI postmerge `44
 
 Saat origin HTTPS terprovisi, Electron main menjadwalkan GET published melalui jalur refresh tervalidasi. Cadence dasar 5 menit dengan jitter ±20%; kegagalan berturut memakai backoff 10, 20, lalu 30 menit sebelum jitter (maksimal 36 menit aktual). Timer baru dipasang setelah request selesai; refresh manual memakai lock yang sama. Respons 200 valid disimpan atomik sebelum revisi baru dikirim ke renderer, sedangkan 304/same revision tidak memicu swap. Gagal atau token tidak tersedia mempertahankan peta lama. Timer dihentikan saat window ditutup. Indikator OFFLINE/STALE/last-sync dan reconnect UI milik 2C-04b.
 
+## Phase 2C-04b: status koneksi published
+
+`PUBLISHED / OFFLINE` berarti belum ada peta published valid; `PUBLISHED / OFFLINE / STALE` berarti peta cache tetap tampil tanpa sync jaringan sukses dalam proses ini atau setelah request gagal. `PUBLISHED / ONLINE` berarti GET published terakhir berhasil, termasuk 304 dengan cache valid. Footer menunjukkan `SYNC TERAKHIR` dalam WIB; waktu ini hanya untuk proses berjalan dan tidak berubah saat gagal. Tombol `Perbarui peta` atau retry scheduler 2C-04a memulihkan ONLINE setelah API/token pulih. Token kedaluwarsa menahan peta lama; rotasi token tetap melalui jalur operator yang sudah ada. Waktu penyimpanan snapshot ditampilkan terpisah sebagai `DATA TERAKHIR`.
+
 ## SOP yang masih harus dibangun
 
 Main process menyimpan cache/config di `app.getPath('userData')`, menggunakan atomic
