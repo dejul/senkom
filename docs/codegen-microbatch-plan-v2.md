@@ -106,7 +106,7 @@
 | `2C-03a`    | Cache restore dan atomic disk write            | VERIFIED     | Corrupt/write fail mempertahankan last good |
 | `2C-03b`    | Hot swap revision dan schema-compatible render | VERIFIED     | Peta tidak blank; view-only tetap           |
 | `2C-04a`    | Scheduler sync no-overlap, backoff/jitter      | VERIFIED     | Tidak membuat request storm                 |
-| `2C-04b`    | Offline/STALE/last-sync dan reconnect          | WIP          | API outage/recovery; carousel tetap         |
+| `2C-04b`    | Offline/STALE/last-sync dan reconnect          | VERIFIED     | API outage/recovery; carousel tetap         |
 | `2C-05a`    | E2E publish→desktop dan failure matrix         | NOT STARTED  | Snapshot lama sampai publish; swap atomik   |
 | `2C-05b`    | Gate Phase 2 full regression + docs            | NOT STARTED  | 2A/2B/2C gates, Electron smoke, approval    |
 
