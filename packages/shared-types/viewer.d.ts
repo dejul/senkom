@@ -48,6 +48,10 @@ export interface ViewerStatus {
   display: DisplayPlan;
   performance: PerformanceSample | null;
   adminConfigured: boolean;
+  sync: {
+    state: 'online' | 'stale' | 'offline';
+    lastSyncAt: string | null;
+  } | null;
 }
 export interface ViewerBootstrap extends ViewerStatus {
   phase: 1;

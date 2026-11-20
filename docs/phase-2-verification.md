@@ -1,5 +1,21 @@
 # Verifikasi Phase 2
 
+## 2C-04b — status koneksi dan recovery published (2026-11-20)
+
+Commit implementasi: `d4fae040bf38fa4b1fbccf43b559e52a3b150698`.
+
+Status: **WIP** sampai PR merge dan CI postmerge PASS; acceptance lokal 2C-04b PASS. Prasyarat: [PR rekonsiliasi #57](https://github.com/dejul/senkom/pull/57) merge manual pada `952c74fe99dbacbe9fc59964339e444286e8a61a`; [CI postmerge `44694442250`](https://github.com/dejul/senkom/actions/runs/44694442250) event `push` pada exact merge SHA PASS 16/16 mandatory, 0 skip. 2C-04a VERIFIED. Branch `feature/phase-2c-04b` dibuat dari merge SHA tersebut; worktree awal bersih.
+
+| Kriteria 2C-04b        | Bukti                                                                                                                                                           | Status |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| OFFLINE/STALE          | Main process menyatakan OFFLINE tanpa peta, STALE saat cache published masih ada tetapi belum tersinkronisasi atau request gagal; renderer menampilkan keduanya | PASS   |
+| Last-sync              | Waktu sync jaringan valid 200/304 dicatat di main process; kegagalan tidak menghapus waktu sync terakhir; UI menampilkannya dalam WIB                           | PASS   |
+| Reconnect              | Retry scheduler 2C-04a dan refresh manual memakai jalur yang sama; sukses setelah 401/outage mengembalikan ONLINE tanpa menghapus peta lama saat gagal          | PASS   |
+| View-only dan carousel | Smoke Windows mempertahankan revisi peta dan CCTV saat 401; renderer tetap tanpa network/token                                                                  | PASS   |
+| Keamanan dan scope     | HTTPS, token safeStorage main-only, timeout 10 detik, respons 8 MiB, checksum/schema/ETag dan cache atomik tetap; tidak ada fitur 2C-05 atau parent gate        | PASS   |
+
+Lokal: tes fokus scheduler/published/cache/token 20/20, 4 file; `npm test` PASS 193/193, 34 file; `npm run lint` PASS (ESLint, Prettier, OpenAPI); `npm run build` PASS (kontrak, typecheck, build desktop/admin); `npm run smoke:desktop` PASS pada DEMO/offline/corrupt/empty/published/refresh/first-run termasuk 200, 304, 401, STALE, ONLINE kembali dan cache tetap. `composer --working-dir apps/api validate --strict` PASS; `npm audit --omit=dev --audit-level=low` PASS, 0 temuan. `composer --working-dir apps/api audit --locked` exit 0, `No security vulnerability advisories found`; tiga kegagalan sebelumnya akibat timeout Packagist `curl error 28`, tanpa perubahan dependensi. Backend PHPUnit/MySQL/HTTP dan browser Laravel/MySQL nyata **NOT RUN lokal**; CI PR wajib menjalankannya. Parent 2C-04 WIP sampai acceptance parent terpisah setelah 2C-04b merge dan CI postmerge PASS.
+
 ## 2C-04a — rekonsiliasi setelah PR #56 (2026-11-20)
 
 Status: **2C-04a VERIFIED**. [PR #56](https://github.com/dejul/senkom/pull/56) merge manual pada `58c24fdaaac19229aba096c8a352f1b4e251828f`; head `06f316e0ced7eb54086204a03cf900f28feeb1b9` ancestor `origin/main`. Scheduler, tes, dan dokumen PR terintegrasi. [CI PR `44683404602`](https://github.com/dejul/senkom/actions/runs/44683404602) PASS 16/16 mandatory, 0 skip. [CI postmerge `44688783846` attempt 2](https://github.com/dejul/senkom/actions/runs/44688783846/attempts/2) event `push` pada exact merge SHA PASS 16/16 mandatory, 0 skip; tidak ada check wajib yang dilewati.

@@ -46,7 +46,7 @@ if (process.env.SENKOM_SMOKE_SCENARIO === 'published-refresh') {
     if (requestCount === 2)
       assert.equal(options.headers.get('If-None-Match'), `"sha256:${hash}"`);
     const response =
-      requestCount === 1
+      requestCount === 1 || requestCount === 4
         ? new globalThis.Response(body, {
             status: 200,
             headers: { ETag: `"sha256:${hash}"`, 'X-Content-SHA256': hash },
@@ -141,6 +141,9 @@ app.once('browser-window-created', (_event, window) => {
         );
         assert.equal(bootstrap.map.source, 'published');
         assert.equal(bootstrap.map.snapshot.revision, 'published-smoke');
+        assert.equal(bootstrap.sync.state, 'stale');
+        assert.equal(bootstrap.sync.lastSyncAt, null);
+        assert.match(result.text, /PUBLISHED \/ OFFLINE \/ STALE/);
         assert.match(result.text, /Published Smoke Node/);
         assert.doesNotMatch(result.text, /CACHE DEMO/);
         console.log(
@@ -172,6 +175,21 @@ app.once('browser-window-created', (_event, window) => {
         assert.match(swapped.text, /Published Next Node/);
         assert.doesNotMatch(swapped.text, /Published Smoke Node/);
         assert.equal(swapped.map.snapshot.revision, 'published-smoke-next');
+        const online = await window.webContents.executeJavaScript(
+          '(async () => await window.senkomViewer.status())()',
+        );
+        assert.equal(online.sync.state, 'online');
+        assert.ok(Date.parse(online.sync.lastSyncAt));
+        const onlineText = await window.webContents
+          .executeJavaScript(`(async () => {
+          for (let attempt = 0; attempt < 120; attempt++) {
+            if (document.body.innerText.includes('PUBLISHED / ONLINE')) break;
+            await new Promise(resolve => setTimeout(resolve, 25));
+          }
+          return document.body.innerText;
+        })()`);
+        assert.match(onlineText, /PUBLISHED \/ ONLINE/);
+        assert.match(onlineText, /SYNC TERAKHIR/);
         const cachePath = join(
           process.env.SENKOM_SMOKE_APP_DATA,
           'SENKOM',
@@ -184,6 +202,10 @@ app.once('browser-window-created', (_event, window) => {
           '(async () => await window.senkomViewer.refreshPublished())()',
         );
         assert.equal(unchanged.snapshot.revision, 'published-smoke-next');
+        const after304 = await window.webContents.executeJavaScript(
+          '(async () => await window.senkomViewer.status())()',
+        );
+        assert.equal(after304.sync.state, 'online');
         assert.equal(await readFile(cachePath, 'utf8'), newCache);
         const failed = await window.webContents
           .executeJavaScript(`(async () => {
@@ -197,7 +219,31 @@ app.once('browser-window-created', (_event, window) => {
         })()`);
         assert.match(failed, /Refresh peta gagal/);
         assert.match(failed, /Published Next Node/);
+        const stale = await window.webContents.executeJavaScript(
+          '(async () => await window.senkomViewer.status())()',
+        );
+        assert.equal(stale.sync.state, 'stale');
+        assert.equal(stale.sync.lastSyncAt, after304.sync.lastSyncAt);
+        assert.match(failed, /CCTV/);
         assert.equal(await readFile(cachePath, 'utf8'), newCache);
+        const staleText = await window.webContents
+          .executeJavaScript(`(async () => {
+          for (let attempt = 0; attempt < 120; attempt++) {
+            if (document.body.innerText.includes('PUBLISHED / OFFLINE / STALE')) break;
+            await new Promise(resolve => setTimeout(resolve, 25));
+          }
+          return document.body.innerText;
+        })()`);
+        assert.match(staleText, /PUBLISHED \/ OFFLINE \/ STALE/);
+        const recovered = await window.webContents.executeJavaScript(
+          '(async () => await window.senkomViewer.refreshPublished())()',
+        );
+        assert.equal(recovered.snapshot.revision, 'published-smoke-next');
+        const reconnected = await window.webContents.executeJavaScript(
+          '(async () => await window.senkomViewer.status())()',
+        );
+        assert.equal(reconnected.sync.state, 'online');
+        assert.ok(reconnected.sync.lastSyncAt);
         const protectedToken = JSON.parse(
           await readFile(
             join(
@@ -237,7 +283,8 @@ app.once('browser-window-created', (_event, window) => {
         );
         assert.equal(bootstrap.publishedConfigured, true);
         assert.equal(bootstrap.map.snapshot, null);
-        assert.match(result.text, /PUBLISHED \/ BELUM TERSEDIA/);
+        assert.equal(bootstrap.sync.state, 'offline');
+        assert.match(result.text, /PUBLISHED \/ OFFLINE/);
         assert.doesNotMatch(result.text, /DEMO \/ VIEW ONLY/);
         console.log(
           'PASS Electron published first-run: empty state, no DEMO fallback.',

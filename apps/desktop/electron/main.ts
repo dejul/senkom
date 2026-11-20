@@ -111,10 +111,16 @@ if (!app.requestSingleInstanceLock()) {
       let failures = 0;
       let lastRecovery = 0;
       let reflowTimer: ReturnType<typeof setTimeout> | undefined;
+      // ponytail: last sync is process-local; persist it only if restart history becomes an acceptance criterion.
+      let sync: ViewerStatus['sync'] =
+        api.origin || map.source === 'published'
+          ? { state: map.snapshot ? 'stale' : 'offline', lastSyncAt: null }
+          : null;
       const status = (): ViewerStatus => ({
         display,
         performance: sample,
         adminConfigured: admin.configured,
+        sync,
       });
 
       session.defaultSession.setPermissionRequestHandler(
@@ -259,6 +265,7 @@ if (!app.requestSingleInstanceLock()) {
             next.source !== map.source ||
             next.snapshot?.revision !== map.snapshot?.revision;
           map = next;
+          sync = { state: 'online', lastSyncAt: new Date().toISOString() };
           if (changed && window && !window.isDestroyed()) {
             window.webContents.send('viewer:map-updated', next);
           }
@@ -267,6 +274,10 @@ if (!app.requestSingleInstanceLock()) {
           });
           return map;
         } catch {
+          sync = {
+            state: map.snapshot ? 'stale' : 'offline',
+            lastSyncAt: sync?.lastSyncAt ?? null,
+          };
           logger.write('published-map-refresh-failed');
           throw new Error('Refresh peta gagal; peta lama dipertahankan.');
         } finally {
