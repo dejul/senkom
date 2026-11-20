@@ -2,6 +2,8 @@
 
 ## 2C-04a — scheduler sinkronisasi published (2026-11-20)
 
+Commit implementasi: `5d4fcec4bd03b824eada365f303ba0ca3e1e9be2`.
+
 Status: **VERIFIED** untuk acceptance lokal 2C-04a; integrasi tetap WIP sampai PR merge dan CI postmerge PASS. Prasyarat: [PR closure #55](https://github.com/dejul/senkom/pull/55) MERGED manual pada `53638954f633adda9698a9b3dafb383c46d611ef`; head `e6b7db939ecd54118036ba1a67bf56423e531f5b` ancestor, empat dokumen terintegrasi identik. [CI postmerge `44681521170`](https://github.com/dejul/senkom/actions/runs/44681521170) event `push` pada exact merge SHA, 16/16 mandatory PASS, 0 skip. **PARENT 2C-03 VERIFIED — CLOSED**. Branch `feature/phase-2c-04a` dari merge SHA; worktree awal bersih, worktree/stash lain dipertahankan.
 
 | Kriteria 2C-04a             | Bukti                                                                                                                                                     | Status |
