@@ -110,7 +110,7 @@
 | `2C-05a`    | E2E publish→desktop dan failure matrix         | NOT STARTED  | Snapshot lama sampai publish; swap atomik   |
 | `2C-05b`    | Gate Phase 2 full regression + docs            | NOT STARTED  | 2A/2B/2C gates, Electron smoke, approval    |
 
-Parent 2C-04: PR gate #60 merge `cccbc7a308c01821623296bad5a9bea17dc24209`, CI postmerge `44712007958` PASS 16/16 mandatory, 0 skip. Acceptance parent PASS; status formal tetap WIP sampai PR closure dokumentasi merge dan CI postmerge PASS. 2C-05 belum dimulai.
+Parent 2C-04 VERIFIED — CLOSED: PR gate #60 merge `cccbc7a308c01821623296bad5a9bea17dc24209`, CI postmerge `44712007958` PASS 16/16 mandatory, 0 skip; PR closure #61 merge `9c3656001eb333ecb9f0cef45696f89792d4de8a`, CI postmerge `45106004707` PASS 16/16 mandatory, 0 skip. 2C-05 belum dimulai.
 
 ### Kriteria wajib 2C-02a — realignment Option B disetujui 2026-11-19
 
