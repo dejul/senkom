@@ -1,5 +1,28 @@
 # Verifikasi Phase 2
 
+## 2C-05a — E2E publish → Desktop dan failure matrix (2026-11-23)
+
+Status: **WIP** sampai PR implementasi MERGED dan CI postmerge exact merge SHA PASS. Branch `feature/phase-2c-05a` dari `origin/main` `a6009789f1da89b082c9d6d2c9aa4369eda3a374` (PR #62 MERGED, CI postmerge `45110085026` 16/16 mandatory PASS, 0 skip). Parent 2C-05 WIP; 2C-05b NOT STARTED.
+
+Tes baru `tests/phase2c-05a-e2e.test.ts` dipanggil oleh `scripts/phase2-smoke.mjs` saat server Laravel/MySQL disposable masih hidup. Admin session menyimpan draft invalid; validasi menolak, publish mengembalikan 409 `VALIDATION_REQUIRED`, dan Desktop mempertahankan revisi lama. Draft diperbaiki dan divalidasi; sebelum publish Desktop tetap melihat revisi lama. Sesudah publish, GET viewer nyata lewat jalur `refreshPublishedSnapshot` mengganti cache atomik dan `MapCanvas` merender label revisi baru. HTTPS origin Desktop dipertahankan; transport tes menjembatani loopback HTTP disposable ke respons API nyata, tanpa jaringan eksternal. Browser Admin Web nyata dan Electron UI diuji oleh smoke terpisah; UAT hardware empat monitor **NOT RUN**.
+
+| Failure scenario                                   | Bukti                                                                                         | Hasil |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------- | ----- |
+| API/network unavailable; HTTP 401/403/404/500      | Fetch gagal atau status ditolak; last-valid cache tetap identik                               | PASS  |
+| Schema invalid; respons parsial                    | Parser menolak payload; last-valid cache tetap identik                                        | PASS  |
+| Cache unavailable/corrupted                        | Write gagal terkontrol; restore korup menghasilkan empty state, bukan data palsu              | PASS  |
+| Validasi gagal; draft belum publish                | Laravel menolak publish; Desktop tetap pada revisi published lama                             | PASS  |
+| Publish berikutnya                                 | Viewer API mengirim revisi baru; Desktop cache dan render mengikuti revisi itu                | PASS  |
+| View-only, token, carousel, multi-monitor fallback | Render tidak punya kontrol edit/token; Electron smoke sandbox, 401, CCTV, display reflow PASS | PASS  |
+
+| Perintah lokal                                                                                                                                  | Exit / hasil                                                                            |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `node scripts/phase2-smoke.mjs --api-only` dengan PHP 8.4.26 dan MySQL 8.4.11 disposable                                                        | 0; E2E baru 2/2 PASS; HTTP/auth/publish/rollback regression PASS; DB dihentikan/dihapus |
+| `npm test`; `npm run lint`; `npm run typecheck`; `npm run build`                                                                                | 0 semua; 194/194 tes, 35 file; kontrak, typecheck, build PASS                           |
+| `npm run smoke:desktop`; `./scripts/phase2-browser-e2e.ps1`                                                                                     | 0 keduanya; Electron dan Admin Web/API nyata PASS                                       |
+| `composer --working-dir apps/api validate --strict`; `composer --working-dir apps/api audit --locked`; `npm audit --omit=dev --audit-level=low` | 0 semua; 0 advisory/vulnerability                                                       |
+| PHPUnit lokal; UAT empat monitor fisik; CI PR/postmerge                                                                                         | NOT RUN lokal / pending sesuai gate                                                     |
+
 **PARENT 2C-04 VERIFIED — CLOSED.** [PR closure #61](https://github.com/dejul/senkom/pull/61) merged at `9c3656001eb333ecb9f0cef45696f89792d4de8a`, included in `origin/main`. [Postmerge CI `45106004707`](https://github.com/dejul/senkom/actions/runs/45106004707) ran on the exact merge SHA: 16/16 mandatory checks PASS, 0 skipped. Parent acceptance matrix and closure requirements passed; product code unchanged. Phase 2C WIP; 2C-05 NOT STARTED.
 
 Rekonsiliasi pada branch `fix/phase-2c-04-status-reconciliation` dari `origin/main` `9c3656001eb333ecb9f0cef45696f89792d4de8a`: `git fetch origin`, `git merge-base --is-ancestor 9c3656001eb333ecb9f0cef45696f89792d4de8a origin/main`, `git diff --check`, dan `npm run lint` exit 0. Tes produk penuh dan smoke lokal **NOT RUN ulang** untuk perubahan dokumentasi; CI PR rekonsiliasi wajib menjalankan 16/16 mandatory checks tanpa skip sebelum merge.

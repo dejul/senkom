@@ -743,6 +743,32 @@ try {
     (await request('/viewer/map?schemaVersion=2', { viewer: true })).text,
     published.text,
   );
+  const e2e = spawn(
+    process.execPath,
+    [
+      join(root, 'node_modules/vitest/vitest.mjs'),
+      'run',
+      'tests/phase2c-05a-e2e.test.ts',
+    ],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        SENKOM_E2E_API_ORIGIN: origin,
+        SENKOM_E2E_ADMIN_COOKIE: cookies.get('senkom_admin_session'),
+        SENKOM_E2E_CSRF: csrf,
+        SENKOM_E2E_VIEWER_TOKEN: credentials.viewerToken,
+      },
+      stdio: 'inherit',
+      windowsHide: true,
+    },
+  );
+  await new Promise((done, reject) => {
+    e2e.on('error', reject);
+    e2e.on('exit', (code) =>
+      code === 0 ? done() : reject(new Error('2C-05a E2E failed: ' + code)),
+    );
+  });
   const previousCsrf = csrf;
   const logout = await request('/auth/logout', { method: 'POST' });
   assert.equal(logout.response.status, 200);
