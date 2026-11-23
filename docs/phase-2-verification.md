@@ -1,5 +1,9 @@
 # Verifikasi Phase 2
 
+## 2C-05a — closure setelah PR #63 (2026-11-23)
+
+Status: **VERIFIED**. [PR #63](https://github.com/dejul/senkom/pull/63) MERGED manual pada `0d7ddc1b8d6d9bf35f0ca0ca725e4a5d233bb351`; head `154d24e99b0095e14042ec624650aaeb9c31f8e5` ancestor `origin/main`. [CI PR `45117240988`](https://github.com/dejul/senkom/actions/runs/45117240988) exact head dan [CI postmerge `45117877882`](https://github.com/dejul/senkom/actions/runs/45117877882) exact merge SHA masing-masing PASS 16/16 mandatory, 0 skip. `git fetch origin` dan ancestor check exit 0. [Matriks acceptance dan failure](#2c-05a--e2e-publish--desktop-dan-failure-matrix-2026-11-23) lulus; kode produk tidak berubah pada rekonsiliasi ini. Parent 2C-05 WIP; 2C-05b NOT STARTED; UAT empat monitor fisik **NOT RUN**. Status WIP di bagian berikut adalah catatan pra-merge.
+
 ## 2C-05a — E2E publish → Desktop dan failure matrix (2026-11-23)
 
 Status: **WIP** sampai PR implementasi MERGED dan CI postmerge exact merge SHA PASS. Branch `feature/phase-2c-05a` dari `origin/main` `a6009789f1da89b082c9d6d2c9aa4369eda3a374` (PR #62 MERGED, CI postmerge `45110085026` 16/16 mandatory PASS, 0 skip). Parent 2C-05 WIP; 2C-05b NOT STARTED.
