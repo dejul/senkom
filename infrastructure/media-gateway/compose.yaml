@@ -1,0 +1,13 @@
+name: senkom-gateway-lab
+
+services:
+  gateway:
+    image: bluenviron/mediamtx:1.21.4@sha256:c730bccdbc8739f8f0c13cefe9bea8b61926f599b88fa4d0d229baa91846c7bc
+    restart: 'no'
+    ports:
+      - '127.0.0.1:8554:8554/tcp' # RTSP publish, host-local only
+      - '127.0.0.1:8888:8888/tcp' # HLS, host-local only
+      - '127.0.0.1:8889:8889/tcp' # WebRTC signaling, host-local only
+      - '127.0.0.1:8189:8189/udp' # WebRTC ICE, host-local only
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
