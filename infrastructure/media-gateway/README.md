@@ -15,7 +15,7 @@
 
 RTSP kamera/NVR aktual dan credential tetap di server/gateway privat, bukan Git, metadata viewer, renderer, browser bundle, log, atau snapshot. Playback session scoped/short-lived dan integrasi desktop milik 3-02c/3-03. Tidak ada decoder RTSP di Electron. Jangan membuka binding loopback menjadi `0.0.0.0` untuk mengatasi koneksi: desain remote memerlukan origin tepercaya, autentikasi, TLS untuk signaling/HLS, ICE UDP/TCP/NAT yang dapat dijangkau, dan CORS origin spesifik. WebRTC media terenkripsi; signaling lab ini HTTP loopback. HLS lab HTTP loopback, variant MediaMTX default `lowLatency`; WebRTC diprioritaskan untuk latensi rendah. Pembatasan CORS saat ini hanya mengizinkan origin halaman gateway pada loopback.
 
-Gateway dapat menerima H.264/H.265 dari RTSP, tetapi playback browser/Electron bergantung pada codec client. Fixture 3-01b direncanakan H.264 `yuv420p`, 1280×720, 15 FPS; tidak ada transcode pada konfigurasi ini. H.265 dan jumlah stream simultan harus diuji tersendiri. Versi dan digest diperiksa terhadap release resmi MediaMTX v1.21.4 serta Docker Hub tag 1.21.4.
+Gateway dapat menerima H.264/H.265 dari RTSP, tetapi playback browser/Electron bergantung pada codec client. Fixture 3-01b memakai H.264 `yuv420p`, 1280×720, 25 FPS, tanpa audio; tidak ada transcode pada konfigurasi ini. Browser lab membuktikan WebRTC dan HLS decode/render. MPEG-4 Visual tidak didukung pada WebRTC; H.265 berhasil pada host ini. Jumlah stream simultan belum diuji. Versi dan digest diperiksa terhadap release resmi MediaMTX v1.21.4 serta Docker Hub tag 1.21.4. Lihat [hasil runtime 3-01b](../../docs/phase-3-verification.md#3-01b-persisted-harness-finalization-2026-11-23).
 
 ## Setup lab (Docker Engine diperlukan)
 
@@ -29,15 +29,30 @@ docker compose ps
 
 Docker Engine dan port loopback harus tersedia. Tidak ada `.env` atau kredensial operasional. `docker compose down` menghentikan gateway dan menghapus network Compose lab; tidak ada volume data persisten. Jangan jalankan pada host produksi. Docker Compose/runtime **NOT RUN** pada host pengembangan 3-01a karena `docker` tidak tersedia.
 
-## Fixture sintetis untuk 3-01b (rencana, belum dijalankan)
+## Fixture sintetis untuk 3-01b
 
 Pada host lab yang sama, FFmpeg dengan encoder `libx264` dapat menerbitkan satu test pattern tanpa kamera atau kredensial:
 
 ```powershell
-ffmpeg -re -f lavfi -i testsrc=size=1280x720:rate=15 -c:v libx264 -pix_fmt yuv420p -preset ultrafast -tune zerolatency -g 30 -f rtsp -rtsp_transport tcp rtsp://127.0.0.1:8554/lab
+ffmpeg -re -f lavfi -i testsrc=size=1280x720:rate=25 -c:v libx264 -pix_fmt yuv420p -preset ultrafast -tune zerolatency -g 50 -f rtsp -rtsp_transport tcp rtsp://127.0.0.1:8554/lab
 ```
 
-Butuh FFmpeg, CPU untuk encoding, Docker Engine, dan port `8554/8888/8889` TCP serta `8189` UDP yang bebas pada loopback. Hentikan publisher dengan `Ctrl+C`, lalu `docker compose down` di direktori ini. 3-01b harus membuktikan playback browser nyata via WebRTC/HLS, bukan menganggap command ini bukti playback.
+Butuh FFmpeg, CPU untuk encoding, Docker Engine, dan port `8554/8888/8889` TCP serta `8189` UDP yang bebas pada loopback. Harness di bawah menjalankan fixture ini, membuktikan playback browser nyata via WebRTC/HLS, dan membersihkan resource miliknya.
+
+## Browser E2E lab 3-01b
+
+Harness opt-in berada di `scripts/phase3-gateway-browser-e2e.mjs`; Playwright dipin ke `1.56.1`. Jalankan dari root repo dengan Node `24.22.2` dan npm `11.19.1`. Set path executable, tanpa instalasi browser:
+
+```powershell
+$env:FFMPEG_PATH = 'D:\tools\ffmpeg.exe'
+$env:DOCKER_PATH = 'C:\Program Files\Docker\Docker\resources\bin\docker.exe' # only if docker is not on PATH
+$env:BROWSER_CHANNEL = 'chrome' # or 'msedge'
+npm run test:gateway:e2e
+```
+
+`FFMPEG_PATH` wajib. `DOCKER_PATH` dan `BROWSER_CHANNEL` opsional bila Docker CLI/browser sudah terdeteksi dari PATH. `BROWSER_EXECUTABLE` dapat menunjuk executable browser secara langsung. Harness memeriksa container lab belum ada, Compose config dan loopback bindings; menjalankan publisher dan browser; menguji WebRTC/HLS/failure matrix; lalu menghapus hanya container/network milik Compose project `senkom-gateway-lab`. Ia tidak menghapus volume atau resource Docker lain. Hasil JSON ada di `.artifacts/phase3-gateway-evidence.json`; tidak otomatis dijalankan oleh `npm test` atau CI biasa.
+
+MediaMTX 1.21.4 mengembalikan HTTP 500 JSON `path '<name>' is not configured` untuk invalid HLS path karena error `findNonCDNSession` dipetakan generic ke 500 pada [handler versi tersebut](https://github.com/bluenviron/mediamtx/blob/v1.21.4/internal/servers/hls/http_server.go#L278-L289). Harness mencatatnya sebagai **WARN**, memeriksa response bounded dan body eksplisit, dan tidak mengubah konfigurasi untuk memaksakan 404.
 
 ## Pemeriksaan dan diagnosis
 
@@ -46,4 +61,4 @@ Butuh FFmpeg, CPU untuk encoding, Docker Engine, dan port `8554/8888/8889` TCP s
 - Jika WebRTC gagal, cek candidate `127.0.0.1` dan UDP `8189`; candidate ini hanya untuk browser pada host yang sama. Untuk klien lain diperlukan rancangan ICE/NAT/TLS/auth baru.
 - Jika HLS gagal, cek origin, CORS dan dukungan H.264 player. HLS mungkin memerlukan player JS pada Electron; itu bukan bagian 3-01a.
 
-Parent 3-01 tetap WIP sampai 3-01b membuktikan satu stream lab di browser dan gate parent lulus. Benchmark GPU/codec/bandwidth serta UAT hardware tetap belum dijalankan.
+Parent 3-01 tetap WIP sampai 3-01b terintegrasi melalui PR dan postmerge CI. Benchmark GPU/codec/bandwidth serta UAT hardware tetap belum dijalankan.

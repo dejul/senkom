@@ -24,8 +24,21 @@ export default tseslint.config(
     languageOptions: {
       globals: {
         console: 'readonly',
+        process: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+      },
+    },
+  },
+  {
+    files: ['scripts/phase3-gateway-browser-e2e.mjs'],
+    languageOptions: {
+      globals: {
+        AbortSignal: 'readonly',
+        document: 'readonly',
+        fetch: 'readonly',
+        URL: 'readonly',
+        window: 'readonly',
       },
     },
   },
