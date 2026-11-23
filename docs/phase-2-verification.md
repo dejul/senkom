@@ -1,10 +1,14 @@
 # Verifikasi Phase 2
 
+**PARENT 2C-04 VERIFIED — CLOSED.** [PR closure #61](https://github.com/dejul/senkom/pull/61) merged at `9c3656001eb333ecb9f0cef45696f89792d4de8a`, included in `origin/main`. [Postmerge CI `45106004707`](https://github.com/dejul/senkom/actions/runs/45106004707) ran on the exact merge SHA: 16/16 mandatory checks PASS, 0 skipped. Parent acceptance matrix and closure requirements passed; product code unchanged. Phase 2C WIP; 2C-05 NOT STARTED.
+
+Rekonsiliasi pada branch `fix/phase-2c-04-status-reconciliation` dari `origin/main` `9c3656001eb333ecb9f0cef45696f89792d4de8a`: `git fetch origin`, `git merge-base --is-ancestor 9c3656001eb333ecb9f0cef45696f89792d4de8a origin/main`, `git diff --check`, dan `npm run lint` exit 0. Tes produk penuh dan smoke lokal **NOT RUN ulang** untuk perubahan dokumentasi; CI PR rekonsiliasi wajib menjalankan 16/16 mandatory checks tanpa skip sebelum merge.
+
 ## Parent 2C-04 — closure setelah gate merge (2026-11-23)
 
 Commit bukti closure: `6fccf96f081ff3c30c270594934ab32d943cfbfe`.
 
-Status: **WIP sampai PR closure dokumentasi merge dan CI postmerge PASS; kemudian PARENT 2C-04 VERIFIED — CLOSED**. [PR gate #60](https://github.com/dejul/senkom/pull/60) merge manual pada `cccbc7a308c01821623296bad5a9bea17dc24209`; head `351148f7d201832a0ef23a4e127c49925c6ba348` ancestor. [CI postmerge `44712007958`](https://github.com/dejul/senkom/actions/runs/44712007958) event `push` pada exact merge SHA, 16/16 mandatory PASS, 0 skip. Lima dokumen gate terintegrasi identik; 2C-04a/b VERIFIED dan [matriks parent](#parent-2c-04--verification-gate-2026-11-20) seluruhnya PASS. Tidak ada blocker keamanan/dependensi baru; kode produk tidak berubah pada PR gate atau closure ini. Phase 2C WIP; 2C-05 NOT STARTED.
+Status: **PARENT 2C-04 VERIFIED — CLOSED** setelah PR #61 merge dan CI postmerge PASS. [PR gate #60](https://github.com/dejul/senkom/pull/60) merge manual pada `cccbc7a308c01821623296bad5a9bea17dc24209`; head `351148f7d201832a0ef23a4e127c49925c6ba348` ancestor. [CI postmerge `44712007958`](https://github.com/dejul/senkom/actions/runs/44712007958) event `push` pada exact merge SHA, 16/16 mandatory PASS, 0 skip. Lima dokumen gate terintegrasi identik; 2C-04a/b VERIFIED dan [matriks parent](#parent-2c-04--verification-gate-2026-11-20) seluruhnya PASS. Tidak ada blocker keamanan/dependensi baru; kode produk tidak berubah pada PR gate atau closure ini. Phase 2C WIP; 2C-05 NOT STARTED.
 
 Branch closure `fix/phase-2c-04-closure` dari merge SHA, worktree awal bersih. Lokal: `npm run lint` exit 0 (ESLint, Prettier, OpenAPI contract); `npm test -- tests/desktop-api-origin.test.ts tests/desktop-sync-scheduler.test.ts tests/desktop-published-viewer.test.ts tests/desktop-published-render.test.ts tests/desktop-published-cache.test.ts tests/desktop-viewer-token.test.ts` exit 0, 28/28, 6 file. Full frontend, backend/MySQL/HTTP, dan Electron smoke **NOT RUN ulang lokal**; source produk identik dengan CI postmerge #60. PR closure tanpa klaim micro-batch perlu merge manual dan CI postmerge sendiri.
 

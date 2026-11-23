@@ -72,7 +72,7 @@ Saat origin HTTPS terprovisi, Electron main menjadwalkan GET published melalui j
 
 ## Phase 2C-04b: status koneksi published
 
-PR gate Parent 2C-04 #60 merge manual `cccbc7a308c01821623296bad5a9bea17dc24209`; CI postmerge `44712007958` PASS 16/16 mandatory, 0 skip. Acceptance parent PASS; status formal VERIFIED/CLOSED menunggu PR closure dokumentasi merge dan CI postmerge PASS. 2C-05 belum dimulai.
+Parent 2C-04 VERIFIED — CLOSED: PR gate #60 merge manual `cccbc7a308c01821623296bad5a9bea17dc24209`, CI postmerge `44712007958` PASS 16/16 mandatory, 0 skip; PR closure #61 merge manual `9c3656001eb333ecb9f0cef45696f89792d4de8a`, CI postmerge `45106004707` PASS 16/16 mandatory, 0 skip. 2C-05 belum dimulai.
 
 PR closure #59 merge manual `544bf3fb8032108387cc98cd1c494aaffd0ac33c`; CI postmerge `44708132041` PASS 16/16 mandatory, 0 skip. Acceptance lokal Parent 2C-04 membuktikan scheduler no-overlap/backoff, recovery 200/304/401, last-valid-map, status dan last-sync, serta isolasi token/renderer. Parent tetap WIP sampai PR gate merge dan CI postmerge PASS; 2C-05 belum dimulai.
 
