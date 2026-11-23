@@ -1,5 +1,11 @@
 # Checkpoint Phase 2
 
+## 2C-05a — E2E publish → Desktop (2026-11-23)
+
+Status: **WIP** sampai PR implementasi merge dan CI postmerge exact merge SHA PASS. Branch `feature/phase-2c-05a` dari `origin/main` `a6009789f1da89b082c9d6d2c9aa4369eda3a374`; worktree awal bersih. Parent 2C-04 VERIFIED — CLOSED setelah PR #62 dan CI postmerge `45110085026` PASS 16/16 mandatory, 0 skip. Parent 2C-05 WIP; 2C-05b NOT STARTED.
+
+Tes integrasi live memakai MySQL disposable dan API Laravel nyata untuk draft invalid, validasi, publish, viewer HTTP, Desktop refresh/cache, dan render revisi baru: 2/2 PASS, exit 0. `npm test` 194/194, 35 file; `npm run lint`, `npm run typecheck`, `npm run build`, `npm run smoke:desktop`, `./scripts/phase2-browser-e2e.ps1`, Composer validate/audit, dan npm audit exit 0; 0 vulnerability. PHPUnit lokal **NOT RUN**; CI PR wajib menjalankan 16/16 mandatory tanpa skip. UAT empat monitor fisik **NOT RUN**. [Matriks](phase-2-verification.md#2c-05a--e2e-publish--desktop-dan-failure-matrix-2026-11-23).
+
 **Parent 2C-04: VERIFIED — CLOSED.** [PR closure #61](https://github.com/dejul/senkom/pull/61) merged at `9c3656001eb333ecb9f0cef45696f89792d4de8a`; [postmerge CI `45106004707`](https://github.com/dejul/senkom/actions/runs/45106004707) on that SHA passed 16/16 mandatory checks, 0 skipped. Phase 2C remains WIP; 2C-05 NOT STARTED.
 
 ## Parent 2C-04 — closure setelah gate merge (2026-11-23)
