@@ -124,7 +124,7 @@ Parent 2C-01 mencakup provisi dan isolasi keamanan origin/token, bukan timeout a
 
 | Micro-batch | Pekerjaan tunggal                             | Status awal* | Bukti minimal / exit gate                 |
 | ----------- | --------------------------------------------- | ------------ | ----------------------------------------- |
-| `3-01a`     | Gateway selection and lab config (no secrets) | NOT STARTED  | Version/codec/transport documented        |
+| `3-01a`     | Gateway selection and lab config (no secrets) | VERIFIED     | Version/codec/transport documented        |
 | `3-01b`     | One synthetic stream via WebRTC/HLS           | NOT STARTED  | Actual browser playback; not RTSP direct  |
 | `3-02a`     | Private camera source storage + secret canary | NOT STARTED  | Viewer metadata contains no RTSP secret   |
 | `3-02b`     | Admin camera form + RBAC                      | NOT STARTED  | Write role and validation                 |
@@ -138,6 +138,8 @@ Parent 2C-01 mencakup provisi dan isolasi keamanan origin/token, bukan timeout a
 | `3-05b`     | Target PC benchmark and capacity decision     | BLOCKED      | Requires target hardware, actual evidence |
 | `3-06a`     | Gateway outage/reconnect/expiry regression    | NOT STARTED  | Failure matrix passes                     |
 | `3-06b`     | Gate Phase 3 runbook and acceptance           | NOT STARTED  | No unmeasured hardware claim              |
+
+3-01a VERIFIED melalui PR #68 merge `f20f5bb88210c3cffb5bdd9248dec3f8a9eed998`; CI PR `45131572484` dan CI postmerge `45133582969` PASS 16/16 mandatory, 0 skip. Docker Compose runtime, synthetic stream, browser playback, dan benchmark belum dijalankan; runtime lab menunggu Docker/FFmpeg/sumber lab. Parent 3-01 WIP; 3-01b NOT STARTED.
 
 ### Phase 4 — Windows installer and controlled update
 
