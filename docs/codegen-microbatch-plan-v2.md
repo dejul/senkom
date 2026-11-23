@@ -108,9 +108,9 @@
 | `2C-04a`    | Scheduler sync no-overlap, backoff/jitter      | VERIFIED     | Tidak membuat request storm                 |
 | `2C-04b`    | Offline/STALE/last-sync dan reconnect          | VERIFIED     | API outage/recovery; carousel tetap         |
 | `2C-05a`    | E2E publish→desktop dan failure matrix         | VERIFIED     | Snapshot lama sampai publish; swap atomik   |
-| `2C-05b`    | Gate Phase 2 full regression + docs            | NOT STARTED  | 2A/2B/2C gates, Electron smoke, approval    |
+| `2C-05b`    | Gate Phase 2 full regression + docs            | WIP          | 2A/2B/2C gates, Electron smoke, approval    |
 
-Parent 2C-04 VERIFIED — CLOSED: PR gate #60 merge `cccbc7a308c01821623296bad5a9bea17dc24209`, CI postmerge `44712007958` PASS 16/16 mandatory, 0 skip; PR closure #61 merge `9c3656001eb333ecb9f0cef45696f89792d4de8a`, CI postmerge `45106004707` PASS 16/16 mandatory, 0 skip. 2C-05a VERIFIED setelah PR #63 merge `0d7ddc1b8d6d9bf35f0ca0ca725e4a5d233bb351` dan CI postmerge `45117877882` PASS 16/16 mandatory, 0 skip; Parent 2C-05 WIP, 2C-05b belum dimulai.
+Parent 2C-04 VERIFIED — CLOSED: PR gate #60 merge `cccbc7a308c01821623296bad5a9bea17dc24209`, CI postmerge `44712007958` PASS 16/16 mandatory, 0 skip; PR closure #61 merge `9c3656001eb333ecb9f0cef45696f89792d4de8a`, CI postmerge `45106004707` PASS 16/16 mandatory, 0 skip. 2C-05a VERIFIED setelah PR #63 merge `0d7ddc1b8d6d9bf35f0ca0ca725e4a5d233bb351` dan CI postmerge `45117877882` PASS 16/16 mandatory, 0 skip; 2C-05b menjalani gate regresi, Parent 2C-05 WIP.
 
 ### Kriteria wajib 2C-02a — realignment Option B disetujui 2026-11-19
 

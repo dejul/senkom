@@ -1,5 +1,7 @@
 # Persetujuan dan checklist Phase 2
 
+Update 2026-11-23: gate lokal 2C-05b mencakup regresi Phase 2A/2B/2C, browser E2E, Laravel→Desktop E2E, Electron smoke, lint/typecheck/build, audit, dan MySQL disposable; seluruh cek yang dijalankan PASS tanpa skip. **2C-05b, Parent 2C-05, dan Phase 2 WIP** sampai PR gate merge serta CI postmerge mandatory PASS. Persetujuan fitur Phase 2A/2B/2C dari 2026-11-04 tetap berlaku; catatan ini tidak menciptakan persetujuan manusia baru. UAT empat monitor fisik **NOT RUN**; Phase 3 memerlukan persetujuan terpisah.
+
 Update 2026-11-23: [PR 2C-05a #63](https://github.com/dejul/senkom/pull/63) MERGED pada `0d7ddc1b8d6d9bf35f0ca0ca725e4a5d233bb351`; [CI postmerge `45117877882`](https://github.com/dejul/senkom/actions/runs/45117877882) pada exact SHA PASS 16/16 mandatory, 0 skip. **2C-05a VERIFIED** secara teknis; ini bukan persetujuan manusia baru. Parent 2C-05 WIP, 2C-05b NOT STARTED; UAT empat monitor fisik belum dijalankan.
 
 Update 2026-11-23: 2C-05a E2E publish→Desktop dan failure matrix lulus gate lokal pada branch `feature/phase-2c-05a`; **status WIP** sampai PR merge dan CI postmerge mandatory PASS tanpa skip. Parent 2C-05 WIP; 2C-05b NOT STARTED. Tidak ada persetujuan manusia baru atau klaim UAT empat monitor fisik.

@@ -1,5 +1,11 @@
 # Checkpoint Phase 2
 
+## 2C-05b — gate regresi penuh Phase 2 (2026-11-23)
+
+Status: **WIP** sampai PR gate merge dan CI postmerge exact merge SHA PASS. Branch `feature/phase-2c-05b` dari `origin/main` `e4dd4f76fd51a9ba01ba09f462de60d5007f4f51`, worktree awal bersih. 2C-05a VERIFIED; parent 2A-11, 2B-09, dan 2C-01–04 VERIFIED. Acceptance lokal Phase 2A/2B/2C dan parent 2C-05 PASS; Parent 2C-05 dan Phase 2 tetap WIP sampai integrasi gate. Phase 3 NOT STARTED.
+
+Lokal: PHPUnit 141 tes/4.133 asersi/0 skip; Vitest 194/194 (35 file), schema 33/33, E2E Laravel→Desktop 2/2; browser Admin Web E2E dan Electron smoke PASS. `npm run lint`, `npm run build` (kontrak/typecheck), PHP lint, Composer validate/audit, npm audit, dan policy CI 51/51 PASS, semua exit 0. MySQL 8.4.11 disposable untuk unit/HTTP/browser dihentikan dan dihapus. UAT empat monitor fisik **NOT RUN**; prasyarat deployment origin/TLS dan grant map existing tetap terbuka. [Matriks](phase-2-verification.md#2c-05b--full-phase-2-regression-gate-2026-11-23).
+
 ## 2C-05a — closure setelah PR #63 (2026-11-23)
 
 Status: **VERIFIED**. [PR #63](https://github.com/dejul/senkom/pull/63) MERGED manual pada `0d7ddc1b8d6d9bf35f0ca0ca725e4a5d233bb351`; head `154d24e99b0095e14042ec624650aaeb9c31f8e5` ancestor `origin/main`. [CI postmerge `45117877882`](https://github.com/dejul/senkom/actions/runs/45117877882) event `push` pada exact merge SHA PASS 16/16 mandatory, 0 skip. Branch rekonsiliasi `fix/phase-2c-05a-closure` dari merge SHA; kode produk tidak berubah. Parent 2C-05 WIP; 2C-05b NOT STARTED. UAT empat monitor fisik tetap **NOT RUN**. Status WIP di bagian berikut adalah catatan pra-merge.
