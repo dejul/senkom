@@ -1,5 +1,9 @@
 # Checkpoint Phase 2
 
+## 2C-05a — closure setelah PR #63 (2026-11-23)
+
+Status: **VERIFIED**. [PR #63](https://github.com/dejul/senkom/pull/63) MERGED manual pada `0d7ddc1b8d6d9bf35f0ca0ca725e4a5d233bb351`; head `154d24e99b0095e14042ec624650aaeb9c31f8e5` ancestor `origin/main`. [CI postmerge `45117877882`](https://github.com/dejul/senkom/actions/runs/45117877882) event `push` pada exact merge SHA PASS 16/16 mandatory, 0 skip. Branch rekonsiliasi `fix/phase-2c-05a-closure` dari merge SHA; kode produk tidak berubah. Parent 2C-05 WIP; 2C-05b NOT STARTED. UAT empat monitor fisik tetap **NOT RUN**. Status WIP di bagian berikut adalah catatan pra-merge.
+
 ## 2C-05a — E2E publish → Desktop (2026-11-23)
 
 Status: **WIP** sampai PR implementasi merge dan CI postmerge exact merge SHA PASS. Branch `feature/phase-2c-05a` dari `origin/main` `a6009789f1da89b082c9d6d2c9aa4369eda3a374`; worktree awal bersih. Parent 2C-04 VERIFIED — CLOSED setelah PR #62 dan CI postmerge `45110085026` PASS 16/16 mandatory, 0 skip. Parent 2C-05 WIP; 2C-05b NOT STARTED.
