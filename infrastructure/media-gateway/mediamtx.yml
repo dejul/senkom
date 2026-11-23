@@ -1,0 +1,31 @@
+# Lab only. Compose binds every published port to host loopback.
+logLevel: warn
+api: false
+metrics: false
+pprof: false
+playback: false
+rtmp: false
+srt: false
+moq: false
+
+authMethod: internal
+authInternalUsers:
+  - user: any
+    permissions:
+      - action: publish
+        path: lab
+      - action: read
+        path: lab
+
+rtsp: true
+rtspTransports: [tcp]
+hls: true
+hlsAllowOrigins: ['http://127.0.0.1:8888']
+webrtc: true
+webrtcAllowOrigins: ['http://127.0.0.1:8889']
+webrtcIPsFromInterfaces: false
+webrtcAdditionalHosts: [127.0.0.1]
+
+paths:
+  lab:
+    source: publisher
