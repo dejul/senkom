@@ -2078,7 +2078,9 @@
             "headers": {
               "ETag": {
                 "description": "Current draft ETag for If-Match on layout PUT, e.g. \"draft:1\".",
-                "schema": { "type": "string" }
+                "schema": {
+                  "type": "string"
+                }
               }
             },
             "content": {
@@ -16246,6 +16248,507 @@
           }
         }
       }
+    },
+    "/admin/cameras/{id}/source": {
+      "get": {
+        "operationId": "getCameraSourceStatus",
+        "x-implementation-phase": "3-02b",
+        "summary": "Safe configuration status for map camera",
+        "description": "system_admin may mutate on an existing map; editor and publisher may read safe status. Viewer bearer is denied. Source changes take effect independently of draft publish. Omitted sourceUri on PATCH preserves ciphertext; empty or masked replacement is rejected. DELETE removes source only. No connectivity test.",
+        "security": [
+          {
+            "adminSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mapId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Configured default map when omitted; access checked before camera lookup."
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Camera ID within authorized map."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Safe status only; never contains URI, host, credentials or ciphertext",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CameraSourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or map grant absent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Camera or source unavailable in authorized map",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "CSRF token missing or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input; no URI echoed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createCameraSource",
+        "x-implementation-phase": "3-02b",
+        "summary": "Create write-only camera source",
+        "description": "system_admin may mutate on an existing map; editor and publisher may read safe status. Viewer bearer is denied. Source changes take effect independently of draft publish. Omitted sourceUri on PATCH preserves ciphertext; empty or masked replacement is rejected. DELETE removes source only. No connectivity test.",
+        "security": [
+          {
+            "adminSession": [],
+            "csrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mapId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Configured default map when omitted; access checked before camera lookup."
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Camera ID within authorized map."
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Safe status only; never contains URI, host, credentials or ciphertext",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CameraSourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or map grant absent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Camera or source unavailable in authorized map",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "CSRF token missing or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input; no URI echoed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraSourceWrite"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceCameraSource",
+        "x-implementation-phase": "3-02b",
+        "summary": "Explicitly replace existing write-only source URI",
+        "description": "system_admin may mutate on an existing map; editor and publisher may read safe status. Viewer bearer is denied. Source changes take effect independently of draft publish. Omitted sourceUri on PATCH preserves ciphertext; empty or masked replacement is rejected. DELETE removes source only. No connectivity test.",
+        "security": [
+          {
+            "adminSession": [],
+            "csrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mapId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Configured default map when omitted; access checked before camera lookup."
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Camera ID within authorized map."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Safe status only; never contains URI, host, credentials or ciphertext",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CameraSourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or map grant absent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Camera or source unavailable in authorized map",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "CSRF token missing or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input; no URI echoed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraSourceWrite"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "setCameraSourceEnabled",
+        "x-implementation-phase": "3-02b",
+        "summary": "Change enabled state without resubmitting source URI",
+        "description": "system_admin may mutate on an existing map; editor and publisher may read safe status. Viewer bearer is denied. Source changes take effect independently of draft publish. Omitted sourceUri on PATCH preserves ciphertext; empty or masked replacement is rejected. DELETE removes source only. No connectivity test.",
+        "security": [
+          {
+            "adminSession": [],
+            "csrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mapId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Configured default map when omitted; access checked before camera lookup."
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Camera ID within authorized map."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Safe status only; never contains URI, host, credentials or ciphertext",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CameraSourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or map grant absent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Camera or source unavailable in authorized map",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "CSRF token missing or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input; no URI echoed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraSourceEnabled"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteCameraSource",
+        "x-implementation-phase": "3-02b",
+        "summary": "Explicitly remove source; camera metadata stays",
+        "description": "system_admin may mutate on an existing map; editor and publisher may read safe status. Viewer bearer is denied. Source changes take effect independently of draft publish. Omitted sourceUri on PATCH preserves ciphertext; empty or masked replacement is rejected. DELETE removes source only. No connectivity test.",
+        "security": [
+          {
+            "adminSession": [],
+            "csrfHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "mapId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Configured default map when omitted; access checked before camera lookup."
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Camera ID within authorized map."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Safe status only; never contains URI, host, credentials or ciphertext",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CameraSourceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden or map grant absent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Camera or source unavailable in authorized map",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "419": {
+            "description": "CSRF token missing or expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input; no URI echoed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -17653,6 +18156,84 @@
           },
           "metadata": {
             "$ref": "../packages/map-schema/schema/published-map.v2.json#/$defs/Metadata"
+          }
+        }
+      },
+      "CameraSourceStatus": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mapId",
+          "cameraId",
+          "configured",
+          "enabled",
+          "sourceType",
+          "updatedAt"
+        ],
+        "properties": {
+          "mapId": {
+            "type": "string"
+          },
+          "cameraId": {
+            "type": "string"
+          },
+          "configured": {
+            "type": "boolean"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "sourceType": {
+            "type": ["string", "null"],
+            "enum": ["rtsp", null]
+          },
+          "updatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        }
+      },
+      "CameraSourceResponse": {
+        "type": "object",
+        "required": ["data", "meta"],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CameraSourceStatus"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/MetaV2"
+          }
+        }
+      },
+      "CameraSourceWrite": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sourceType", "sourceUri"],
+        "properties": {
+          "sourceType": {
+            "type": "string",
+            "enum": ["rtsp"]
+          },
+          "sourceUri": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "writeOnly": true,
+            "description": "Write-only RTSP or RTSPS URI. Never returned or logged."
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "CameraSourceEnabled": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["enabled"],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
           }
         }
       }

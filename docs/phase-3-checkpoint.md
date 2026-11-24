@@ -1,5 +1,9 @@
 # Checkpoint Phase 3
 
+## 3-02b implementation checkpoint (2026-11-24)
+
+Status: **WIP** pada `feature/phase-3` dari `origin/main` `b82b48757fa815a6340d218776c0b81e2b3e81fb`. Project owner meminta hanya 3-02b. Admin source API dan form memakai storage terenkripsi 3-02a. `system_admin` dapat membuat, mengganti, menyalakan/mematikan, dan menghapus sumber; editor/publisher dengan grant map hanya membaca status aman. Source URI ditulis saja dan tidak masuk draft/publish. PHPUnit penuh 150/4308 asersi, frontend 197/197, browser Admin E2E, lint/kontrak/build/Desktop smoke PASS lokal. Composer audit memakai cache lokal akibat Packagist timeout; CI wajib menjalankan audit online. PR, review manual, dan CI masih terbuka. Parent 3-02 WIP; 3-02c NOT STARTED. Detail [verifikasi](phase-3-verification.md#3-02b--admin-source-management-2026-11-24).
+
 ## 3-02a postmerge closure (2026-11-24)
 
 PR [#72](https://github.com/dejul/senkom/pull/72) MERGED manual pada 2026-11-24 04:35:04 UTC (11:35:04 WIB), head `c016e07015942a710e82e7bf8f7cc4d75f89ceff`, merge SHA `43b10bc00836c8f35d570f494b2eb35c31216aff`. SHA merge adalah ancestor `origin/main` (exit 0). [CI postmerge `45327404103`](https://github.com/dejul/senkom/actions/runs/45327404103) event `push` pada exact merge SHA: 16/16 mandatory PASS, 0 skipped. Tinjauan teknis keamanan PASS; detail di [verifikasi](phase-3-verification.md#3-02a--private-cctv-source-storage-encryption--map-isolation-2026-11-24). Dokumentasi closure ini memerlukan PR dan CI tersendiri sebelum status 3-02a final di `main`. Parent 3-02 WIP; 3-02b READY — NOT STARTED; 3-02c NOT STARTED. CCTV operasional belum diakses.

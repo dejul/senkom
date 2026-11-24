@@ -7,7 +7,7 @@ export type MapSource =
   | { kind: 'published'; token: string }
   | { kind: 'revision'; revisionId: string };
 
-export type DraftMap = { content: MapContentV2; etag: string };
+export type DraftMap = { content: MapContentV2; etag: string; mapId?: string };
 export type Revision = components['schemas']['Revision'];
 export type RevisionPage = {
   revisions: Revision[];
@@ -36,7 +36,13 @@ function parseDraft(payload: unknown, response: Response): DraftMap {
       throw new Error();
     const etag = response.headers.get('ETag');
     if (etag !== `"draft:${data.version}"`) throw new Error();
-    return { content: parseMapContent(data.content), etag };
+    return {
+      content: parseMapContent(data.content),
+      etag,
+      ...('mapId' in data && typeof data.mapId === 'string'
+        ? { mapId: data.mapId }
+        : {}),
+    };
   } catch {
     throw new ApiError(
       response.status,

@@ -22,6 +22,8 @@ and credentials remain encrypted at rest and excluded from model JSON/arrays,
 published snapshots, viewer API payloads, and Desktop-compatible cache data. Admin
 source forms/RBAC remain 3-02b; playback sessions remain 3-02c.
 
+Micro-batch 3-02b adds `/admin/cameras/{id}/source?mapId=<map>` under existing Admin cookie/CSRF. GET returns only `mapId`, `cameraId`, `configured`, `enabled`, `sourceType`, `updatedAt`; editor/publisher may read on granted maps. POST creates, PUT explicitly replaces URI, PATCH changes only `enabled`, and DELETE removes source without deleting camera; mutations require `system_admin`. POST/PUT accept a write-only `sourceUri` and never return it, its host, credentials, or ciphertext. PUT requires a new nonempty URI; PATCH omits URI and preserves ciphertext. Empty or masked replacement is rejected. Missing/out-of-scope maps return 403 before camera lookup; missing cameras/sources on allowed maps return 404. Source changes apply privately without draft publish; viewer and snapshot schemas remain unchanged. Gateway connection and playback sessions remain 3-02c or later.
+
 ## Otorisasi rencana
 
 | Role                  | Hak operasional                                | Batas                                      |

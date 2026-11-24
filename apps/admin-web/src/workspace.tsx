@@ -373,6 +373,7 @@ export function Workspace({
             <h2 id="canvas-title">Kanvas</h2>
             <MapCanvas
               source={{ kind: 'draft' }}
+              cameraSourceAdmin={user.roles.includes('system_admin')}
               editable={user.roles.some((role) =>
                 ['infrastructure_editor', 'system_admin'].includes(role),
               )}

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController, MapController};
+use App\Http\Controllers\{AuthController, CameraSourceController, MapController};
 use App\Http\Middleware\{AdminAccess, InfrastructureAccess, ViewerAccess};
 use App\Services\InventoryStore;
 
@@ -29,6 +29,11 @@ Route::middleware([InfrastructureAccess::class.':admin', 'web'])->group(function
         Route::get('/audit-logs', [MapController::class, 'audit'])->middleware(AdminAccess::class.':publisher');
         Route::get('/map-layouts', [MapController::class, 'layout']);
         Route::put('/map-layouts', [MapController::class, 'layout'])->middleware(AdminAccess::class.':infrastructure_editor');
+        Route::get('/cameras/{id}/source', [CameraSourceController::class, 'show']);
+        Route::post('/cameras/{id}/source', [CameraSourceController::class, 'create'])->middleware(AdminAccess::class.':system_admin');
+        Route::put('/cameras/{id}/source', [CameraSourceController::class, 'replace'])->middleware(AdminAccess::class.':system_admin');
+        Route::patch('/cameras/{id}/source', [CameraSourceController::class, 'enabled'])->middleware(AdminAccess::class.':system_admin');
+        Route::delete('/cameras/{id}/source', [CameraSourceController::class, 'delete'])->middleware(AdminAccess::class.':system_admin');
         $resources = implode('|', array_keys(InventoryStore::RESOURCES));
         Route::get('/{resource}', [MapController::class, 'index'])->where('resource', $resources);
         Route::get('/{resource}/{id}', [MapController::class, 'show'])->where('resource', $resources);
