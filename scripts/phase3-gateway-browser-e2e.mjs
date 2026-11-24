@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { Buffer } from 'node:buffer';
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -12,15 +13,35 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const compose = resolve(root, 'infrastructure/media-gateway/compose.yaml');
 const evidenceFile = resolve(root, '.artifacts/phase3-gateway-evidence.json');
 const docker = process.env.DOCKER_PATH || 'docker';
+const composeCli = process.env.COMPOSE_PATH;
+const runCompose = (args, timeout) =>
+  run(composeCli || docker, composeCli ? args : ['compose', ...args], timeout);
 const ffmpeg = process.env.FFMPEG_PATH;
 const browserChannel = process.env.BROWSER_CHANNEL || 'chrome';
 const browserPath = process.env.BROWSER_EXECUTABLE;
+const apiOrigin =
+  process.env.SENKOM_GATEWAY_API_ORIGIN || 'http://127.0.0.1:8000';
+const viewerToken = process.env.SENKOM_GATEWAY_VIEWER_TOKEN;
+const mapId = process.env.SENKOM_GATEWAY_MAP_ID || 'main';
+const cameraId = process.env.SENKOM_GATEWAY_CAMERA_ID || 'demo-camera-01';
+const cameraBId = process.env.SENKOM_GATEWAY_CAMERA_B_ID || 'demo-camera-04';
+const publisherPassword = process.env.SENKOM_GATEWAY_PUBLISH_PASSWORD;
 const timeoutMs = 30_000;
 const evidence = { versions: {}, checks: [], warnings: [], cleanup: {} };
 let gatewayStarted = false;
 let publisher;
 let browser;
 let cleanupPromise;
+const sensitiveValues = new Set(
+  [viewerToken, publisherPassword].filter(Boolean),
+);
+
+function redact(value) {
+  let safe = String(value);
+  for (const secret of sensitiveValues)
+    safe = safe.replaceAll(secret, '[REDACTED]');
+  return safe;
+}
 
 function record(name, result) {
   evidence.checks.push({ name, ...result });
@@ -59,7 +80,9 @@ function run(
       else
         reject(
           new Error(
-            `${command} ${args.join(' ')} exited ${code ?? signal}: ${stderr || stdout}`,
+            redact(
+              `${command} ${args.join(' ')} exited ${code ?? signal}: ${stderr || stdout}`,
+            ),
           ),
         );
     });
@@ -84,6 +107,7 @@ async function waitFor(label, check, timeout = timeoutMs) {
 }
 
 function startPublisher(codec = 'libx264') {
+  const publishUrl = `rtsp://senkom-publisher:${encodeURIComponent(publisherPassword)}@127.0.0.1:8554/lab`;
   const args = [
     '-hide_banner',
     '-loglevel',
@@ -101,15 +125,7 @@ function startPublisher(codec = 'libx264') {
   ];
   if (codec === 'libx264' || codec === 'libx265')
     args.push('-preset', 'ultrafast', '-tune', 'zerolatency');
-  args.push(
-    '-g',
-    '50',
-    '-f',
-    'rtsp',
-    '-rtsp_transport',
-    'tcp',
-    'rtsp://127.0.0.1:8554/lab',
-  );
+  args.push('-g', '50', '-f', 'rtsp', '-rtsp_transport', 'tcp', publishUrl);
   let log = '';
   const child = spawn(ffmpeg, args, {
     cwd: root,
@@ -119,7 +135,7 @@ function startPublisher(codec = 'libx264') {
   child.stderr.setEncoding('utf8').on('data', (chunk) => {
     log = (log + chunk).slice(-12_000);
   });
-  child.log = () => log;
+  child.log = () => redact(log);
   child.once('error', (error) => {
     child.startError = error;
   });
@@ -139,21 +155,110 @@ async function stopPublisher() {
   ]);
 }
 
-async function fetchWithTimeout(url, timeout = 5_000) {
+async function fetchWithTimeout(url, timeout = 5_000, authorization, cookie) {
   return fetch(url, {
     signal: AbortSignal.timeout(timeout),
-    redirect: 'follow',
+    redirect: 'error',
+    headers: {
+      ...(authorization && { Authorization: authorization }),
+      ...(cookie && { Cookie: cookie }),
+    },
   });
 }
 
-async function waitForPlaylist() {
+function cookieHeader(...responses) {
+  const cookies = new Map();
+  for (const response of responses)
+    for (const value of response.headers.getSetCookie()) {
+      const pair = value.split(';', 1)[0];
+      const separator = pair.indexOf('=');
+      if (separator > 0)
+        cookies.set(pair.slice(0, separator), pair.slice(separator + 1));
+    }
+  return [...cookies].map(([name, value]) => `${name}=${value}`).join('; ');
+}
+
+async function issueSession(protocol, requestedCameraId = cameraId) {
+  assert.ok(
+    viewerToken,
+    'Set SENKOM_GATEWAY_VIEWER_TOKEN to a local synthetic Viewer token',
+  );
+  const issued = await fetch(
+    `${apiOrigin}/api/v1/viewer/maps/${encodeURIComponent(mapId)}/cameras/${encodeURIComponent(requestedCameraId)}/playback-sessions`,
+    {
+      method: 'POST',
+      signal: AbortSignal.timeout(5_000),
+      headers: {
+        Authorization: `Bearer ${viewerToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ protocol }),
+      redirect: 'error',
+    },
+  );
+  assert.equal(
+    issued.status,
+    200,
+    `Laravel playback session issuance returned HTTP ${issued.status}`,
+  );
+  const payload = await issued.json();
+  const session = payload?.data;
+  assert.ok(
+    session &&
+      session.protocol === protocol &&
+      session.mapId === mapId &&
+      session.cameraId === requestedCameraId,
+  );
+  assert.equal(session.authScheme, 'Basic');
+  assert.equal(session.authUsername, 'senkom-viewer');
+  assert.ok(
+    session.accessToken && session.expiresAt && session.expiresInSeconds >= 15,
+  );
+  const authorization = `Basic ${Buffer.from(`${session.authUsername}:${session.accessToken}`).toString('base64')}`;
+  sensitiveValues.add(session.accessToken);
+  sensitiveValues.add(authorization);
+  evidence.sessions ??= [];
+  evidence.sessions.push({
+    sessionId: session.sessionId,
+    protocol,
+    expiresAt: session.expiresAt,
+  });
+  return {
+    ...session,
+    authorization,
+    path: new URL(session.endpoint).pathname.replace(
+      /\/(?:index\.m3u8|whep)$/,
+      '',
+    ),
+  };
+}
+
+async function publisherAuth(password) {
+  return fetch(`${apiOrigin}/api/v1/gateway/auth`, {
+    method: 'POST',
+    signal: AbortSignal.timeout(5_000),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user: 'senkom-publisher',
+      password,
+      action: 'publish',
+      path: 'lab',
+      protocol: 'rtsp',
+    }),
+    redirect: 'error',
+  });
+}
+
+async function waitForPlaylist(session) {
   return waitFor('HLS playlist', async () => {
     if (publisher && publisher.exitCode !== null)
       throw new Error(
         `FFmpeg exited ${publisher.exitCode}: ${publisher.log()}`,
       );
     const response = await fetchWithTimeout(
-      'http://127.0.0.1:8888/lab/index.m3u8?cookieCheck=1',
+      `http://127.0.0.1:8888${session.path}/index.m3u8?cookieCheck=1`,
+      5_000,
+      session.authorization,
     );
     const master = await response.text();
     if (!response.ok || !master.includes('#EXTM3U')) return false;
@@ -162,21 +267,49 @@ async function waitForPlaylist() {
       .map((line) => line.trim())
       .find((line) => line && !line.startsWith('#') && line.includes('.m3u8'));
     if (!variant) return false;
+    const cookies = cookieHeader(response);
     const mediaResponse = await fetchWithTimeout(
       new URL(variant, response.url),
+      5_000,
+      session.authorization,
+      cookies,
     );
     const mediaPlaylist = await mediaResponse.text();
     if (!mediaResponse.ok || !mediaPlaylist.includes('#EXTM3U')) return false;
     const segment = mediaPlaylist
       .split('\n')
       .map((line) => line.trim())
-      .find((line) => line && !line.startsWith('#') && line.includes('.mp4'));
-    return Boolean(segment);
+      .find(
+        (line) =>
+          line &&
+          !line.startsWith('#') &&
+          line.includes('.mp4') &&
+          !line.endsWith('/gap.mp4') &&
+          line !== 'gap.mp4',
+      );
+    return segment
+      ? {
+          url: new URL(segment, mediaResponse.url).toString(),
+          cookie: cookieHeader(response, mediaResponse),
+        }
+      : false;
   });
 }
 
-async function playback(kind, url) {
+async function playback(kind, url, session, { keepOpen = false } = {}) {
   const page = await browser.newPage();
+  await page.route('**/*', (route) => {
+    const target = new URL(route.request().url());
+    const headers = route.request().headers();
+    if (
+      target.hostname === '127.0.0.1' &&
+      ['8888', '8889'].includes(target.port)
+    )
+      return route.continue({
+        headers: { ...headers, authorization: session.authorization },
+      });
+    return route.continue();
+  });
   if (kind === 'WebRTC') {
     await page.addInitScript(() => {
       const Base = window.RTCPeerConnection;
@@ -294,7 +427,9 @@ async function playback(kind, url) {
     );
   } else {
     const manifestResponse = await fetchWithTimeout(
-      'http://127.0.0.1:8888/lab/index.m3u8?cookieCheck=1',
+      `http://127.0.0.1:8888${session.path}/index.m3u8?cookieCheck=1`,
+      5_000,
+      session.authorization,
     );
     const master = await manifestResponse.text();
     assert.equal(manifestResponse.status, 200);
@@ -305,18 +440,35 @@ async function playback(kind, url) {
     assert.ok(variant, 'HLS master playlist contains no variant');
     const mediaResponse = await fetchWithTimeout(
       new URL(variant, manifestResponse.url),
+      5_000,
+      session.authorization,
+      cookieHeader(manifestResponse),
     );
     const mediaPlaylist = await mediaResponse.text();
     assert.equal(mediaResponse.status, 200);
     const segment = mediaPlaylist
       .split('\n')
       .map((line) => line.trim())
-      .find((line) => line && !line.startsWith('#') && line.includes('.mp4'));
+      .find(
+        (line) =>
+          line &&
+          !line.startsWith('#') &&
+          line.includes('.mp4') &&
+          !line.endsWith('/gap.mp4') &&
+          line !== 'gap.mp4',
+      );
     assert.ok(segment, 'HLS playlist contains no media segment');
     const segmentResponse = await fetchWithTimeout(
       new URL(segment, mediaResponse.url),
+      5_000,
+      session.authorization,
+      cookieHeader(manifestResponse, mediaResponse),
     );
-    assert.equal(segmentResponse.status, 200);
+    assert.equal(
+      segmentResponse.status,
+      200,
+      `HLS segment ${new URL(segment, mediaResponse.url).pathname} returned HTTP ${segmentResponse.status}: ${redact(await segmentResponse.clone().text())}`,
+    );
     const segmentBytes = (await segmentResponse.arrayBuffer()).byteLength;
     assert.ok(segmentBytes > 0);
     hls = {
@@ -326,13 +478,31 @@ async function playback(kind, url) {
       segmentBytes,
     };
   }
-  await page.close();
-  return { httpStatus: response.status(), video, peers, hls };
+  if (!keepOpen) await page.close();
+  return {
+    httpStatus: response.status(),
+    video,
+    peers,
+    hls,
+    ...(keepOpen && { page }),
+  };
 }
 
-async function noVideoResult(expectedMessage) {
+async function noVideoResult(expectedMessage, session) {
   const page = await browser.newPage();
-  await page.goto('http://127.0.0.1:8889/lab', {
+  await page.route('**/*', (route) => {
+    const target = new URL(route.request().url());
+    const headers = route.request().headers();
+    if (
+      target.hostname === '127.0.0.1' &&
+      ['8888', '8889'].includes(target.port)
+    )
+      return route.continue({
+        headers: { ...headers, authorization: session.authorization },
+      });
+    return route.continue();
+  });
+  await page.goto(`http://127.0.0.1:8889${session.path}`, {
     waitUntil: 'domcontentloaded',
     timeout: 10_000,
   });
@@ -352,6 +522,65 @@ async function noVideoResult(expectedMessage) {
   return result;
 }
 
+async function probeWhep(session, authorization = session.authorization) {
+  const page = await browser.newPage();
+  await page.route(`http://127.0.0.1:8889${session.path}`, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'text/html',
+      body: '<!doctype html><title>synthetic WHEP probe</title>',
+    }),
+  );
+  await page.goto(`http://127.0.0.1:8889${session.path}`, {
+    waitUntil: 'domcontentloaded',
+    timeout: 10_000,
+  });
+  try {
+    const sdp = await Promise.race([
+      page.evaluate(async () => {
+        const peer = new window.RTCPeerConnection();
+        peer.addTransceiver('video', { direction: 'recvonly' });
+        const offer = await peer.createOffer();
+        await peer.setLocalDescription(offer);
+        await Promise.race([
+          new Promise((resolve) => {
+            if (peer.iceGatheringState === 'complete') resolve();
+            else
+              peer.addEventListener('icegatheringstatechange', () => {
+                if (peer.iceGatheringState === 'complete') resolve();
+              });
+          }),
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error('ICE gathering timed out')),
+              5_000,
+            ),
+          ),
+        ]);
+        const result = peer.localDescription.sdp;
+        peer.close();
+        return result;
+      }),
+      delay(10_000).then(() => {
+        throw new Error('WebRTC signaling probe timed out');
+      }),
+    ]);
+    const response = await fetch(`http://127.0.0.1:8889${session.path}/whep`, {
+      method: 'POST',
+      signal: AbortSignal.timeout(5_000),
+      headers: {
+        'Content-Type': 'application/sdp',
+        ...(authorization && { Authorization: authorization }),
+      },
+      body: sdp,
+      redirect: 'error',
+    });
+    return response.status;
+  } finally {
+    await page.close();
+  }
+}
+
 async function cleanup() {
   if (cleanupPromise) return cleanupPromise;
   cleanupPromise = (async () => {
@@ -361,10 +590,10 @@ async function cleanup() {
       browser = undefined;
     }
     if (gatewayStarted) {
-      await run(docker, ['compose', '-f', compose, 'down'], 30_000);
+      await runCompose(['-f', compose, 'down'], 30_000);
       gatewayStarted = false;
     }
-    const remaining = await run(docker, ['compose', '-f', compose, 'ps', '-q']);
+    const remaining = await runCompose(['-f', compose, 'ps', '-q']);
     assert.equal(
       remaining.stdout.trim(),
       '',
@@ -425,6 +654,14 @@ process.once('SIGTERM', () => {
 
 try {
   assert.ok(ffmpeg, 'Set FFMPEG_PATH to FFmpeg executable');
+  assert.ok(
+    viewerToken,
+    'Set SENKOM_GATEWAY_VIEWER_TOKEN to a local synthetic Viewer token',
+  );
+  assert.ok(
+    publisherPassword,
+    'Set SENKOM_GATEWAY_PUBLISH_PASSWORD for synthetic RTSP publishing',
+  );
   await mkdir(dirname(evidenceFile), { recursive: true });
   await run(ffmpeg, ['-version']);
   evidence.versions.ffmpeg = (await run(ffmpeg, ['-version'])).stdout.split(
@@ -439,24 +676,84 @@ try {
     await run(docker, ['version', '--format', '{{.Server.Version}}'])
   ).stdout.trim();
   evidence.versions.compose = (
-    await run(docker, ['compose', 'version', '--short'])
+    await runCompose(['version', '--short'])
   ).stdout.trim();
-  await run(docker, ['compose', '-f', compose, 'config', '--quiet']);
-  const existing = await run(docker, ['compose', '-f', compose, 'ps', '-q']);
+  await runCompose(['-f', compose, 'config', '--quiet']);
+  const existing = await runCompose(['-f', compose, 'ps', '-q']);
   assert.equal(
     existing.stdout.trim(),
     '',
     'owned gateway container already exists; stop it before running this harness',
   );
   gatewayStarted = true;
-  await run(docker, ['compose', '-f', compose, 'up', '-d']);
-  await waitFor(
-    'MediaMTX HTTP',
-    async () =>
-      (await fetchWithTimeout('http://127.0.0.1:8889/lab')).status === 200,
+  await runCompose(['-f', compose, 'up', '-d']);
+  await waitFor('MediaMTX HTTP', async () => {
+    const [webrtc, hls] = await Promise.all([
+      fetchWithTimeout('http://127.0.0.1:8889/lab/'),
+      fetchWithTimeout('http://127.0.0.1:8888/lab/'),
+    ]);
+    return webrtc.status === 401 && hls.status === 401;
+  });
+  const preflightSession = await issueSession('hls');
+  const preflight = await fetchWithTimeout(
+    `http://127.0.0.1:8888${preflightSession.path}/index.m3u8?cookieCheck=1`,
+    5_000,
   );
+  assert.equal(
+    preflight.status,
+    401,
+    'gateway allowed playback without authorization',
+  );
+  const tamperedToken = `${preflightSession.accessToken[0] === 'a' ? 'b' : 'a'}${preflightSession.accessToken.slice(1)}`;
+  const tamperedAuthorization = `Basic ${Buffer.from(`senkom-viewer:${tamperedToken}`).toString('base64')}`;
+  const tampered = await fetchWithTimeout(
+    `http://127.0.0.1:8888${preflightSession.path}/index.m3u8?cookieCheck=1`,
+    5_000,
+    tamperedAuthorization,
+  );
+  assert.equal(
+    tampered.status,
+    401,
+    'gateway accepted tampered playback authorization',
+  );
+  const cameraBSession = await issueSession('hls', cameraBId);
+  const crossCamera = await fetchWithTimeout(
+    `http://127.0.0.1:8888${preflightSession.path}/index.m3u8?cookieCheck=1`,
+    5_000,
+    cameraBSession.authorization,
+  );
+  assert.equal(
+    crossCamera.status,
+    401,
+    'camera B authorization accessed camera A path',
+  );
+  const publishAttempt = await fetch(`${apiOrigin}/api/v1/gateway/auth`, {
+    method: 'POST',
+    signal: AbortSignal.timeout(5_000),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user: 'senkom-viewer',
+      password: preflightSession.accessToken,
+      action: 'publish',
+      path: 'lab',
+      protocol: 'rtsp',
+    }),
+  });
+  assert.equal(
+    publishAttempt.status,
+    401,
+    'Viewer playback authorization permitted publishing',
+  );
+  assert.equal(
+    (await publisherAuth(`${publisherPassword}-invalid`)).status,
+    401,
+    'Gateway accepted invalid synthetic publisher credential',
+  );
+  record('No-auth, tampered, cross-camera, and publish denial', {
+    status: 'PASS',
+  });
   const containerId = (
-    await run(docker, ['compose', '-f', compose, 'ps', '-q', 'gateway'])
+    await runCompose(['-f', compose, 'ps', '-q', 'gateway'])
   ).stdout.trim();
   assert.ok(containerId, 'gateway container did not start');
   evidence.gatewayImage = (
@@ -491,7 +788,7 @@ try {
 
   if (process.env.SENKOM_GATEWAY_INTERRUPT_TEST === '1') {
     startPublisher();
-    await waitForPlaylist();
+    await waitForPlaylist(await issueSession('hls'));
     await delay(500);
     process.emit('SIGINT');
     await new Promise(() => {});
@@ -504,61 +801,144 @@ try {
     headless: true,
   });
   evidence.versions.browser = browser.version();
+  const missingWhepAuth = await probeWhep(preflightSession, null);
+  assert.equal(
+    missingWhepAuth,
+    401,
+    'gateway accepted unauthenticated WebRTC signaling',
+  );
   startPublisher();
-  await waitForPlaylist();
+  const webrtcSession = await issueSession('webrtc');
+  await waitForPlaylist(await issueSession('hls'));
+  const activeWebrtc = await playback(
+    'WebRTC',
+    `http://127.0.0.1:8889${webrtcSession.path}`,
+    webrtcSession,
+    { keepOpen: true },
+  );
+  const { page: activeWebrtcPage, ...webrtcMetrics } = activeWebrtc;
   record('WebRTC playback', {
     status: 'PASS',
-    metrics: await playback('WebRTC', 'http://127.0.0.1:8889/lab'),
+    metrics: webrtcMetrics,
   });
+  const hlsSession = await issueSession('hls');
   record('HLS playback and segment retrieval', {
     status: 'PASS',
-    metrics: await playback('HLS', 'http://127.0.0.1:8888/lab'),
+    metrics: await playback(
+      'HLS',
+      `http://127.0.0.1:8888${hlsSession.path}`,
+      hlsSession,
+    ),
+  });
+
+  const expiryHlsSession = await issueSession('hls');
+  const expirySegment = await waitForPlaylist(expiryHlsSession);
+  assert.ok(expirySegment, 'HLS playlist has no segment before expiry');
+  const validSegment = await fetchWithTimeout(
+    expirySegment.url,
+    5_000,
+    expiryHlsSession.authorization,
+    expirySegment.cookie,
+  );
+  assert.equal(validSegment.status, 200);
+  await delay(
+    Math.max(
+      0,
+      Math.max(
+        Date.parse(webrtcSession.expiresAt),
+        Date.parse(expiryHlsSession.expiresAt),
+      ) -
+        Date.now() +
+        500,
+    ),
+  );
+  const expiredPlaylist = await fetchWithTimeout(
+    `http://127.0.0.1:8888${expiryHlsSession.path}/index.m3u8?cookieCheck=1`,
+    5_000,
+    expiryHlsSession.authorization,
+  );
+  const expiredSegment = await fetchWithTimeout(
+    expirySegment.url,
+    5_000,
+    expiryHlsSession.authorization,
+    expirySegment.cookie,
+  );
+  assert.equal(expiredPlaylist.status, 401);
+  assert.equal(expiredSegment.status, 401);
+  const expiredWhep = await probeWhep(webrtcSession);
+  assert.equal(
+    expiredWhep,
+    401,
+    'gateway accepted new WebRTC signaling after session expiry',
+  );
+  const framesBeforeExpiryCheck = await activeWebrtcPage
+    .locator('video')
+    .evaluate((video) => video.getVideoPlaybackQuality().totalVideoFrames);
+  await delay(2_000);
+  const framesAfterExpiryCheck = await activeWebrtcPage
+    .locator('video')
+    .evaluate((video) => video.getVideoPlaybackQuality().totalVideoFrames);
+  assert.ok(framesAfterExpiryCheck > framesBeforeExpiryCheck);
+  await activeWebrtcPage.close();
+  record('Expired HLS requests denied; established WebRTC continues', {
+    status: 'PASS',
+    metrics: {
+      expiredPlaylistStatus: expiredPlaylist.status,
+      expiredSegmentStatus: expiredSegment.status,
+      framesBefore: framesBeforeExpiryCheck,
+      framesAfter: framesAfterExpiryCheck,
+    },
   });
 
   await stopPublisher();
+  const unavailableSession = await issueSession('webrtc');
   record('Publisher stopped / WebRTC timeout', {
     status: 'PASS',
-    metrics: await noVideoResult('stream not found'),
+    metrics: await noVideoResult('stream not found', unavailableSession),
   });
   startPublisher();
-  await waitForPlaylist();
+  await waitForPlaylist(await issueSession('hls'));
   record('Publisher restarted', { status: 'PASS' });
 
-  const invalidStarted = Date.now();
+  const invalidSession = await issueSession('hls');
   const invalid = await fetchWithTimeout(
-    'http://127.0.0.1:8888/invalid/index.m3u8',
+    'http://127.0.0.1:8888/invalid/index.m3u8?cookieCheck=1',
     5_000,
+    invalidSession.authorization,
   );
   const invalidBody = await invalid.text();
   assert.ok(
-    invalid.status >= 400 && invalid.status < 600,
-    `invalid path returned unexpected HTTP ${invalid.status}`,
+    [401, 500].includes(invalid.status),
+    `unexpected HTTP ${invalid.status}`,
   );
-  assert.match(invalidBody, /path 'invalid' is not configured/);
-  assert.ok(Date.now() - invalidStarted < 5_000);
-  if (invalid.status >= 500) {
-    evidence.warnings.push({
-      name: 'Invalid HLS path',
-      httpStatus: invalid.status,
-      body: invalidBody,
-      interpretation:
-        'Controlled rejection; HTTP 5xx remains gateway behavior to review.',
-    });
-    record('Invalid path explicitly rejected (HTTP 5xx retained as warning)', {
-      status: 'WARN',
-      detail: invalidBody,
-    });
-  } else {
-    record('Invalid path rejected', {
-      status: 'PASS',
-      detail: `HTTP ${invalid.status}: ${invalidBody}`,
-    });
+  if (invalid.status === 500) {
+    assert.match(invalidBody, /path 'invalid' is not configured/);
+    for (const secret of sensitiveValues)
+      assert.ok(!invalidBody.includes(secret));
+    assert.ok(!/rtsp:|password|credential|admin|token/i.test(invalidBody));
+    evidence.warnings.push(
+      'MediaMTX 1.21.4 rejects unrelated HLS paths with HTTP 500; access remains denied.',
+    );
   }
+  const unaffectedPlaylist = await waitForPlaylist(await issueSession('hls'));
+  assert.ok(
+    unaffectedPlaylist,
+    'invalid path request disrupted configured stream',
+  );
+  record('Unrelated gateway path denied', {
+    status: invalid.status === 401 ? 'PASS' : 'WARN',
+    detail:
+      invalid.status === 500
+        ? 'MediaMTX 1.21.4 rejection surfaces as HTTP 500.'
+        : undefined,
+  });
 
   await stopPublisher();
   startPublisher('mpeg4');
+  const unsupportedSession = await issueSession('webrtc');
   const unsupportedResult = await noVideoResult(
     "doesn't contain any supported codec",
+    unsupportedSession,
   );
   record('Unsupported MPEG-4 Visual codec', {
     status: 'PASS',
@@ -566,8 +946,14 @@ try {
   });
   await stopPublisher();
 
+  assert.equal(
+    (await publisherAuth(publisherPassword)).status,
+    204,
+    'Laravel rejected unchanged synthetic publisher credential after codec test',
+  );
   startPublisher();
-  await waitForPlaylist();
+  await waitForPlaylist(await issueSession('hls'));
+  record('Publisher recovered after codec transition', { status: 'PASS' });
   await browser.close();
   browser = undefined;
   assert.ok(
@@ -584,10 +970,12 @@ try {
     detail: browser.version(),
   });
 
-  await run(docker, ['compose', '-f', compose, 'stop', 'gateway']);
+  await runCompose(['-f', compose, 'stop', 'gateway']);
+  const stoppedSession = await issueSession('hls');
   const stoppedResponse = await fetchWithTimeout(
-    'http://127.0.0.1:8888/lab',
+    `http://127.0.0.1:8888${stoppedSession.path}/index.m3u8`,
     3_000,
+    stoppedSession.authorization,
   ).catch(() => null);
   assert.equal(
     stoppedResponse,
@@ -595,17 +983,22 @@ try {
     'HLS unexpectedly remained available while gateway stopped',
   );
   record('HLS unavailable while gateway stopped', { status: 'PASS' });
-  await run(docker, ['compose', '-f', compose, 'start', 'gateway']);
+  await runCompose(['-f', compose, 'start', 'gateway']);
   await waitFor(
     'gateway restart',
     async () => (await fetchWithTimeout('http://127.0.0.1:8889/')).status < 500,
   );
   record('Gateway restarted', { status: 'PASS' });
   startPublisher();
-  await waitForPlaylist();
+  const recoveredSession = await issueSession('webrtc');
+  await waitForPlaylist(await issueSession('hls'));
   record('Playback recovered after gateway restart', {
     status: 'PASS',
-    metrics: await playback('WebRTC', 'http://127.0.0.1:8889/lab'),
+    metrics: await playback(
+      'WebRTC',
+      `http://127.0.0.1:8889${recoveredSession.path}`,
+      recoveredSession,
+    ),
   });
   record('Interrupted cleanup path', {
     status: 'PASS',
@@ -628,13 +1021,7 @@ try {
     130,
     `interruption cleanup child exited ${interrupted.code}: ${interrupted.stderr}`,
   );
-  const interruptedResources = await run(docker, [
-    'compose',
-    '-f',
-    compose,
-    'ps',
-    '-q',
-  ]);
+  const interruptedResources = await runCompose(['-f', compose, 'ps', '-q']);
   assert.equal(
     interruptedResources.stdout.trim(),
     '',

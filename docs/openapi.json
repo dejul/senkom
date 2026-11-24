@@ -221,6 +221,141 @@
         ]
       }
     },
+    "/viewer/maps/{mapId}/cameras/{cameraId}/playback-sessions": {
+      "post": {
+        "operationId": "createViewerPlaybackSession",
+        "summary": "issue short-lived playback access for an eligible published camera",
+        "x-implementation-phase": "3-02c",
+        "security": [{ "viewerBearer": [] }],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mapId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$"
+            }
+          },
+          {
+            "in": "path",
+            "name": "cameraId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["protocol"],
+                "properties": {
+                  "protocol": { "type": "string", "enum": ["hls", "webrtc"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Short-lived gateway access. Response is private and non-cacheable; it contains no RTSP source data.",
+            "headers": {
+              "Cache-Control": {
+                "schema": { "type": "string", "const": "no-store, private" }
+              },
+              "Pragma": { "schema": { "type": "string", "const": "no-cache" } }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["data", "meta"],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "sessionId",
+                        "mapId",
+                        "cameraId",
+                        "protocol",
+                        "endpoint",
+                        "authScheme",
+                        "authUsername",
+                        "accessToken",
+                        "issuedAt",
+                        "expiresAt",
+                        "expiresInSeconds"
+                      ],
+                      "properties": {
+                        "sessionId": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{24}$"
+                        },
+                        "mapId": { "type": "string" },
+                        "cameraId": { "type": "string" },
+                        "protocol": {
+                          "type": "string",
+                          "enum": ["hls", "webrtc"]
+                        },
+                        "endpoint": { "type": "string", "format": "uri" },
+                        "authScheme": { "type": "string", "const": "Basic" },
+                        "authUsername": {
+                          "type": "string",
+                          "const": "senkom-viewer"
+                        },
+                        "accessToken": {
+                          "type": "string",
+                          "description": "Opaque short-lived credential; never persist, log, or cache."
+                        },
+                        "issuedAt": { "type": "string", "format": "date-time" },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "expiresInSeconds": {
+                          "type": "integer",
+                          "minimum": 15,
+                          "maximum": 300
+                        }
+                      }
+                    },
+                    "meta": { "$ref": "#/components/schemas/MetaV2" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "422": {
+            "description": "Invalid protocol or request fields",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "503": { "$ref": "#/components/responses/Unavailable" }
+        }
+      }
+    },
     "/viewer/version-policy": {
       "get": {
         "operationId": "getVersionPolicy",
