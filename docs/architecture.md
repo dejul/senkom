@@ -40,6 +40,15 @@ Tidak ada TBD yang memblokir build foundation; semua integrasi operasional ditun
    kabel tidak menghasilkan konektivitas; route corridor harus eksplisit.
 8. Laravel tanpa model, migrasi, seed DB, auth, queue, atau CRUD dulu. Database baru
    diperkenalkan Phase 2 beserta migrasi/FK/transaction dan integration tests.
+9. Phase 3 / 3-02a stores private CCTV source configuration separately from public
+   `Camera` metadata. `camera_sources.source_uri` uses Laravel encryption at rest,
+   and its composite map/camera relationship preserves map isolation. The internal
+   store has no HTTP retrieval route; snapshots and viewer serializers stay unchanged.
+   APP_KEY must be protected and backed up: rotating it makes existing ciphertext
+   unreadable unless the operator performs a separately approved re-encryption.
+   Before gateway provisioning, enforce approved camera CIDR/host and port allowlists,
+   validate resolved addresses at connection time against rebinding, deny loopback,
+   link-local, multicast and metadata-service ranges, and restrict gateway egress.
 
 ## Alur tanggung jawab fase berikutnya
 

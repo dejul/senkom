@@ -3,6 +3,10 @@
 > **Status:** Rencana usulan pengganti `docs/codegen-plan.md` setelah ditinjau dan diterapkan ke repository. Ini adalah rencana dokumentasi, bukan bukti implementasi atau hasil tes baru.
 > **Sumber:** `codegen-plan(2).md`, `phase-2-checkpoint(3).md`, `phase-2-wip-audit(1).md`, `phase-2-verification(1).md`, `phase-2-approval(2).md`, dan SENKOM Technical Specification v1.1.0-draft.
 
+## Repository state update (2026-11-24)
+
+Historical plan state below predates the current repository. Phase 2 is CLOSED; Parent 3-01 is VERIFIED. Micro-batch 3-02a is now **WIP** on `feature/phase-3`: private source persistence and local acceptance work exist, but PR review, merge, and exact-SHA postmerge CI remain open. 3-02b and 3-02c remain NOT STARTED.
+
 ## Keadaan terverifikasi dari dokumen terakhir
 
 - Phase 0 dan 1 selesai secara lokal; UAT empat monitor fisik masih terbuka.
@@ -126,7 +130,7 @@ Parent 2C-01 mencakup provisi dan isolasi keamanan origin/token, bukan timeout a
 | ----------- | --------------------------------------------- | ------------ | -------------------------------------------- |
 | `3-01a`     | Gateway selection and lab config (no secrets) | VERIFIED     | Version/codec/transport documented           |
 | `3-01b`     | One synthetic stream via WebRTC/HLS           | VERIFIED     | Browser harness, PR CI and postmerge CI pass |
-| `3-02a`     | Private camera source storage + secret canary | NOT STARTED  | Viewer metadata contains no RTSP secret      |
+| `3-02a`     | Private camera source storage + secret canary | WIP          | Viewer metadata contains no RTSP secret      |
 | `3-02b`     | Admin camera form + RBAC                      | NOT STARTED  | Write role and validation                    |
 | `3-02c`     | Scoped short-lived playback session           | NOT STARTED  | Expiry/origin/unauthorized tested            |
 | `3-03a`     | Single player happy path + loading/live       | NOT STARTED  | Muted autoplay in Electron                   |
@@ -139,7 +143,7 @@ Parent 2C-01 mencakup provisi dan isolasi keamanan origin/token, bukan timeout a
 | `3-06a`     | Gateway outage/reconnect/expiry regression    | NOT STARTED  | Failure matrix passes                        |
 | `3-06b`     | Gate Phase 3 runbook and acceptance           | NOT STARTED  | No unmeasured hardware claim                 |
 
-3-01a VERIFIED melalui PR #68 merge `f20f5bb88210c3cffb5bdd9248dec3f8a9eed998`; CI PR `45131572484` dan CI postmerge `45133582969` PASS 16/16 mandatory, 0 skip. 3-01b VERIFIED melalui PR #70 merge `4cd01973a76ad695ebea93f9495b92d50f0801ff`; CI PR `45161863658` dan postmerge `45163520055` PASS 16/16 mandatory, 0 skip. Invalid HLS path mengembalikan HTTP 500 dengan rejection eksplisit pada MediaMTX 1.21.4 dan tetap dicatat WARN. Detail pada [verifikasi 3-01b](phase-3-verification.md#3-01b-persisted-harness-finalization-2026-11-23). Parent 3-01 closure direkam di [verifikasi Phase 3](phase-3-verification.md#parent-3-01-closure-2026-11-24); 3-02a NOT STARTED.
+3-01a VERIFIED melalui PR #68 merge `f20f5bb88210c3cffb5bdd9248dec3f8a9eed998`; CI PR `45131572484` dan CI postmerge `45133582969` PASS 16/16 mandatory, 0 skip. 3-01b VERIFIED melalui PR #70 merge `4cd01973a76ad695ebea93f9495b92d50f0801ff`; CI PR `45161863658` dan postmerge `45163520055` PASS 16/16 mandatory, 0 skip. Invalid HLS path mengembalikan HTTP 500 dengan rejection eksplisit pada MediaMTX 1.21.4 dan tetap dicatat WARN. Detail pada [verifikasi 3-01b](phase-3-verification.md#3-01b-persisted-harness-finalization-2026-11-23). Parent 3-01 closure direkam di [verifikasi Phase 3](phase-3-verification.md#parent-3-01-closure-2026-11-24). Status/evidence terkini 3-02a: [verifikasi Phase 3](phase-3-verification.md#3-02a--private-cctv-source-storage-encryption--map-isolation-2026-11-24).
 
 ### Phase 4 — Windows installer and controlled update
 

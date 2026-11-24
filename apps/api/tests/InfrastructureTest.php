@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 use App\Models\{InfrastructureMap, MapRevision, Site, User};
-use App\Services\{InventoryStore, MapRules, MapWorkflow};
+use App\Services\{CameraSourceStore, InventoryStore, MapRules, MapWorkflow};
 use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Bootstrap\LoadConfiguration;
 use Illuminate\Foundation\Testing\TestCase;
@@ -87,6 +87,34 @@ final class InfrastructureTest extends TestCase
         self::assertCount(1, $site->devices->first()->ports);
         $content['logicalLinks'] = [];
         $this->putJson('/api/v1/admin/map/draft', $content, ['If-Match' => $this->etag()])->assertOk()->assertJsonPath('data.content.fiberCores.0.status', 'unallocated');
+    }
+
+    public function test_private_camera_source_survives_public_inventory_replacement_and_never_enters_viewer_snapshots(): void
+    {
+        $uri = 'rtsp://camera-user-sentinel:camera-password-sentinel@camera.example.invalid/live?token=query-secret-sentinel';
+        $sources = app(CameraSourceStore::class);
+        $source = $sources->create('test-map', ['cameraId' => 'demo-camera-01', 'sourceType' => 'rtsp', 'sourceUri' => $uri, 'enabled' => true]);
+        $ciphertext = DB::table('camera_sources')->where('map_id', 'test-map')->where('id', $source->id)->value('source_uri');
+
+        $draft = $this->content();
+        $draft['cameras'][0]['name'] = 'Public metadata update';
+        $this->workflow->store->replace($this->workflow->map('test-map'), $draft);
+        self::assertSame($ciphertext, DB::table('camera_sources')->where('map_id', 'test-map')->where('id', $source->id)->value('source_uri'));
+        self::assertSame($uri, $sources->findForCamera('test-map', 'demo-camera-01')->source_uri);
+
+        $publishedId = $this->publish();
+        $snapshot = MapRevision::where('map_id', 'test-map')->whereKey($publishedId)->firstOrFail()->snapshot;
+        foreach ([$snapshot, $this->viewerMap('1')->assertOk()->getContent(), $this->viewerMap('2')->assertOk()->getContent()] as $payload) {
+            self::assertStringNotContainsString($uri, $payload);
+            self::assertStringNotContainsString('camera-user-sentinel', $payload);
+            self::assertStringNotContainsString('camera-password-sentinel', $payload);
+            self::assertStringNotContainsString('query-secret-sentinel', $payload);
+        }
+
+        $withoutCamera = $this->content();
+        $withoutCamera['cameras'] = array_values(array_filter($withoutCamera['cameras'], fn ($camera) => $camera['id'] !== 'demo-camera-01'));
+        $this->workflow->store->replace($this->workflow->map('test-map'), $withoutCamera);
+        self::assertDatabaseMissing('camera_sources', ['map_id' => 'test-map', 'id' => $source->id]);
     }
 
     public function test_ring_identity_order_direction_and_visual_separation(): void

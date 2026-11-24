@@ -98,6 +98,8 @@ final class InventoryStore
             $table = (new $class())->getTable();
             $created[$table] = DB::table($table)->where('map_id', $map->id)->pluck('created_at', 'id')->all();
         }
+        $cameraIds = array_column($content['cameras'] ?? [], 'id');
+        $privateSources = $cameraIds === [] ? [] : DB::table('camera_sources')->where('map_id', $map->id)->whereIn('camera_id', $cameraIds)->get()->all();
         foreach (array_reverse(self::TABLES) as $table) DB::table($table)->where('map_id', $map->id)->delete();
         $now = now()->format('Y-m-d H:i:s');
         $details = ['fiber_cable_details' => [], 'power_cable_details' => []];
@@ -144,6 +146,8 @@ final class InventoryStore
             foreach (array_chunk($inserts, 300) as $chunk) DB::table($table)->insert($chunk);
         }
         foreach ($details + $relations as $table => $rows) foreach (array_chunk($rows, 300) as $chunk) DB::table($table)->insert($chunk);
+        // Source ciphertext is copied as opaque data; only sources for retained camera IDs return.
+        foreach (array_chunk(array_map(fn ($row) => (array) $row, $privateSources), 300) as $chunk) DB::table('camera_sources')->insert($chunk);
         $map->fill([
             'data_origin' => $content['dataOrigin'], 'demo_label' => $content['demoLabel'] ?? null,
             'width' => $content['layout']['width'], 'height' => $content['layout']['height'], 'layers' => $content['layers'],

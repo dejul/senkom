@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\{Artisan, DB};
 
 require __DIR__.'/../vendor/autoload.php';
 
-// ponytail: disposable 2A-01b verification only; use a newly initialized instance for every run.
+// ponytail: migration lifecycle runs only on a newly initialized owned disposable instance.
 $checks = 0;
 function verify(bool $condition, string $label): void
 {
@@ -28,10 +28,10 @@ try {
     $meta = json_decode(file_get_contents($argv[1] ?? ''), true, 32, JSON_THROW_ON_ERROR);
     $artifactRoot = realpath(__DIR__.'/../../../.artifacts');
     $data = realpath($meta['data']);
-    if (!$artifactRoot || !$data || !preg_match('~/migration-2a01b-[a-f0-9]{32}/data$~', normalizedPath($data))
+    if (!$artifactRoot || !$data || !preg_match('~/migration-(?:2a01b|3-02a)-[a-f0-9]{32}/data$~', normalizedPath($data))
         || !str_starts_with(normalizedPath($data), normalizedPath($artifactRoot).'/')
         || !is_int($meta['port']) || $meta['port'] < 1024 || $meta['port'] > 65535) {
-        throw new RuntimeException('Only a fresh 2A-01b artifact instance is allowed.');
+        throw new RuntimeException('Only a fresh owned migration-test artifact instance is allowed.');
     }
     $run = dirname($data);
     $pdo = new PDO('mysql:host=127.0.0.1;port='.$meta['port'].';charset=utf8mb4', 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
@@ -40,7 +40,7 @@ try {
         && normalizedPath($identity['datadir']) === normalizedPath($data) && $identity['db'] === null, 'fresh server identity');
     $databases = $pdo->query('SHOW DATABASES')->fetchAll(PDO::FETCH_COLUMN);
     verify(array_diff($databases, ['information_schema', 'mysql', 'performance_schema', 'sys']) === [], 'no existing user databases on instance');
-    $database = 'senkom_migration_2a01b_'.bin2hex(random_bytes(8)).'_test';
+    $database = 'senkom_migration_3_02a_'.bin2hex(random_bytes(8)).'_test';
     $pdo->exec('CREATE DATABASE `'.$database.'` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs');
     $identity['db'] = $database;
     $identity['app_env'] = 'testing';
@@ -81,9 +81,9 @@ try {
     $guard();
     verify($tables() === [], 'disposable database starts with zero tables');
     $artisan('migrate');
-    $expectedTables = ['audit_logs', 'cables', 'cameras', 'corridor_cables', 'device_ports', 'devices', 'fiber_cable_details', 'fiber_cores', 'fiber_splices', 'fiber_terminations', 'logical_link_core_segments', 'logical_links', 'map_edges', 'map_nodes', 'map_revisions', 'maps', 'migrations', 'power_cable_details', 'power_circuit_cables', 'power_circuits', 'route_corridors', 'sites', 'users', 'viewer_tokens'];
-    verify($tables() === $expectedTables, 'all 23 application tables plus migrations ledger created');
-    verify(DB::table('migrations')->count() === 1, 'one migration applied');
+    $expectedTables = ['audit_logs', 'cables', 'camera_sources', 'cameras', 'corridor_cables', 'device_ports', 'devices', 'fiber_cable_details', 'fiber_cores', 'fiber_splices', 'fiber_terminations', 'logical_link_core_segments', 'logical_links', 'map_edges', 'map_nodes', 'map_revisions', 'maps', 'migrations', 'power_cable_details', 'power_circuit_cables', 'power_circuits', 'route_corridors', 'sites', 'user_map_roles', 'users', 'viewer_tokens'];
+    verify($tables() === $expectedTables, 'all 24 application tables plus migrations ledger created');
+    verify(DB::table('migrations')->count() === 3, 'all three migrations applied');
     $before = $snapshot();
     verify(count($before['triggers']) === 4, 'four immutable history triggers created');
     file_put_contents($run.'/schema-up.json', json_encode($before, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
@@ -102,19 +102,32 @@ try {
         $fk = DB::select('SELECT k.COLUMN_NAME AS col, k.REFERENCED_COLUMN_NAME AS ref, r.DELETE_RULE AS rule FROM information_schema.KEY_COLUMN_USAGE k JOIN information_schema.REFERENTIAL_CONSTRAINTS r ON r.CONSTRAINT_SCHEMA=k.CONSTRAINT_SCHEMA AND r.CONSTRAINT_NAME=k.CONSTRAINT_NAME AND r.TABLE_NAME=k.TABLE_NAME WHERE k.TABLE_SCHEMA=DATABASE() AND k.TABLE_NAME=? AND k.REFERENCED_TABLE_NAME=? ORDER BY k.ORDINAL_POSITION', [$table, $target]);
         verify(array_column($fk, 'col') === ['map_id', $key] && array_column($fk, 'ref') === ['map_id', 'id'] && array_unique(array_column($fk, 'rule')) === ['RESTRICT'], $table.' composite FK with RESTRICT');
     }
+    $sourceColumns = DB::select('SELECT COLUMN_NAME AS name, COLUMN_TYPE AS type, IS_NULLABLE AS nullable FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?', ['camera_sources']);
+    $sourceColumns = array_column($sourceColumns, null, 'name');
+    verify($sourceColumns['source_uri']->type === 'longtext' && $sourceColumns['source_uri']->nullable === 'NO', 'camera_sources encrypted payload has longtext capacity');
+    verify($sourceColumns['enabled']->type === 'tinyint(1)' && $sourceColumns['enabled']->nullable === 'NO', 'camera_sources enabled defaults to safe boolean state');
+    $sourceIndexes = DB::select('SELECT INDEX_NAME AS name, GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX) AS cols FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND NON_UNIQUE = 0 GROUP BY INDEX_NAME', ['camera_sources']);
+    $sourceIndexes = array_column($sourceIndexes, 'cols', 'name');
+    verify(($sourceIndexes['PRIMARY'] ?? '') === 'map_id,id' && in_array('map_id,camera_id', $sourceIndexes, true), 'camera source map-scoped primary and camera uniqueness');
+    $sourceFk = DB::select('SELECT k.COLUMN_NAME AS col, k.REFERENCED_COLUMN_NAME AS ref, r.DELETE_RULE AS rule FROM information_schema.KEY_COLUMN_USAGE k JOIN information_schema.REFERENTIAL_CONSTRAINTS r ON r.CONSTRAINT_SCHEMA=k.CONSTRAINT_SCHEMA AND r.CONSTRAINT_NAME=k.CONSTRAINT_NAME AND r.TABLE_NAME=k.TABLE_NAME WHERE k.TABLE_SCHEMA=DATABASE() AND k.TABLE_NAME=? AND k.REFERENCED_TABLE_NAME=? ORDER BY k.ORDINAL_POSITION', ['camera_sources', 'cameras']);
+    verify(array_column($sourceFk, 'col') === ['map_id', 'camera_id'] && array_column($sourceFk, 'ref') === ['map_id', 'id'] && array_unique(array_column($sourceFk, 'rule')) === ['CASCADE'], 'camera source composite map-scoped camera FK cascades camera deletion');
+    verify(DB::table('camera_sources')->count() === 0, 'private source migration creates no camera credentials or source defaults');
 
     DB::beginTransaction();
     $site = fn ($map, $id, $code) => ['map_id' => $map, 'id' => $id, 'code' => $code, 'name' => 'Synthetic site', 'type' => 'field_site', 'status' => '{}'];
     $device = fn ($map, $id, $code, $siteId) => ['map_id' => $map, 'id' => $id, 'code' => $code, 'site_id' => $siteId, 'type' => 'switch', 'status' => '{}'];
     $port = fn ($map, $id, $deviceId, $name) => ['map_id' => $map, 'id' => $id, 'device_id' => $deviceId, 'name' => $name, 'type' => 'ethernet', 'status' => '{}'];
+    $camera = fn ($map, $id, $siteId) => ['map_id' => $map, 'id' => $id, 'code' => $id, 'site_id' => $siteId, 'name' => 'Synthetic camera', 'enabled' => true, 'created_at' => now(), 'updated_at' => now()];
     foreach (['a', 'b'] as $map) {
         DB::table('maps')->insert(['id' => $map, 'name' => 'Synthetic map', 'data_origin' => 'demo', 'width' => 100, 'height' => 100, 'layers' => '[]']);
         DB::table('sites')->insert($site($map, 'shared', 'same'));
         DB::table('devices')->insert($device($map, 'shared', 'same', 'shared'));
         DB::table('device_ports')->insert($port($map, 'shared', 'shared', 'same'));
+        DB::table('cameras')->insert($camera($map, 'shared-camera', 'shared'));
     }
     verify(DB::table('device_ports')->count() === 2, 'same IDs/codes/names permitted across maps');
     DB::table('sites')->insert($site('b', 'only-b', 'only-b'));
+    DB::table('cameras')->insert($camera('b', 'only-camera-b', 'only-b'));
     DB::table('devices')->insert($device('b', 'only-b', 'only-b', 'only-b'));
     DB::table('device_ports')->insert($port('b', 'other-port', 'only-b', 'same'));
     verify(DB::table('device_ports')->where('map_id', 'b')->where('name', 'same')->count() === 2, 'same port name permitted on different devices');
@@ -125,10 +138,17 @@ try {
         }
         throw new RuntimeException('FAIL '.$label.' was accepted');
     };
+    $reject('camera cross-map site', 1452, fn () => DB::table('cameras')->insert($camera('a', 'bad-camera', 'only-b')));
     $reject('device missing site', 1452, fn () => DB::table('devices')->insert($device('a', 'bad', 'bad', 'missing')));
     $reject('port missing device', 1452, fn () => DB::table('device_ports')->insert($port('a', 'bad', 'missing', 'bad')));
     $reject('device cross-map site', 1452, fn () => DB::table('devices')->insert($device('a', 'bad', 'bad', 'only-b')));
     $reject('port cross-map device', 1452, fn () => DB::table('device_ports')->insert($port('a', 'bad', 'only-b', 'bad')));
+    $source = ['map_id' => 'a', 'id' => 'source-a', 'camera_id' => 'shared-camera', 'source_type' => 'rtsp', 'source_uri' => 'encrypted-test-value', 'enabled' => false, 'created_at' => now(), 'updated_at' => now()];
+    DB::table('camera_sources')->insert($source);
+    $reject('camera source cross-map camera', 1452, fn () => DB::table('camera_sources')->insert(array_replace($source, ['id' => 'source-cross', 'camera_id' => 'only-camera-b'])));
+    $reject('camera source duplicate per camera', 1062, fn () => DB::table('camera_sources')->insert(array_replace($source, ['id' => 'source-duplicate'])));
+    DB::table('cameras')->where('map_id', 'a')->where('id', 'shared-camera')->delete();
+    verify(DB::table('camera_sources')->where('map_id', 'a')->where('id', 'source-a')->doesntExist(), 'camera deletion cascades its private source');
     foreach (['sites' => $site('a', 'shared', 'new'), 'devices' => $device('a', 'shared', 'new', 'shared'), 'device_ports' => $port('a', 'shared', 'shared', 'new')] as $table => $row) {
         $reject($table.' duplicate PK', 1062, fn () => DB::table($table)->insert($row));
     }
@@ -148,6 +168,7 @@ try {
         verify(DB::table($table)->count() === count($fixture[$key]), $table.' seed count matches Phase 0 fixture');
     }
     verify(DB::table('users')->count() === 0 && DB::table('viewer_tokens')->count() === 0, 'seeder creates no accounts or credentials');
+    verify(DB::table('camera_sources')->count() === 0, 'DEMO seeder creates no private camera sources');
     verify(DB::table('audit_logs')->where('action', 'map.seed_demo')->count() === 1, 'seed audit created');
     $sites = Site::with('devices.ports')->get();
     $deviceCount = $portCount = 0;
@@ -185,7 +206,7 @@ try {
         return json_encode($schema, JSON_THROW_ON_ERROR);
     };
     verify($normalizeLedger($after) === $normalizeLedger($before), 're-up schema and triggers match except ledger next ID');
-    verify(DB::table('migrations')->count() === 1 && DB::table('maps')->count() === 0, 're-up ledger restored and application data empty');
+    verify(DB::table('migrations')->count() === 3 && DB::table('maps')->count() === 0, 're-up ledger restored and application data empty');
     echo 'RESULT '.$checks.' checks PASS; database retained for inspection: '.$database.PHP_EOL;
 } catch (Throwable $error) {
     fwrite(STDERR, get_class($error).': '.$error->getMessage().PHP_EOL);

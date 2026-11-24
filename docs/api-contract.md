@@ -16,6 +16,12 @@ perluas OpenAPI untuk bootstrap/site/cable/health viewer, admin CRUD, pagination
 draft validation/publication, optimistic concurrency, dan audit.
 Playback-session POST dibakukan Phase 3 setelah gateway/auth dipilih.
 
+Micro-batch 3-02a adds private source persistence only through internal
+`CameraSourceStore` operations. It adds no HTTP endpoint or OpenAPI field. RTSP URLs
+and credentials remain encrypted at rest and excluded from model JSON/arrays,
+published snapshots, viewer API payloads, and Desktop-compatible cache data. Admin
+source forms/RBAC remain 3-02b; playback sessions remain 3-02c.
+
 ## Otorisasi rencana
 
 | Role                  | Hak operasional                                | Batas                                      |
