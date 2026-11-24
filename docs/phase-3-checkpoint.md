@@ -1,8 +1,8 @@
 # Checkpoint Phase 3
 
-## 3-02b implementation checkpoint (2026-11-24)
+## 3-02b postmerge closure checkpoint (2026-11-24)
 
-Status: **WIP** pada `feature/phase-3` dari `origin/main` `b82b48757fa815a6340d218776c0b81e2b3e81fb`. Project owner meminta hanya 3-02b. Admin source API dan form memakai storage terenkripsi 3-02a. `system_admin` dapat membuat, mengganti, menyalakan/mematikan, dan menghapus sumber; editor/publisher dengan grant map hanya membaca status aman. Source URI ditulis saja dan tidak masuk draft/publish. PHPUnit penuh 150/4308 asersi, frontend 197/197, browser Admin E2E, lint/kontrak/build/Desktop smoke PASS lokal. Composer audit memakai cache lokal akibat Packagist timeout; CI wajib menjalankan audit online. PR, review manual, dan CI masih terbuka. Parent 3-02 WIP; 3-02c NOT STARTED. Detail [verifikasi](phase-3-verification.md#3-02b--admin-source-management-2026-11-24).
+Status: **WIP — AWAITING CLOSURE MERGE**. PR [#74](https://github.com/dejul/senkom/pull/74) MERGED manual oleh `dejul` pada 2026-11-24 05:55:35 UTC (12:55:35 WIB). Head `51f1dec6937f3084cd26de73967234bd151690ed`; merge SHA `331ebf1e0317a1bce2ad2f13d84c589716d418ed`, ancestor `origin/main` (exit 0). [CI postmerge](https://github.com/dejul/senkom/actions/runs/45336700413), event `push` pada exact merge SHA: 16/16 mandatory PASS, 0 skipped, Composer audit PASS. Review teknis 3-02b PASS; acceptance, actual RBAC matrix, dan batas keamanan ada pada [verifikasi](phase-3-verification.md#3-02b--admin-source-management-2026-11-24). Local Composer audit `--no-cache` timed out (`curl error 28`); local cached audit PASS bukan online evidence. Documentation closure PR awaits manual merge and its postmerge CI. Parent 3-02 WIP; 3-02c NOT STARTED. Tidak ada akses CCTV operasional, gateway provisioning, atau playback.
 
 ## 3-02a postmerge closure (2026-11-24)
 
