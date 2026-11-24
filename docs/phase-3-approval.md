@@ -1,5 +1,7 @@
 # Persetujuan Phase 3
 
+Project owner meminta implementasi **3-02b — CCTV Source Admin Forms, Management API & RBAC** pada 2026-11-24. Otorisasi terbatas pada Admin Web/API, kontrak, tes dan dokumentasi 3-02b. Tidak mencakup koneksi CCTV operasional, kredensial nyata, gateway provisioning, playback session 3-02c, atau deployment produksi. Merge perubahan auth/route/kontrak tetap melalui review manual sesuai [Git workflow](git-workflow.md).
+
 Recovery request project owner **Phase 3 / 3-01b RECOVERY** pada 2026-11-23 secara eksplisit mengotorisasi PC Windows pengembangan SENKOM sebagai host lab untuk instalasi Docker Desktop, FFmpeg, dan browser automation serta pengujian lokal. Batas tetap berlaku: tanpa deployment/konfigurasi CCTV/firewall produksi, tanpa kredensial CCTV, tanpa perubahan atau penghapusan distribusi WSL, tanpa mengubah service aplikasi lain, tanpa Docker reset/prune, dan tanpa public port binding. Persetujuan ini tidak mencakup perubahan Windows Features, reboot, atau penerimaan Docker Subscription Service Agreement.
 
 Recovery request lanjutan menyatakan organisasi memenuhi tier Docker gratis dan project owner berwenang menerima agreement bila terms yang tampil sesuai tier tersebut. Ini memperbarui catatan kelayakan sebelumnya; acceptance aktual tetap belum dilakukan.

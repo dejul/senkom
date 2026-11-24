@@ -235,6 +235,109 @@ app.whenReady().then(async () => {
 
     const admin = await browser('e2e-admin-' + Date.now());
     await login(admin, credentials.email, credentials.password);
+    await until(admin, "document.querySelector('#source-camera') !== null");
+    await js(
+      admin,
+      "(()=>{const select=document.querySelector('#source-camera');select.value='demo-camera-01';select.dispatchEvent(new Event('change',{bubbles:true}))})()",
+    );
+    await until(admin, "document.querySelector('#camera-source-uri') !== null");
+    await js(
+      admin,
+      "(()=>{const input=document.querySelector('#camera-source-uri');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'rtsp://browser-user:browser-password@camera.example.invalid/live?channel=1&subtype=0');input.dispatchEvent(new Event('input',{bubbles:true}));input.closest('form').requestSubmit()})()",
+    );
+    await until(
+      admin,
+      "document.querySelector('[aria-label=\"Sumber CCTV\"]')?.textContent.includes('Terkonfigurasi')",
+    );
+    assert.equal(
+      await js(
+        admin,
+        "document.querySelector('#camera-source-uri') === null && !document.body.textContent.includes('browser-password') && !JSON.stringify(localStorage).includes('browser-password') && !JSON.stringify(sessionStorage).includes('browser-password')",
+      ),
+      true,
+    );
+    const sourceStatus = await request(
+      admin,
+      '/admin/cameras/demo-camera-01/source',
+    );
+    assert.equal(sourceStatus.status, 200);
+    assert.equal(sourceStatus.json.data.configured, true);
+    assert.equal(
+      JSON.stringify(sourceStatus.json).includes('browser-password'),
+      false,
+    );
+    await click(admin, 'Ganti URI sumber');
+    await until(admin, "document.querySelector('#camera-source-uri') !== null");
+    await js(
+      admin,
+      "(()=>{const input=document.querySelector('#camera-source-uri');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'rtsp://unsaved-user:unsaved-password@camera.example.invalid/live');input.dispatchEvent(new Event('input',{bubbles:true}));const select=document.querySelector('#source-camera');select.value='demo-camera-04';select.dispatchEvent(new Event('change',{bubbles:true}))})()",
+    );
+    await until(
+      admin,
+      "document.querySelector('#camera-source-uri')?.value === '' && document.querySelector('[aria-label=\"Sumber CCTV\"]')?.textContent.includes('Belum dikonfigurasi')",
+    );
+    await js(
+      admin,
+      "(()=>{const select=document.querySelector('#source-camera');select.value='demo-camera-01';select.dispatchEvent(new Event('change',{bubbles:true}))})()",
+    );
+    await until(
+      admin,
+      "document.querySelector('[aria-label=\"Sumber CCTV\"]')?.textContent.includes('Terkonfigurasi')",
+    );
+    await click(admin, 'Ganti URI sumber');
+    await until(admin, "document.querySelector('#camera-source-uri') !== null");
+    await click(admin, 'Batal');
+    assert.equal(
+      await js(admin, "document.querySelector('#camera-source-uri') === null"),
+      true,
+    );
+    await click(admin, 'Ganti URI sumber');
+    await js(
+      admin,
+      "(()=>{const input=document.querySelector('#camera-source-uri');Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'rtsps://replacement-user:replacement-password@camera.example.invalid/live?subtype=1');input.dispatchEvent(new Event('input',{bubbles:true}));input.closest('form').requestSubmit()})()",
+    );
+    await until(
+      admin,
+      "document.querySelector('#camera-source-uri') === null && document.querySelector('[aria-label=\"Sumber CCTV\"]')?.textContent.includes('tersimpan')",
+    );
+    assert.equal(
+      JSON.stringify(
+        (await request(admin, '/admin/cameras/demo-camera-01/source')).json,
+      ).includes('replacement-password'),
+      false,
+    );
+    assert.equal(
+      await js(
+        admin,
+        "[...document.querySelectorAll('button')].some(x=>x.textContent.trim()==='Hapus sumber')",
+      ),
+      true,
+    );
+    await js(
+      admin,
+      'window.__sourceConfirm=window.confirm; window.confirm=()=>false; true',
+    );
+    await click(admin, 'Hapus sumber');
+    assert.equal(
+      (await request(admin, '/admin/cameras/demo-camera-01/source')).json.data
+        .configured,
+      true,
+    );
+    await js(admin, 'window.confirm=()=>true; true');
+    await click(admin, 'Hapus sumber');
+    await until(
+      admin,
+      "document.querySelector('[aria-label=\"Sumber CCTV\"]')?.textContent.includes('Belum dikonfigurasi')",
+    );
+    assert.equal(
+      (await request(admin, '/admin/cameras/demo-camera-01/source')).json.data
+        .configured,
+      false,
+    );
+    await js(
+      admin,
+      'window.confirm=window.__sourceConfirm; delete window.__sourceConfirm; true',
+    );
     const before = await request(admin, '/admin/map/draft');
     assert.equal(before.status, 200);
     await js(
@@ -364,6 +467,14 @@ app.whenReady().then(async () => {
 
     const editor = await browser('e2e-editor-' + Date.now());
     await login(editor, credentials.editorEmail, credentials.password);
+    await until(editor, "document.querySelector('#source-camera') !== null");
+    assert.equal(
+      await js(
+        editor,
+        "document.querySelector('[aria-label=\"Sumber CCTV\"]')?.querySelector('form') === null",
+      ),
+      true,
+    );
     assert.equal(
       await js(
         editor,

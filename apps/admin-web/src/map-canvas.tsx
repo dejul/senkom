@@ -23,6 +23,7 @@ import { FoForms } from './fo-forms';
 import { LogicalForms } from './logical-forms';
 import { PowerForms } from './power-forms';
 import { CorridorForms } from './corridor-forms';
+import { CameraSourceForms } from './camera-source';
 
 type View = { x: number; y: number; width: number; height: number };
 type Layer = MapContentV2['layers'][number];
@@ -874,11 +875,13 @@ export function MapCanvas({
   source,
   editable = false,
   publishable = false,
+  cameraSourceAdmin = false,
   rollback,
 }: {
   source: MapSource;
   editable?: boolean;
   publishable?: boolean;
+  cameraSourceAdmin?: boolean;
   rollback?: { before: string; after: DraftMap } | undefined;
 }) {
   const kind = source.kind;
@@ -890,6 +893,7 @@ export function MapCanvas({
   const [history, setHistory] = useState<EditHistory | null>(null);
   const [error, setError] = useState('');
   const [etag, setEtag] = useState<string | null>(null);
+  const [mapId, setMapId] = useState('');
   const pendingRef = useRef(false);
   const handledRollback = useRef<typeof rollback>(undefined);
   const [pending, setPending] = useState<
@@ -950,9 +954,10 @@ export function MapCanvas({
         ).then((content) => ({
           content,
           etag: null,
+          mapId: '',
         }))
     )
-      .then(({ content, etag: loadedEtag }) => {
+      .then(({ content, etag: loadedEtag, mapId: loadedMapId }) => {
         if (!active) return;
         setHistory({
           baseline: content,
@@ -961,6 +966,7 @@ export function MapCanvas({
           future: [],
         });
         setEtag(loadedEtag);
+        setMapId(loadedMapId ?? '');
         setConflict(false);
         setView({
           x: 0,
@@ -1489,6 +1495,14 @@ export function MapCanvas({
           onChange={(next) =>
             setHistory((current) => current && commitEdit(current, () => next))
           }
+        />
+      )}
+      {kind === 'draft' && mapId && map && (
+        <CameraSourceForms
+          mapId={mapId}
+          cameras={map.cameras}
+          sites={map.sites}
+          canManage={cameraSourceAdmin}
         />
       )}
       {canEdit && map && (

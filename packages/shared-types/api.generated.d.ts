@@ -691,6 +691,42 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/admin/cameras/{id}/source': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Safe configuration status for map camera
+     * @description system_admin may mutate on an existing map; editor and publisher may read safe status. Viewer bearer is denied. Source changes take effect independently of draft publish. Omitted sourceUri on PATCH preserves ciphertext; empty or masked replacement is rejected. DELETE removes source only. No connectivity test.
+     */
+    get: operations['getCameraSourceStatus'];
+    /**
+     * Explicitly replace existing write-only source URI
+     * @description system_admin may mutate on an existing map; editor and publisher may read safe status. Viewer bearer is denied. Source changes take effect independently of draft publish. Omitted sourceUri on PATCH preserves ciphertext; empty or masked replacement is rejected. DELETE removes source only. No connectivity test.
+     */
+    put: operations['replaceCameraSource'];
+    /**
+     * Create write-only camera source
+     * @description system_admin may mutate on an existing map; editor and publisher may read safe status. Viewer bearer is denied. Source changes take effect independently of draft publish. Omitted sourceUri on PATCH preserves ciphertext; empty or masked replacement is rejected. DELETE removes source only. No connectivity test.
+     */
+    post: operations['createCameraSource'];
+    /**
+     * Explicitly remove source; camera metadata stays
+     * @description system_admin may mutate on an existing map; editor and publisher may read safe status. Viewer bearer is denied. Source changes take effect independently of draft publish. Omitted sourceUri on PATCH preserves ciphertext; empty or masked replacement is rejected. DELETE removes source only. No connectivity test.
+     */
+    delete: operations['deleteCameraSource'];
+    options?: never;
+    head?: never;
+    /**
+     * Change enabled state without resubmitting source URI
+     * @description system_admin may mutate on an existing map; editor and publisher may read safe status. Viewer bearer is denied. Source changes take effect independently of draft publish. Omitted sourceUri on PATCH preserves ciphertext; empty or masked replacement is rejected. DELETE removes source only. No connectivity test.
+     */
+    patch: operations['setCameraSourceEnabled'];
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1202,6 +1238,31 @@ export interface components {
       label?: components['schemas']['Name'];
       zIndex?: number;
       metadata?: components['schemas']['Metadata'];
+    };
+    CameraSourceStatus: {
+      mapId: string;
+      cameraId: string;
+      configured: boolean;
+      enabled: boolean;
+      /** @enum {string|null} */
+      sourceType: 'rtsp' | null;
+      /** Format: date-time */
+      updatedAt: string | null;
+    };
+    CameraSourceResponse: {
+      data: components['schemas']['CameraSourceStatus'];
+      meta: components['schemas']['MetaV2'];
+    };
+    CameraSourceWrite: {
+      /** @enum {string} */
+      sourceType: 'rtsp';
+      /** @description Write-only RTSP or RTSPS URI. Never returned or logged. */
+      sourceUri: string;
+      /** @default false */
+      enabled: boolean;
+    };
+    CameraSourceEnabled: {
+      enabled: boolean;
     };
     Id: string;
     Name: string;
@@ -14857,6 +14918,373 @@ export interface operations {
       };
       /** @description Rejected request; no partial mutation */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+    };
+  };
+  getCameraSourceStatus: {
+    parameters: {
+      query?: {
+        /** @description Configured default map when omitted; access checked before camera lookup. */
+        mapId?: string;
+      };
+      header?: never;
+      path: {
+        /** @description Camera ID within authorized map. */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Safe status only; never contains URI, host, credentials or ciphertext */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CameraSourceResponse'];
+        };
+      };
+      /** @description Unauthenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Forbidden or map grant absent */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Camera or source unavailable in authorized map */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description CSRF token missing or expired */
+      419: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Invalid input; no URI echoed */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+    };
+  };
+  replaceCameraSource: {
+    parameters: {
+      query?: {
+        /** @description Configured default map when omitted; access checked before camera lookup. */
+        mapId?: string;
+      };
+      header?: never;
+      path: {
+        /** @description Camera ID within authorized map. */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CameraSourceWrite'];
+      };
+    };
+    responses: {
+      /** @description Safe status only; never contains URI, host, credentials or ciphertext */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CameraSourceResponse'];
+        };
+      };
+      /** @description Unauthenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Forbidden or map grant absent */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Camera or source unavailable in authorized map */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description CSRF token missing or expired */
+      419: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Invalid input; no URI echoed */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+    };
+  };
+  createCameraSource: {
+    parameters: {
+      query?: {
+        /** @description Configured default map when omitted; access checked before camera lookup. */
+        mapId?: string;
+      };
+      header?: never;
+      path: {
+        /** @description Camera ID within authorized map. */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CameraSourceWrite'];
+      };
+    };
+    responses: {
+      /** @description Safe status only; never contains URI, host, credentials or ciphertext */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CameraSourceResponse'];
+        };
+      };
+      /** @description Unauthenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Forbidden or map grant absent */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Camera or source unavailable in authorized map */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description CSRF token missing or expired */
+      419: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Invalid input; no URI echoed */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+    };
+  };
+  deleteCameraSource: {
+    parameters: {
+      query?: {
+        /** @description Configured default map when omitted; access checked before camera lookup. */
+        mapId?: string;
+      };
+      header?: never;
+      path: {
+        /** @description Camera ID within authorized map. */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Safe status only; never contains URI, host, credentials or ciphertext */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CameraSourceResponse'];
+        };
+      };
+      /** @description Unauthenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Forbidden or map grant absent */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Camera or source unavailable in authorized map */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description CSRF token missing or expired */
+      419: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Invalid input; no URI echoed */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+    };
+  };
+  setCameraSourceEnabled: {
+    parameters: {
+      query?: {
+        /** @description Configured default map when omitted; access checked before camera lookup. */
+        mapId?: string;
+      };
+      header?: never;
+      path: {
+        /** @description Camera ID within authorized map. */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CameraSourceEnabled'];
+      };
+    };
+    responses: {
+      /** @description Safe status only; never contains URI, host, credentials or ciphertext */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CameraSourceResponse'];
+        };
+      };
+      /** @description Unauthenticated */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Forbidden or map grant absent */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Camera or source unavailable in authorized map */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description CSRF token missing or expired */
+      419: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Invalid input; no URI echoed */
+      422: {
         headers: {
           [name: string]: unknown;
         };

@@ -5,7 +5,7 @@
 
 ## Repository state update (2026-11-24)
 
-Historical plan state below predates the current repository. Phase 2 is CLOSED; Parent 3-01 is VERIFIED. Micro-batch 3-02a passed technical acceptance and PR #72 postmerge CI; its documentation closure PR remains pending. Parent 3-02 remains WIP; 3-02b and 3-02c remain NOT STARTED.
+Historical plan state below predates the current repository. Phase 2 is CLOSED; Parent 3-01 and 3-02a are VERIFIED. PR #73 closure merged at `b82b48757fa815a6340d218776c0b81e2b3e81fb`; postmerge CI `45330687797` passed 16/16 mandatory checks, zero skipped. Micro-batch 3-02b is WIP on `feature/phase-3`; Parent 3-02 remains WIP and 3-02c remains NOT STARTED.
 
 ## Keadaan terverifikasi dari dokumen terakhir
 
@@ -131,7 +131,7 @@ Parent 2C-01 mencakup provisi dan isolasi keamanan origin/token, bukan timeout a
 | `3-01a`     | Gateway selection and lab config (no secrets) | VERIFIED     | Version/codec/transport documented           |
 | `3-01b`     | One synthetic stream via WebRTC/HLS           | VERIFIED     | Browser harness, PR CI and postmerge CI pass |
 | `3-02a`     | Private camera source storage + secret canary | VERIFIED     | Viewer metadata contains no RTSP secret      |
-| `3-02b`     | Admin camera form + RBAC                      | NOT STARTED  | Write role and validation                    |
+| `3-02b`     | Admin camera form + RBAC                      | WIP          | Write role and validation                    |
 | `3-02c`     | Scoped short-lived playback session           | NOT STARTED  | Expiry/origin/unauthorized tested            |
 | `3-03a`     | Single player happy path + loading/live       | NOT STARTED  | Muted autoplay in Electron                   |
 | `3-03b`     | Player cleanup/error/unsupported codec        | NOT STARTED  | Unmount cancels session/decoder              |
