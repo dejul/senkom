@@ -2,7 +2,7 @@
 
 ## Latest 3-01b finalization (2026-11-23)
 
-Status: **WIP pending PR/CI**. Persisted opt-in browser harness: [`scripts/phase3-gateway-browser-e2e.mjs`](../scripts/phase3-gateway-browser-e2e.mjs), command `npm run test:gateway:e2e`. Node/npm exact repository versions; WebRTC/HLS and full failure matrix rerun, JSON evidence at ignored `.artifacts/phase3-gateway-evidence.json`. Loopback-only gateway, source/browser/container cleanup passed. Invalid HLS path is controlled HTTP 500 on MediaMTX 1.21.4 and remains explicit WARN, not contract PASS. Regression/audit evidence: [verification](phase-3-verification.md#3-01b-persisted-harness-finalization-2026-11-23). PR/CI/postmerge CI pending. Parent 3-01 WIP; 3-02a NOT STARTED.
+Status: **3-01b VERIFIED; Parent 3-01 VERIFIED — CLOSED** after PR #70 and exact-SHA CI. PR CI `45161863658`; postmerge CI `45163520055`; both 16/16 mandatory PASS, zero skipped. Closure evidence and parent gate: [verification](phase-3-verification.md#parent-3-01-closure-2026-11-24). Harness: [`scripts/phase3-gateway-browser-e2e.mjs`](../scripts/phase3-gateway-browser-e2e.mjs), command `npm run test:gateway:e2e`. Invalid HLS path remains explicit HTTP 500 WARN. 3-02a NOT STARTED.
 
 ## 3-01b runtime recovery update (2026-11-23)
 
