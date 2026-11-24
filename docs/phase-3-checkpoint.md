@@ -1,5 +1,9 @@
 # Checkpoint Phase 3
 
+## 3-02a postmerge closure (2026-11-24)
+
+PR [#72](https://github.com/dejul/senkom/pull/72) MERGED manual pada 2026-11-24 04:35:04 UTC (11:35:04 WIB), head `c016e07015942a710e82e7bf8f7cc4d75f89ceff`, merge SHA `43b10bc00836c8f35d570f494b2eb35c31216aff`. SHA merge adalah ancestor `origin/main` (exit 0). [CI postmerge `45327404103`](https://github.com/dejul/senkom/actions/runs/45327404103) event `push` pada exact merge SHA: 16/16 mandatory PASS, 0 skipped. Tinjauan teknis keamanan PASS; detail di [verifikasi](phase-3-verification.md#3-02a--private-cctv-source-storage-encryption--map-isolation-2026-11-24). Dokumentasi closure ini memerlukan PR dan CI tersendiri sebelum status 3-02a final di `main`. Parent 3-02 WIP; 3-02b READY — NOT STARTED; 3-02c NOT STARTED. CCTV operasional belum diakses.
+
 ## Latest 3-02a checkpoint (2026-11-24)
 
 Status: **WIP** on `feature/phase-3`, implementation commit `47d7e0406477d4f4e9258808ef0c505f9c4759d7`, based on `origin/main` / Parent 3-01 merge `a3337e5952badb884d8b44c97fa28278aa738f52`. User explicitly requested only micro-batch 3-02a. Backend storage uses `camera_sources` with Laravel encrypted `source_uri`, composite `(map_id,camera_id)` FK to `cameras`, one source per camera/map, and no HTTP retrieval endpoint. Public snapshot/viewer canaries PASS locally. Details and commands: [verification](phase-3-verification.md#3-02a--private-cctv-source-storage-encryption--map-isolation-2026-11-24).
