@@ -50,6 +50,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/viewer/maps/{mapId}/cameras/{cameraId}/playback-sessions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** issue short-lived playback access for an eligible published camera */
+    post: operations['createViewerPlaybackSession'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/viewer/version-policy': {
     parameters: {
       query?: never;
@@ -2210,6 +2227,82 @@ export interface operations {
       403: components['responses']['Forbidden'];
       /** @description Unsupported or incompatible schema */
       406: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      503: components['responses']['Unavailable'];
+    };
+  };
+  createViewerPlaybackSession: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        mapId: string;
+        cameraId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          /** @enum {string} */
+          protocol: 'hls' | 'webrtc';
+        };
+      };
+    };
+    responses: {
+      /** @description Short-lived gateway access. Response is private and non-cacheable; it contains no RTSP source data. */
+      200: {
+        headers: {
+          'Cache-Control'?: 'no-store, private';
+          Pragma?: 'no-cache';
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            data: {
+              sessionId: string;
+              mapId: string;
+              cameraId: string;
+              /** @enum {string} */
+              protocol: 'hls' | 'webrtc';
+              /** Format: uri */
+              endpoint: string;
+              /** @constant */
+              authScheme: 'Basic';
+              /** @constant */
+              authUsername: 'senkom-viewer';
+              /** @description Opaque short-lived credential; never persist, log, or cache. */
+              accessToken: string;
+              /** Format: date-time */
+              issuedAt: string;
+              /** Format: date-time */
+              expiresAt: string;
+              expiresInSeconds: number;
+            };
+            meta: components['schemas']['MetaV2'];
+          };
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      404: components['responses']['NotFound'];
+      /** @description Invalid protocol or request fields */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorResponse'];
+        };
+      };
+      /** @description Rate limit exceeded */
+      429: {
         headers: {
           [name: string]: unknown;
         };

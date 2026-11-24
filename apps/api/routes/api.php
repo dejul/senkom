@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\{AuthController, CameraSourceController, MapController};
-use App\Http\Middleware\{AdminAccess, InfrastructureAccess, ViewerAccess};
+use App\Http\Controllers\{AuthController, CameraSourceController, MapController, PlaybackSessionController};
+use App\Http\Middleware\{AdminAccess, InfrastructureAccess, PlaybackOrigin, ViewerAccess};
 use App\Services\InventoryStore;
 
 Route::get('/health', fn () => response()->json([
@@ -13,6 +13,8 @@ Route::get('/health', fn () => response()->json([
 ]));
 
 if (!config('senkom.enabled')) return;
+
+Route::post('/gateway/auth', [PlaybackSessionController::class, 'gatewayAuth'])->middleware('throttle:6000,1');
 
 Route::middleware([InfrastructureAccess::class.':admin', 'web'])->group(function () {
     Route::get('/auth/session', [AuthController::class, 'session']);
@@ -41,9 +43,12 @@ Route::middleware([InfrastructureAccess::class.':admin', 'web'])->group(function
         Route::match(['PUT', 'PATCH', 'DELETE'], '/{resource}/{id}', [MapController::class, 'mutate'])->where('resource', $resources)->middleware(AdminAccess::class.':infrastructure_editor');
     });
 });
-Route::prefix('viewer')->middleware([InfrastructureAccess::class.':viewer', ViewerAccess::class])->group(function () {
+Route::options('/viewer/maps/{mapId}/cameras/{id}/playback-sessions', [PlaybackSessionController::class, 'preflight'])
+    ->middleware([InfrastructureAccess::class.':viewer', PlaybackOrigin::class]);
+Route::prefix('viewer')->middleware([InfrastructureAccess::class.':viewer', ViewerAccess::class, PlaybackOrigin::class])->group(function () {
     Route::get('/map', [MapController::class, 'viewer']);
     Route::get('/{resource}', [MapController::class, 'viewer'])->where('resource', 'cameras');
     Route::get('/{resource}/{id}', [MapController::class, 'viewer'])->where('resource', 'sites|cables');
+    Route::post('/maps/{mapId}/cameras/{id}/playback-sessions', [PlaybackSessionController::class, 'issue'])->name('viewer.playback.issue');
     Route::match(['POST', 'PUT', 'PATCH', 'DELETE'], '/{path}', fn () => abort(403))->where('path', '.*');
 });
