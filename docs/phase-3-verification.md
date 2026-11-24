@@ -2,7 +2,7 @@
 
 ## 3-02a — Private CCTV source storage, encryption & map isolation (2026-11-24)
 
-Status: **WIP**. Branch `feature/phase-3`; `HEAD` and fetched `origin/main` are `a3337e5952badb884d8b44c97fa28278aa738f52`, the Parent 3-01 closure merge. User explicitly requested this micro-batch. No source has been committed; PR CI, security-sensitive manual review, merge, and exact-SHA postmerge CI are **NOT RUN**. Parent 3-02 remains WIP; 3-02b and 3-02c remain NOT STARTED.
+Status: **WIP**. Branch `feature/phase-3`; implementation commit `47d7e0406477d4f4e9258808ef0c505f9c4759d7`, based on fetched `origin/main` / Parent 3-01 closure merge `a3337e5952badb884d8b44c97fa28278aa738f52`. User explicitly requested this micro-batch. PR CI, security-sensitive manual review, merge, and exact-SHA postmerge CI are **NOT RUN**. Parent 3-02 remains WIP; 3-02b and 3-02c remain NOT STARTED.
 
 Design: additive `camera_sources` table, with one row per `(map_id,camera_id)`, composite primary key `(map_id,id)`, unique `(map_id,camera_id)`, map-scoped composite FK to `cameras`, and cascading deletion with its camera. Camera already carries map-scoped site association; no duplicate `site_id`. Laravel `encrypted` cast protects canonical `source_uri`; `LONGTEXT` holds ciphertext. The model hides the field, disables mass assignment, and its only relations are map-scoped. `CameraSourceStore` offers internal create/update/find/disable/delete only; no HTTP route, playback session, gateway provisioning, or public serializer was added. RTSP and RTSPS accepted; network/DNS checks are deliberately absent. APP_KEY must remain protected/backed up; rotation makes stored values unreadable without an approved re-encryption procedure.
 

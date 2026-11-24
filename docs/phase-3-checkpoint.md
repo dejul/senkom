@@ -2,7 +2,7 @@
 
 ## Latest 3-02a checkpoint (2026-11-24)
 
-Status: **WIP** on `feature/phase-3`, based on `origin/main` / Parent 3-01 merge `a3337e5952badb884d8b44c97fa28278aa738f52`. User explicitly requested only micro-batch 3-02a. Backend storage uses `camera_sources` with Laravel encrypted `source_uri`, composite `(map_id,camera_id)` FK to `cameras`, one source per camera/map, and no HTTP retrieval endpoint. Public snapshot/viewer canaries PASS locally. Details and commands: [verification](phase-3-verification.md#3-02a--private-cctv-source-storage-encryption--map-isolation-2026-11-24).
+Status: **WIP** on `feature/phase-3`, implementation commit `47d7e0406477d4f4e9258808ef0c505f9c4759d7`, based on `origin/main` / Parent 3-01 merge `a3337e5952badb884d8b44c97fa28278aa738f52`. User explicitly requested only micro-batch 3-02a. Backend storage uses `camera_sources` with Laravel encrypted `source_uri`, composite `(map_id,camera_id)` FK to `cameras`, one source per camera/map, and no HTTP retrieval endpoint. Public snapshot/viewer canaries PASS locally. Details and commands: [verification](phase-3-verification.md#3-02a--private-cctv-source-storage-encryption--map-isolation-2026-11-24).
 
 Local evidence: disposable MySQL 8.4.11 migration lifecycle 109 checks PASS; focused source tests 5 tests / 68 assertions PASS; full PHPUnit 147 tests / 4,225 assertions / 0 skipped PASS. Node 24.22.2/npm 11.19.1 lint, frontend tests, build, Electron smoke, policy tests, and audits PASS. Exact-SHA PR CI, manual security review, merge, and postmerge CI remain NOT RUN. Parent 3-02 remains WIP; 3-02b/3-02c NOT STARTED. No production DB, camera, network, service, or firewall used.
 
