@@ -18,6 +18,17 @@ seed DB, atau kredensial aktual dibuat pada Phase 0.
 | Operasi      | cameras, display_profiles, audit_logs, desktop_releases | secret kamera private, audit immutable, channel/version unik     |
 | Auth         | users, user_map_roles, scoped tokens                    | policy server-side dan expiry                                    |
 
+### Phase 3 / 3-02a private camera sources
+
+Additive table `camera_sources` stores one private RTSP source per camera and map.
+Primary key `(map_id,id)`, unique `(map_id,camera_id)`, and composite FK to
+`cameras(map_id,id)` prevent cross-map association; camera deletion cascades its
+private source. `source_uri` is a Laravel encrypted cast backed by `LONGTEXT`, since
+ciphertext is larger than plaintext. The table stores no site ID because the camera
+already carries a map-scoped site FK. Internal backend access only; no API, session,
+gateway provisioning, or viewer snapshot field is added. APP_KEY rotation requires
+an approved re-encryption procedure before old values can be read again.
+
 Kontrak awal power circuit memiliki `cableIds`; Phase 2 memerlukan relasi berurutan
 `power_circuit_cables(circuit_id, cable_id, sequence)` untuk menyimpannya tanpa JSON FK.
 Ini memperjelas hubungan rangkaian dengan kabel fisik, bukan status telemetry.

@@ -1,8 +1,14 @@
 # Checkpoint Phase 3
 
+## Latest 3-02a checkpoint (2026-11-24)
+
+Status: **WIP** on `feature/phase-3`, implementation commit `47d7e0406477d4f4e9258808ef0c505f9c4759d7`, based on `origin/main` / Parent 3-01 merge `a3337e5952badb884d8b44c97fa28278aa738f52`. User explicitly requested only micro-batch 3-02a. Backend storage uses `camera_sources` with Laravel encrypted `source_uri`, composite `(map_id,camera_id)` FK to `cameras`, one source per camera/map, and no HTTP retrieval endpoint. Public snapshot/viewer canaries PASS locally. Details and commands: [verification](phase-3-verification.md#3-02a--private-cctv-source-storage-encryption--map-isolation-2026-11-24).
+
+Local evidence: disposable MySQL 8.4.11 migration lifecycle 109 checks PASS; focused source tests 5 tests / 68 assertions PASS; full PHPUnit 147 tests / 4,225 assertions / 0 skipped PASS. Node 24.22.2/npm 11.19.1 lint, frontend tests, build, Electron smoke, policy tests, and audits PASS. Initial implementation-head PR CI [`45325825194`](https://github.com/dejul/senkom/actions/runs/45325825194) on `428bd4ae1012494c4f2376337234a8e3f9c038f4` passed 16/16 mandatory checks, zero skipped. This checkpoint change requires fresh exact-head CI; manual security review, merge, and postmerge CI remain open. Parent 3-02 remains WIP; 3-02b/3-02c NOT STARTED. No production DB, camera, network, service, or firewall used.
+
 ## Latest 3-01b finalization (2026-11-23)
 
-Status: **3-01b VERIFIED; Parent 3-01 VERIFIED — CLOSED** after PR #70 and exact-SHA CI. PR CI `45161863658`; postmerge CI `45163520055`; both 16/16 mandatory PASS, zero skipped. Closure evidence and parent gate: [verification](phase-3-verification.md#parent-3-01-closure-2026-11-24). Harness: [`scripts/phase3-gateway-browser-e2e.mjs`](../scripts/phase3-gateway-browser-e2e.mjs), command `npm run test:gateway:e2e`. Invalid HLS path remains explicit HTTP 500 WARN. 3-02a NOT STARTED.
+Status: **3-01b VERIFIED; Parent 3-01 VERIFIED — CLOSED** after PR #70 and exact-SHA CI. PR CI `45161863658`; postmerge CI `45163520055`; both 16/16 mandatory PASS, zero skipped. Closure evidence and parent gate: [verification](phase-3-verification.md#parent-3-01-closure-2026-11-24). Harness: [`scripts/phase3-gateway-browser-e2e.mjs`](../scripts/phase3-gateway-browser-e2e.mjs), command `npm run test:gateway:e2e`. Invalid HLS path remains explicit HTTP 500 WARN. 3-02a status changed to WIP in latest checkpoint above.
 
 ## 3-01b runtime recovery update (2026-11-23)
 
