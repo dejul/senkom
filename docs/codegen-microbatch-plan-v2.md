@@ -5,7 +5,7 @@
 
 ## Repository state update (2026-11-24)
 
-Historical plan state below predates the current repository. Phase 2 is CLOSED; Parent 3-01 and 3-02a are VERIFIED. PR #73 closure merged at `b82b48757fa815a6340d218776c0b81e2b3e81fb`; postmerge CI `45330687797` passed 16/16 mandatory checks, zero skipped. Micro-batch 3-02b is WIP on `feature/phase-3`; Parent 3-02 remains WIP and 3-02c remains NOT STARTED.
+Historical plan state below predates the current repository. Phase 2 is CLOSED; Parent 3-01 and 3-02a are VERIFIED. PR #73 closure merged at `b82b48757fa815a6340d218776c0b81e2b3e81fb`; postmerge CI `45330687797` passed 16/16 mandatory checks, zero skipped. PR #74 implementation merged at `331ebf1e0317a1bce2ad2f13d84c589716d418ed`; exact-SHA postmerge CI `45336700413` passed 16/16 mandatory checks, zero skipped. 3-02b implementation acceptance passed; documentation closure PR and its manual merge remain pending. Parent 3-02 remains WIP and 3-02c remains NOT STARTED.
 
 ## Keadaan terverifikasi dari dokumen terakhir
 
@@ -126,22 +126,22 @@ Parent 2C-01 mencakup provisi dan isolasi keamanan origin/token, bukan timeout a
 
 ### Phase 3 — CCTV media gateway
 
-| Micro-batch | Pekerjaan tunggal                             | Status awal* | Bukti minimal / exit gate                    |
-| ----------- | --------------------------------------------- | ------------ | -------------------------------------------- |
-| `3-01a`     | Gateway selection and lab config (no secrets) | VERIFIED     | Version/codec/transport documented           |
-| `3-01b`     | One synthetic stream via WebRTC/HLS           | VERIFIED     | Browser harness, PR CI and postmerge CI pass |
-| `3-02a`     | Private camera source storage + secret canary | VERIFIED     | Viewer metadata contains no RTSP secret      |
-| `3-02b`     | Admin camera form + RBAC                      | WIP          | Write role and validation                    |
-| `3-02c`     | Scoped short-lived playback session           | NOT STARTED  | Expiry/origin/unauthorized tested            |
-| `3-03a`     | Single player happy path + loading/live       | NOT STARTED  | Muted autoplay in Electron                   |
-| `3-03b`     | Player cleanup/error/unsupported codec        | NOT STARTED  | Unmount cancels session/decoder              |
-| `3-04a`     | Carousel visible-only stream lifecycle        | NOT STARTED  | Hidden feeds release resources               |
-| `3-04b`     | Focused view/pause/restore                    | NOT STARTED  | Return to prior carousel position            |
-| `3-04c`     | Per-camera retry/backoff/isolation            | NOT STARTED  | One stream failure not global                |
-| `3-05a`     | Lab metrics harness + stream-count sweep      | NOT STARTED  | CPU/RAM/GPU/bandwidth/codec recorded         |
-| `3-05b`     | Target PC benchmark and capacity decision     | BLOCKED      | Requires target hardware, actual evidence    |
-| `3-06a`     | Gateway outage/reconnect/expiry regression    | NOT STARTED  | Failure matrix passes                        |
-| `3-06b`     | Gate Phase 3 runbook and acceptance           | NOT STARTED  | No unmeasured hardware claim                 |
+| Micro-batch | Pekerjaan tunggal                             | Status awal* | Bukti minimal / exit gate                                    |
+| ----------- | --------------------------------------------- | ------------ | ------------------------------------------------------------ |
+| `3-01a`     | Gateway selection and lab config (no secrets) | VERIFIED     | Version/codec/transport documented                           |
+| `3-01b`     | One synthetic stream via WebRTC/HLS           | VERIFIED     | Browser harness, PR CI and postmerge CI pass                 |
+| `3-02a`     | Private camera source storage + secret canary | VERIFIED     | Viewer metadata contains no RTSP secret                      |
+| `3-02b`     | Admin camera form + RBAC                      | WIP          | Implementation verified; documentation closure merge pending |
+| `3-02c`     | Scoped short-lived playback session           | NOT STARTED  | Expiry/origin/unauthorized tested                            |
+| `3-03a`     | Single player happy path + loading/live       | NOT STARTED  | Muted autoplay in Electron                                   |
+| `3-03b`     | Player cleanup/error/unsupported codec        | NOT STARTED  | Unmount cancels session/decoder                              |
+| `3-04a`     | Carousel visible-only stream lifecycle        | NOT STARTED  | Hidden feeds release resources                               |
+| `3-04b`     | Focused view/pause/restore                    | NOT STARTED  | Return to prior carousel position                            |
+| `3-04c`     | Per-camera retry/backoff/isolation            | NOT STARTED  | One stream failure not global                                |
+| `3-05a`     | Lab metrics harness + stream-count sweep      | NOT STARTED  | CPU/RAM/GPU/bandwidth/codec recorded                         |
+| `3-05b`     | Target PC benchmark and capacity decision     | BLOCKED      | Requires target hardware, actual evidence                    |
+| `3-06a`     | Gateway outage/reconnect/expiry regression    | NOT STARTED  | Failure matrix passes                                        |
+| `3-06b`     | Gate Phase 3 runbook and acceptance           | NOT STARTED  | No unmeasured hardware claim                                 |
 
 3-01a VERIFIED melalui PR #68 merge `f20f5bb88210c3cffb5bdd9248dec3f8a9eed998`; CI PR `45131572484` dan CI postmerge `45133582969` PASS 16/16 mandatory, 0 skip. 3-01b VERIFIED melalui PR #70 merge `4cd01973a76ad695ebea93f9495b92d50f0801ff`; CI PR `45161863658` dan postmerge `45163520055` PASS 16/16 mandatory, 0 skip. Invalid HLS path mengembalikan HTTP 500 dengan rejection eksplisit pada MediaMTX 1.21.4 dan tetap dicatat WARN. Detail pada [verifikasi 3-01b](phase-3-verification.md#3-01b-persisted-harness-finalization-2026-11-23). Parent 3-01 closure direkam di [verifikasi Phase 3](phase-3-verification.md#parent-3-01-closure-2026-11-24). Status/evidence terkini 3-02a: [verifikasi Phase 3](phase-3-verification.md#3-02a--private-cctv-source-storage-encryption--map-isolation-2026-11-24).
 
