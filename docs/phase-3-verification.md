@@ -2,7 +2,7 @@
 
 ## 3-01b persisted harness finalization (2026-11-23)
 
-Status: **WIP** until PR CI, merge, and exact-SHA postmerge CI pass. Branch `feature/phase-3`, base/HEAD `b45b44b82c620c431bd0e6ef72c1796e2235ec7f`; `origin/main` matched and branch had zero divergence before these changes. Historical baseline CI [`45138640928`](https://github.com/dejul/senkom/actions/runs/45138640928) is not 3-01b CI.
+Status: **VERIFIED**. Branch `feature/phase-3`, PR [#70](https://github.com/dejul/senkom/pull/70) head `60325224536ac1e5957ffb73fa43ff98b3bdec29`; merge SHA `4cd01973a76ad695ebea93f9495b92d50f0801ff`. PR CI [`45161863658`](https://github.com/dejul/senkom/actions/runs/45161863658) and exact-SHA postmerge CI [`45163520055`](https://github.com/dejul/senkom/actions/runs/45163520055) both PASS all 16 mandatory checks, zero skipped. `origin/main` contains merge SHA. Parent 3-01 closure is tracked separately below.
 
 Harness: [`scripts/phase3-gateway-browser-e2e.mjs`](../scripts/phase3-gateway-browser-e2e.mjs), opt-in `npm run test:gateway:e2e`. Pin: Playwright `1.56.1`; no browser download. Set `FFMPEG_PATH`; optional `DOCKER_PATH`, `BROWSER_CHANNEL=chrome|msedge`, or `BROWSER_EXECUTABLE`. Evidence JSON: `.artifacts/phase3-gateway-evidence.json` (ignored local artifact). It requires Node `24.22.2` / npm `11.19.1`, verifies Compose resource ownership and loopback bindings, and cleans only its own Compose project on completion or SIGINT/SIGTERM.
 
@@ -23,7 +23,11 @@ Regression on Node/npm exact repo versions: `npm run lint` exit 0; `npm test` 35
 
 Security: no credentials or production sources; renderer/API unchanged; `rg -n -i 'rtsp://' apps/desktop apps/admin-web packages` found no direct RTSP URL. Compose `docker inspect` showed `127.0.0.1` only on all four gateway ports. No DB, migration, firewall, WSL, or production service changes.
 
-CI/PR/postmerge CI: **NOT RUN**. Keep 3-01b and Parent 3-01 WIP until PR/CI and exact-SHA postmerge evidence pass. Parent 3-01 closure remains pending; 3-02a NOT STARTED.
+Parent closure evidence: 3-01a VERIFIED (PR #68); 3-01b VERIFIED (PR #70), with real WebRTC/HLS playback, persisted harness, loopback isolation, failure handling and cleanup. `rg -n -i 'rtsp://' apps/desktop apps/admin-web packages` found no direct RTSP URL; Electron playback unchanged. Parent closure is recorded in the dedicated closure PR. 3-02a NOT STARTED.
+
+## Parent 3-01 closure (2026-11-24)
+
+Status: **PARENT 3-01 VERIFIED — CLOSED**. Roadmap gate in [`docs/codegen-plan.md`](codegen-plan.md): one synthetic lab stream available through browser WebRTC/HLS and no Electron RTSP decoder. Child 3-01a is VERIFIED through PR #68; 3-01b is VERIFIED through PR #70. Browser runtime and failure matrix evidence is above. Security review found no direct RTSP URL in Desktop, Admin Web, or packages; gateway ports were loopback-only; cleanup passed. Closure documentation PR carries this record and requires manual merge because parent-only evidence is not eligible for Auto-Merge V2. Phase 3 continues with 3-02a NOT STARTED; this closure does not authorize implementation.
 
 ## 3-01b runtime recovery (2026-11-23)
 
