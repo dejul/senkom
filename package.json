@@ -27,6 +27,7 @@
     "format": "prettier . --write",
     "test": "vitest run",
     "test:gateway:e2e": "node scripts/phase3-gateway-browser-e2e.mjs",
+    "test:parent3-02:e2e": "powershell -NoProfile -File scripts/phase3-parent-browser-e2e.ps1",
     "build": "npm run contracts:check && npm run typecheck && npm run build --workspaces --if-present",
     "smoke:desktop": "node scripts/smoke-desktop.mjs",
     "check:api": "composer --working-dir apps/api check",

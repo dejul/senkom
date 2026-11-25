@@ -5,14 +5,14 @@
 
 ## Repository state update (2026-11-25)
 
-Current state: Phase 2 is CLOSED; Parent 3-01, 3-02a, and 3-02b are VERIFIED. PR #73 merge `b82b48757fa815a6340d218776c0b81e2b3e81fb` and PR #74/#75 merge SHAs `331ebf1e0317a1bce2ad2f13d84c589716d418ed` / `fd9c6a02fa14959c1b787bd3dbebf2b060d1f1c2` are recorded with exact-SHA postmerge CI. 3-02c implementation and owner security acceptance are recorded; documentation closure PR merge and exact-SHA CI remain pending. Parent 3-02 remains WIP.
+Current state: Phase 2 is CLOSED; Parent 3-01 and children 3-02a/3-02b/3-02c are VERIFIED. PR #77 closure merge `2f9c4b7f7aa075afac4e8f308d1c5a83b668126c` and exact-SHA postmerge CI `45520526340` passed 16/16 mandatory checks, zero skipped, Composer audit PASS. Parent 3-02 remains WIP pending acceptance remediation review and merge.
 
 ## Keadaan terverifikasi dari dokumen terakhir
 
 - Phase 0 dan 1 selesai secara lokal; UAT empat monitor fisik masih terbuka.
 - **2A-00 VERIFIED** (HTTP 500 session dan Composer strict telah diperbaiki); **jangan ulangi**.
 - 2A-01 sampai 2A-11 masih **WIP** menurut audit, walaupun banyak kode sudah ada. Status child WIP di bawah berarti **belum diverifikasi secara independen**, bukan berarti belum ada implementasi.
-- Phase 2B/2C and children 3-01/3-02a/3-02b are verified; 3-02c is WIP. Parent 3-02 remains WIP. Phase 4/5 are not started and require separate approval.
+- Phase 2B/2C and children 3-01/3-02a/3-02b/3-02c are verified. Parent 3-02 remains WIP. Phase 4/5 are not started and require separate approval.
 - Status historis di bawah mengikuti rencana awal; gunakan current state dan checkpoint/verifikasi Phase 3 untuk bukti repository terbaru.
 
 ## Aturan eksekusi yang menghemat konteks
@@ -126,22 +126,22 @@ Parent 2C-01 mencakup provisi dan isolasi keamanan origin/token, bukan timeout a
 
 ### Phase 3 — CCTV media gateway
 
-| Micro-batch | Pekerjaan tunggal                             | Status awal* | Bukti minimal / exit gate                                                                                                                                                                                              |
-| ----------- | --------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `3-01a`     | Gateway selection and lab config (no secrets) | VERIFIED     | Version/codec/transport documented                                                                                                                                                                                     |
-| `3-01b`     | One synthetic stream via WebRTC/HLS           | VERIFIED     | Browser harness, PR CI and postmerge CI pass                                                                                                                                                                           |
-| `3-02a`     | Private camera source storage + secret canary | VERIFIED     | Viewer metadata contains no RTSP secret                                                                                                                                                                                |
-| `3-02b`     | Admin camera form + RBAC                      | VERIFIED     | PR #75 merge `fd9c6a02fa14959c1b787bd3dbebf2b060d1f1c2`; CI `45338767751` 16/16, zero skipped                                                                                                                          |
-| `3-02c`     | Scoped short-lived playback session           | WIP          | Implementation accepted after owner security review decision and one-time postmerge remediation; docs closure PR merge and exact-SHA CI remain the final gate. 15 PASS/1 documented WARN; 16/16 CI PASS, zero skipped. |
-| `3-03a`     | Single player happy path + loading/live       | NOT STARTED  | Muted autoplay in Electron                                                                                                                                                                                             |
-| `3-03b`     | Player cleanup/error/unsupported codec        | NOT STARTED  | Unmount cancels session/decoder                                                                                                                                                                                        |
-| `3-04a`     | Carousel visible-only stream lifecycle        | NOT STARTED  | Hidden feeds release resources                                                                                                                                                                                         |
-| `3-04b`     | Focused view/pause/restore                    | NOT STARTED  | Return to prior carousel position                                                                                                                                                                                      |
-| `3-04c`     | Per-camera retry/backoff/isolation            | NOT STARTED  | One stream failure not global                                                                                                                                                                                          |
-| `3-05a`     | Lab metrics harness + stream-count sweep      | NOT STARTED  | CPU/RAM/GPU/bandwidth/codec recorded                                                                                                                                                                                   |
-| `3-05b`     | Target PC benchmark and capacity decision     | BLOCKED      | Requires target hardware, actual evidence                                                                                                                                                                              |
-| `3-06a`     | Gateway outage/reconnect/expiry regression    | NOT STARTED  | Failure matrix passes; evaluate design, placement, and acceptance for active-session revocation. No implementation scope approved.                                                                                     |
-| `3-06b`     | Gate Phase 3 runbook and acceptance           | NOT STARTED  | No unmeasured hardware claim                                                                                                                                                                                           |
+| Micro-batch | Pekerjaan tunggal                             | Status awal* | Bukti minimal / exit gate                                                                                                          |
+| ----------- | --------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `3-01a`     | Gateway selection and lab config (no secrets) | VERIFIED     | Version/codec/transport documented                                                                                                 |
+| `3-01b`     | One synthetic stream via WebRTC/HLS           | VERIFIED     | Browser harness, PR CI and postmerge CI pass                                                                                       |
+| `3-02a`     | Private camera source storage + secret canary | VERIFIED     | Viewer metadata contains no RTSP secret                                                                                            |
+| `3-02b`     | Admin camera form + RBAC                      | VERIFIED     | PR #75 merge `fd9c6a02fa14959c1b787bd3dbebf2b060d1f1c2`; CI `45338767751` 16/16, zero skipped                                      |
+| `3-02c`     | Scoped short-lived playback session           | VERIFIED     | PR #77 merge `2f9c4b7f7aa075afac4e8f308d1c5a83b668126c`; exact-SHA CI `45520526340` 16/16 PASS, zero skipped, Composer audit PASS. |
+| `3-03a`     | Single player happy path + loading/live       | NOT STARTED  | Muted autoplay in Electron                                                                                                         |
+| `3-03b`     | Player cleanup/error/unsupported codec        | NOT STARTED  | Unmount cancels session/decoder                                                                                                    |
+| `3-04a`     | Carousel visible-only stream lifecycle        | NOT STARTED  | Hidden feeds release resources                                                                                                     |
+| `3-04b`     | Focused view/pause/restore                    | NOT STARTED  | Return to prior carousel position                                                                                                  |
+| `3-04c`     | Per-camera retry/backoff/isolation            | NOT STARTED  | One stream failure not global                                                                                                      |
+| `3-05a`     | Lab metrics harness + stream-count sweep      | NOT STARTED  | CPU/RAM/GPU/bandwidth/codec recorded                                                                                               |
+| `3-05b`     | Target PC benchmark and capacity decision     | BLOCKED      | Requires target hardware, actual evidence                                                                                          |
+| `3-06a`     | Gateway outage/reconnect/expiry regression    | NOT STARTED  | Failure matrix passes; evaluate design, placement, and acceptance for active-session revocation. No implementation scope approved. |
+| `3-06b`     | Gate Phase 3 runbook and acceptance           | NOT STARTED  | No unmeasured hardware claim                                                                                                       |
 
 3-01a VERIFIED melalui PR #68 merge `f20f5bb88210c3cffb5bdd9248dec3f8a9eed998`; CI PR `45131572484` dan CI postmerge `45133582969` PASS 16/16 mandatory, 0 skip. 3-01b VERIFIED melalui PR #70 merge `4cd01973a76ad695ebea93f9495b92d50f0801ff`; CI PR `45161863658` dan postmerge `45163520055` PASS 16/16 mandatory, 0 skip. Invalid HLS path mengembalikan HTTP 500 dengan rejection eksplisit pada MediaMTX 1.21.4 dan tetap dicatat WARN. Detail pada [verifikasi 3-01b](phase-3-verification.md#3-01b-persisted-harness-finalization-2026-11-23). Parent 3-01 closure direkam di [verifikasi Phase 3](phase-3-verification.md#parent-3-01-closure-2026-11-24). Status/evidence terkini 3-02a: [verifikasi Phase 3](phase-3-verification.md#3-02a--private-cctv-source-storage-encryption--map-isolation-2026-11-24).
 
