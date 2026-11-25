@@ -83,6 +83,31 @@ async function ready(url) {
   throw new Error(`Server not ready: ${url}; ${log.slice(-1000)}`);
 }
 
+async function listenerOwner(port) {
+  return (
+    await run(
+      'powershell',
+      [
+        '-NoProfile',
+        '-Command',
+        `(Get-NetTCPConnection -State Listen -LocalPort ${port} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess)`,
+      ],
+      root,
+      process.env,
+    )
+  ).trim();
+}
+
+async function ownedReady(url, child, port) {
+  await ready(url);
+  assert.equal(child.exitCode, null, `Owned service exited before ${url}`);
+  assert.equal(
+    await listenerOwner(port),
+    String(child.pid),
+    `Listener ${port} is not test-owned`,
+  );
+}
+
 async function browser(partition) {
   const win = new BrowserWindow({
     show: false,
@@ -161,6 +186,12 @@ app.whenReady().then(async () => {
       process.env.SENKOM_TEST_DB_PORT &&
         process.env.SENKOM_TEST_DB_DATABASE?.endsWith('_test'),
     );
+    for (const port of [8000, 5174])
+      assert.equal(
+        await listenerOwner(port),
+        '',
+        `Port ${port} already occupied`,
+      );
     await mkdir(artifacts, { recursive: true });
     directory = await mkdtemp(join(artifacts, 'browser-e2e-'));
     for (const path of [
@@ -203,7 +234,7 @@ app.whenReady().then(async () => {
     // ponytail: Fixture seeds one map; add a second map here when browser cross-map grants enter scope.
     const credentials = JSON.parse(await readFile(credentialPath, 'utf8'));
     await unlink(credentialPath);
-    serve(
+    const apiServer = serve(
       php,
       [
         '-d',
@@ -217,8 +248,8 @@ app.whenReady().then(async () => {
       api,
       env,
     );
-    await ready('http://127.0.0.1:8000/api/v1/health');
-    serve(
+    await ownedReady('http://127.0.0.1:8000/api/v1/health', apiServer, 8000);
+    const frontend = serve(
       process.execPath,
       [
         join(root, 'node_modules/vite/bin/vite.js'),
@@ -231,7 +262,7 @@ app.whenReady().then(async () => {
       join(root, 'apps/admin-web'),
       { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
     );
-    await ready('http://127.0.0.1:5174/');
+    await ownedReady('http://127.0.0.1:5174/', frontend, 5174);
 
     const admin = await browser('e2e-admin-' + Date.now());
     await login(admin, credentials.email, credentials.password);
