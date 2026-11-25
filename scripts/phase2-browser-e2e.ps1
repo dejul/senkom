@@ -12,10 +12,11 @@ if (Test-Path -LiteralPath $envFile) { throw 'Browser E2E environment file alrea
 $previousGithubEnv = $env:GITHUB_ENV
 $previousRunAsNode = $env:ELECTRON_RUN_AS_NODE
 $previousPhp = $env:SENKOM_PHP_BINARY
+$runId = [guid]::NewGuid().ToString('N')
 $env:GITHUB_ENV = $envFile
 $exitCode = 0
 try {
-    & (Join-Path $PSScriptRoot 'ci-mysql.ps1') -Action start -ArchivePath $ArchivePath
+    & (Join-Path $PSScriptRoot 'ci-mysql.ps1') -Action start -ArchivePath $ArchivePath -RunId $runId
     if ($LASTEXITCODE -ne 0) { throw 'Disposable MySQL startup failed.' }
     foreach ($line in Get-Content -LiteralPath $envFile) {
         $pair = $line.Split('=', 2)
@@ -37,7 +38,7 @@ try {
     [Console]::Error.WriteLine($_)
     $exitCode = 1
 } finally {
-    try { & (Join-Path $PSScriptRoot 'ci-mysql.ps1') -Action stop }
+    try { & (Join-Path $PSScriptRoot 'ci-mysql.ps1') -Action stop -RunId $runId }
     finally {
         Remove-Item -LiteralPath $envFile -ErrorAction SilentlyContinue
         $env:GITHUB_ENV = $previousGithubEnv
