@@ -68,6 +68,16 @@ export interface Diagnostics extends ViewerStatus {
 export interface ViewerBridge {
   bootstrap(): Promise<ViewerBootstrap>;
   refreshPublished(): Promise<SnapshotState>;
+  issuePlayback(
+    mapId: string,
+    cameraId: string,
+    requestId: string,
+  ): Promise<{
+    endpoint: string;
+    authUsername: 'senkom-viewer';
+    accessToken: string;
+  }>;
+  cancelPlayback(requestId: string): Promise<void>;
   onMapUpdated(callback: (map: SnapshotState) => void): () => void;
   status(): Promise<ViewerStatus>;
   reportFrame(sample: { fps: number; painted: boolean }): Promise<void>;

@@ -416,6 +416,25 @@ li span {
     radial-gradient(ellipse at center, #203448, #121f2b);
   overflow: hidden;
 }
+.camera-player {
+  position: relative;
+  height: 100%;
+  background: #101c2b;
+}
+.camera-player video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.camera-player span {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  color: #fff;
+  background: #101c2bcc;
+  font-size: 10px;
+}
 .camera-crosshair {
   position: absolute;
   left: calc(50% - 8px);

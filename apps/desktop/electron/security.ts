@@ -8,7 +8,7 @@ export const contentSecurityPolicy = [
   "style-src 'self'",
   "img-src 'self' data:",
   "font-src 'self'",
-  "connect-src 'none'",
+  'connect-src http://127.0.0.1:8889',
   "object-src 'none'",
   "base-uri 'none'",
   "frame-ancestors 'none'",

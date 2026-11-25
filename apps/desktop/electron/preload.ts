@@ -10,6 +10,10 @@ contextBridge.exposeInMainWorld('senkom', bridge);
 const viewer: ViewerBridge = Object.freeze({
   bootstrap: () => ipcRenderer.invoke('viewer:bootstrap'),
   refreshPublished: () => ipcRenderer.invoke('viewer:refresh-published'),
+  issuePlayback: (mapId: string, cameraId: string, requestId: string) =>
+    ipcRenderer.invoke('viewer:issue-playback', mapId, cameraId, requestId),
+  cancelPlayback: (requestId: string) =>
+    ipcRenderer.invoke('viewer:cancel-playback', requestId),
   onMapUpdated: (callback: (map: SnapshotState) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, map: SnapshotState) =>
       callback(map);
