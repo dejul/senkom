@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { renameSync, writeFileSync } from 'node:fs';
 import { setTimeout as delay } from 'node:timers/promises';
 import { connect } from 'node:net';
 import { createSocket } from 'node:dgram';
-import { dirname, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
@@ -14,8 +15,19 @@ const compose = resolve(root, 'infrastructure/media-gateway/compose.yaml');
 const evidenceFile = resolve(root, '.artifacts/phase3-gateway-evidence.json');
 const docker = process.env.DOCKER_PATH || 'docker';
 const composeCli = process.env.COMPOSE_PATH;
+const project = process.env.SENKOM_GATEWAY_PROJECT;
+const ownerFile = process.env.SENKOM_GATEWAY_OWNER_FILE;
+const runId = process.env.SENKOM_GATEWAY_RUN_ID;
 const runCompose = (args, timeout) =>
-  run(composeCli || docker, composeCli ? args : ['compose', ...args], timeout);
+  run(
+    composeCli || docker,
+    [
+      ...(composeCli ? [] : ['compose']),
+      ...(project ? ['-p', project] : []),
+      ...args,
+    ],
+    timeout,
+  );
 const ffmpeg = process.env.FFMPEG_PATH;
 const browserChannel = process.env.BROWSER_CHANNEL || 'chrome';
 const browserPath = process.env.BROWSER_EXECUTABLE;
@@ -35,6 +47,32 @@ let cleanupPromise;
 const sensitiveValues = new Set(
   [viewerToken, publisherPassword].filter(Boolean),
 );
+if (ownerFile) {
+  assert.match(runId || '', /^[0-9a-f]{32}$/);
+  assert.equal(project, `senkom-e2e-${runId}`);
+  assert.equal(
+    dirname(dirname(resolve(ownerFile))),
+    resolve(root, '.artifacts'),
+  );
+  assert.match(basename(dirname(ownerFile)), /^parent3-02-[A-Za-z0-9]+$/);
+  assert.equal(basename(ownerFile), `gateway-${runId}.json`);
+  recordPublisher(null);
+}
+
+function recordPublisher(pid) {
+  if (!ownerFile) return;
+  const next = `${ownerFile}.next`;
+  writeFileSync(
+    next,
+    JSON.stringify({
+      runId,
+      project,
+      childPid: process.pid,
+      publisherPid: pid,
+    }),
+  );
+  renameSync(next, ownerFile);
+}
 
 function redact(value) {
   let safe = String(value);
@@ -140,19 +178,33 @@ function startPublisher(codec = 'libx264') {
     child.startError = error;
   });
   publisher = child;
+  recordPublisher(child.pid);
   return child;
 }
 
 async function stopPublisher() {
   if (!publisher) return;
   const child = publisher;
+  let closed = child.exitCode !== null;
+  const close = new Promise((done) =>
+    child.once('close', () => {
+      closed = true;
+      done();
+    }),
+  );
+  if (!closed) child.kill();
+  if (!closed) await Promise.race([close, delay(3_000)]);
+  if (!closed) {
+    child.kill('SIGKILL');
+    await Promise.race([
+      close,
+      delay(5_000).then(() => {
+        throw new Error('Publisher did not stop.');
+      }),
+    ]);
+  }
   publisher = undefined;
-  if (child.exitCode !== null || child.signalCode !== null) return;
-  child.kill();
-  await Promise.race([
-    new Promise((resolvePromise) => child.once('close', resolvePromise)),
-    delay(3_000).then(() => child.kill('SIGKILL')),
-  ]);
+  recordPublisher(null);
 }
 
 async function fetchWithTimeout(url, timeout = 5_000, authorization, cookie) {
@@ -651,6 +703,17 @@ process.once('SIGTERM', () => {
     )
     .finally(() => process.exit(143));
 });
+if (ownerFile) {
+  process.stdin.setEncoding('utf8').on('data', (message) => {
+    if (!message.includes('shutdown')) return;
+    if (process.env.SENKOM_GATEWAY_TEST_IGNORE_SHUTDOWN === '1') return;
+    void cleanup()
+      .then(() =>
+        writeFile(evidenceFile, `${JSON.stringify(evidence, null, 2)}\n`),
+      )
+      .finally(() => process.exit(143));
+  });
+}
 
 try {
   assert.ok(ffmpeg, 'Set FFMPEG_PATH to FFmpeg executable');
@@ -686,7 +749,13 @@ try {
     'owned gateway container already exists; stop it before running this harness',
   );
   gatewayStarted = true;
+  if (ownerFile && process.env.SENKOM_GATEWAY_TEST_FAIL_BEFORE_UP === '1')
+    throw new Error('Injected failure before gateway startup.');
   await runCompose(['-f', compose, 'up', '-d']);
+  if (ownerFile && process.env.SENKOM_GATEWAY_TEST_FAIL_AFTER_UP === '1')
+    throw new Error('Injected failure after gateway startup.');
+  if (ownerFile && process.env.SENKOM_GATEWAY_TEST_HANG_AFTER_UP === '1')
+    await new Promise(() => {});
   await waitFor('MediaMTX HTTP', async () => {
     const [webrtc, hls] = await Promise.all([
       fetchWithTimeout('http://127.0.0.1:8889/lab/'),
@@ -1035,6 +1104,10 @@ try {
   evidence.error = error.stack || error.message;
   process.exitCode = 1;
 } finally {
+  if (ownerFile) {
+    process.stdin.removeAllListeners('data');
+    process.stdin.pause();
+  }
   try {
     await cleanup();
   } catch (error) {

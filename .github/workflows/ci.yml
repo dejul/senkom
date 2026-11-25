@@ -33,7 +33,7 @@ jobs:
       - name: PHP lint
         run: php apps/api/tools/lint.php
       - name: Disposable MySQL integration
-        run: ./scripts/ci-mysql.ps1 -Action start
+        run: ./scripts/ci-mysql.ps1 -Action start -RunId ('{0:x16}{1:x16}' -f [long]$env:GITHUB_RUN_ID, [long]$env:GITHUB_RUN_ATTEMPT)
       - name: Migration and DEMO seed
         env:
           APP_ENV: testing
@@ -93,7 +93,7 @@ jobs:
         run: npm audit --omit=dev
       - name: Stop disposable MySQL
         if: always()
-        run: ./scripts/ci-mysql.ps1 -Action stop
+        run: ./scripts/ci-mysql.ps1 -Action stop -RunId ('{0:x16}{1:x16}' -f [long]$env:GITHUB_RUN_ID, [long]$env:GITHUB_RUN_ATTEMPT)
       - uses: actions/upload-artifact@v7.0.2
         if: always()
         with:

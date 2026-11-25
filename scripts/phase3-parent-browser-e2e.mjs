@@ -14,10 +14,12 @@ import { join, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { recoverGateway } from './phase3-gateway-recovery.mjs';
 
 const root = resolve(fileURLToPath(new globalThis.URL('..', import.meta.url)));
 const api = join(root, 'apps/api');
 const artifacts = join(root, '.artifacts');
+const compose = join(root, 'infrastructure/media-gateway/compose.yaml');
 const php = process.env.SENKOM_PHP_BINARY || 'php';
 const target = 'demo-camera-01';
 const secondary = 'demo-camera-04';
@@ -27,6 +29,8 @@ const evidence = { stages: [], gatewayRuns: [], cleanup: {} };
 let directory;
 let credentials;
 let browser;
+let gatewayChild;
+let interrupted = false;
 const servers = [];
 const sensitive = new Set([sourceUri]);
 
@@ -36,31 +40,67 @@ function safe(value) {
   return text.replaceAll('parent-password', '[REDACTED]');
 }
 
-function run(command, args, cwd = root, env = process.env, timeout = 180_000) {
+function run(
+  command,
+  args,
+  cwd = root,
+  env = process.env,
+  timeout = 180_000,
+  graceful = false,
+  input = null,
+) {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(command, args, {
       cwd,
       env,
       windowsHide: true,
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: [graceful || input !== null ? 'pipe' : 'ignore', 'pipe', 'pipe'],
     });
+    if (graceful) gatewayChild = child;
+    if (graceful) child.stdin.on('error', () => {});
+    if (graceful && process.env.SENKOM_PARENT_TEST_INTERRUPT === '1')
+      setTimeout(() => interrupt('SIGINT'), 25_000).unref();
+    if (input !== null) child.stdin.end(input);
     let output = '';
-    const timer = setTimeout(() => child.kill(), timeout);
+    let timedOut = false;
+    let forceTimer;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      if (graceful) {
+        if (child.stdin.writable) child.stdin.write('shutdown\n');
+        forceTimer = setTimeout(() => child.kill(), 10_000);
+      } else child.kill();
+    }, timeout);
     for (const stream of [child.stdout, child.stderr])
       stream.on('data', (chunk) => {
         output = (output + chunk).slice(-12_000);
       });
     child.once('error', (error) => {
       clearTimeout(timer);
+      clearTimeout(forceTimer);
       reject(error);
     });
     child.once('close', (code) => {
       clearTimeout(timer);
-      if (code === 0) resolvePromise(output);
+      clearTimeout(forceTimer);
+      if (graceful) gatewayChild = undefined;
+      if (code === 0 && !timedOut && (!graceful || !interrupted))
+        resolvePromise(output);
+      else if (timedOut) reject(new Error('Gateway child timed out.'));
+      else if (graceful && interrupted)
+        reject(new Error('Parent E2E interrupted.'));
       else reject(new Error(safe(`${command} exited ${code}: ${output}`)));
     });
   });
 }
+
+function interrupt(signal) {
+  interrupted = true;
+  process.exitCode = signal === 'SIGINT' ? 130 : 143;
+  if (gatewayChild?.stdin.writable) gatewayChild.stdin.write('shutdown\n');
+}
+for (const signal of ['SIGINT', 'SIGTERM'])
+  process.once(signal, () => interrupt(signal));
 
 function start(command, args, cwd, env) {
   const child = spawn(command, args, {
@@ -180,23 +220,63 @@ function stage(name, detail = {}) {
   process.stdout.write(`PASS ${name}\n`);
 }
 
-async function fixture(action, env) {
+async function fixture(action, env, input = null, sourceId = null) {
   return await run(
     php,
-    [join(root, 'scripts/phase3-parent-source-fixture.php'), action],
+    [
+      join(root, 'scripts/phase3-parent-source-fixture.php'),
+      action,
+      ...(sourceId ? [sourceId] : []),
+    ],
     api,
     env,
+    180_000,
+    false,
+    input,
   );
 }
 
 async function gateway(env) {
-  await run(
-    process.execPath,
-    [join(root, 'scripts/phase3-gateway-browser-e2e.mjs')],
-    root,
-    env,
-    300_000,
-  );
+  const childRunId = randomBytes(16).toString('hex');
+  const ownerFile = join(directory, `gateway-${childRunId}.json`);
+  const ownedEnv = {
+    ...env,
+    SENKOM_GATEWAY_RUN_ID: childRunId,
+    SENKOM_GATEWAY_PROJECT: `senkom-e2e-${childRunId}`,
+    SENKOM_GATEWAY_OWNER_FILE: ownerFile,
+  };
+  let failure;
+  try {
+    await run(
+      process.execPath,
+      [join(root, 'scripts/phase3-gateway-browser-e2e.mjs')],
+      root,
+      ownedEnv,
+      Number(process.env.SENKOM_PARENT_GATEWAY_TIMEOUT_MS || 300_000),
+      true,
+    );
+  } catch (error) {
+    failure = error;
+  }
+  try {
+    await recoverGateway({
+      env: ownedEnv,
+      ownerFile,
+      childRunId,
+      run,
+      root,
+      compose,
+    });
+    evidence.cleanup.gatewayRecovered = true;
+  } catch (error) {
+    throw new Error(
+      safe(
+        `Gateway cleanup failed: ${failure?.message || 'none'}; ${error.message}`,
+      ),
+      { cause: error },
+    );
+  }
+  if (failure) throw failure;
   const result = JSON.parse(
     await readFile(join(artifacts, 'phase3-gateway-evidence.json'), 'utf8'),
   );
@@ -349,10 +429,17 @@ try {
   await page.getByRole('button', { name: 'Masuk', exact: true }).click();
   await page.locator('#source-camera').waitFor();
   await page.locator('#source-camera').selectOption(target);
+  await page.waitForLoadState('networkidle');
   await page.locator('#camera-source-uri').fill(sourceUri);
   await page
     .locator('[aria-label="Sumber CCTV"] input[type="checkbox"]')
     .check();
+  assert.equal(
+    await page
+      .locator('[aria-label="Sumber CCTV"] input[type="checkbox"]')
+      .isChecked(),
+    true,
+  );
   await page.getByRole('button', { name: 'Simpan sumber' }).click();
   try {
     await page.getByText('Terkonfigurasi, aktif', { exact: false }).waitFor();
@@ -413,8 +500,11 @@ try {
   assert.ok(metadata.body.includes(target));
   assert.ok(
     !metadata.body.includes('parent-password') &&
-      !metadata.body.includes('source_uri'),
+      !metadata.body.includes('parent-user') &&
+      !metadata.body.includes('source_uri') &&
+      !metadata.body.includes('sourceUri'),
   );
+  await fixture('metadata', env, metadata.body, sourceId);
   const session = await issue();
   assert.equal(session.status, 200);
   assert.equal(session.data.mapId, credentials.mapId);
@@ -477,38 +567,48 @@ try {
   assert.equal(await gatewayAuth(beforeDelete.data), 401);
   stage('Admin delete rejects new playback');
   assert.deepEqual(browserErrors, []);
-  process.stdout.write('PASS PARENT 3-02 INTEGRATED E2E\n');
+  evidence.acceptanceComplete = true;
 } catch (error) {
   evidence.error = safe(error.stack || error.message);
   process.exitCode = 1;
 } finally {
-  if (browser) {
-    await browser.close();
-    evidence.cleanup.browserClosed = true;
-  }
-  for (const { child } of servers.reverse()) {
-    if (child.exitCode === null) child.kill();
-  }
-  for (const { child } of servers) {
-    if (child.exitCode === null)
-      await Promise.race([
-        new Promise((done) => child.once('close', done)),
-        delay(5000),
-      ]);
-  }
-  evidence.cleanup.listenersClosed = (await free(8000)) && (await free(5174));
-  if (!evidence.cleanup.listenersClosed) process.exitCode = 1;
-  if (directory) {
+  try {
+    if (browser) {
+      await browser.close();
+      evidence.cleanup.browserClosed = true;
+    }
+    for (const { child } of servers.reverse()) {
+      if (child.exitCode === null) child.kill();
+    }
+    for (const { child } of servers) {
+      if (child.exitCode === null)
+        await Promise.race([
+          new Promise((done) => child.once('close', done)),
+          delay(5000),
+        ]);
+    }
+    evidence.cleanup.listenersClosed = (await free(8000)) && (await free(5174));
     assert.ok(
-      directory.startsWith(artifacts + '\\') ||
-        directory.startsWith(artifacts + '/'),
+      evidence.cleanup.listenersClosed,
+      'Owned API/Vite listeners remain.',
     );
-    await rm(directory, { recursive: true, force: true });
-    evidence.cleanup.temporaryFilesRemoved = true;
+    if (directory) {
+      assert.ok(
+        directory.startsWith(artifacts + '\\') ||
+          directory.startsWith(artifacts + '/'),
+      );
+      await rm(directory, { recursive: true, force: true });
+      evidence.cleanup.temporaryFilesRemoved = true;
+    }
+  } catch (error) {
+    evidence.cleanupError = safe(error.stack || error.message);
+    process.exitCode = 1;
   }
   await writeFile(
     join(artifacts, 'phase3-parent-evidence.json'),
     `${JSON.stringify(evidence, null, 2)}\n`,
   );
   if (evidence.error) process.stderr.write(`${evidence.error}\n`);
+  if (evidence.cleanupError) process.stderr.write(`${evidence.cleanupError}\n`);
+  if (!evidence.acceptanceComplete) process.exitCode = 1;
 }
