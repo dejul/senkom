@@ -4,6 +4,8 @@
 
 Status: **PARENT 3-02 WIP — AWAITING REMEDIATION PR REVIEW AND MERGE** on `feature/phase-3`. Fresh `origin/main` and local HEAD were `2f9c4b7f7aa075afac4e8f308d1c5a83b668126c`; local branch was two commits ahead of `origin/feature/phase-3`, worktree clean, and no open PRs before edits. PR #77 merged at that SHA on 2026-11-25 00:45:12 UTC; exact-SHA postmerge CI [45520526340](https://github.com/dejul/senkom/actions/runs/45520526340) passed 16/16 mandatory checks, zero skipped, Composer audit PASS. **3-02c VERIFIED**. Historical preclosure WIP entries below remain process history.
 
+Remediation implementation commit `67f93170f0f7cce93e684f1e4c140fa131430d64` was pushed to `feature/phase-3`; [PR #78](https://github.com/dejul/senkom/pull/78) requires exact-head CI and manual review/merge. No Parent 3-02 VERIFIED claim follows from local PASS.
+
 Admin browser E2E passed twice on fresh disposable MySQL with exit 0. Its earlier `Failed to fetch` root cause remains unconfirmed; first attempted rerun found an existing disposable MySQL directory and safely removed it through its owner-marked launcher, then two consecutive isolated runs passed. Parent integrated harness and final regression evidence: [verification](phase-3-verification.md#parent-3-02-acceptance-remediation-2026-11-25). Parent 3-02 remains WIP pending remediation review and merge; 3-03a NOT STARTED.
 
 **OPERATIONAL CCTV CONNECTIVITY — PENDING EXTERNAL UNIT COORDINATION.** Operational CCTV, physical four-monitor UAT, and production deployment NOT RUN. Synthetic static `lab`/`lab-b` paths do not prove dynamic RTSP provisioning or operational CCTV compatibility.
