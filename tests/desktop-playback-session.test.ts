@@ -114,6 +114,199 @@ describe('Desktop playback authorization', () => {
     ).resolves.toMatchObject({ endpoint: session.endpoint });
   });
 
+  it('accepts a valid offset session at the HTTP response boundary', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-26T03:59:30Z'));
+    try {
+      await expect(
+        issuePlaybackSession(
+          origin,
+          token,
+          mapId,
+          cameraId,
+          new AbortController().signal,
+          vi.fn(async () =>
+            response({
+              ...session,
+              issuedAt: '2026-11-26T10:59:00+07:00',
+              expiresAt: '2026-11-26T11:00:00+07:00',
+            }),
+          ) as unknown as typeof fetch,
+        ),
+      ).resolves.toMatchObject({ endpoint: session.endpoint });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each([
+    ['2026-11-26T03:59:00Z', '2026-11-26T04:00:00Z', '2026-11-26T03:59:30Z'],
+    [
+      '2026-11-26T10:59:00+07:00',
+      '2026-11-26T11:00:00+07:00',
+      '2026-11-26T03:59:30Z',
+    ],
+    [
+      '2026-11-25T22:59:00-05:00',
+      '2026-11-25T23:00:00-05:00',
+      '2026-11-26T03:59:30Z',
+    ],
+    [
+      '2026-11-26T03:59:00+00:00',
+      '2026-11-26T04:00:00+00:00',
+      '2026-11-26T03:59:30Z',
+    ],
+    [
+      '2026-11-26T09:29:00+05:30',
+      '2026-11-26T09:30:00.123456+05:30',
+      '2026-11-26T03:59:30Z',
+    ],
+    [
+      '2026-11-27T03:58:00+23:59',
+      '2026-11-27T03:59:00+23:59',
+      '2026-11-26T03:59:30Z',
+    ],
+    [
+      '2026-11-26T03:59:00Z',
+      '2026-11-26T11:00:00+07:00',
+      '2026-11-26T03:59:30Z',
+    ],
+    [
+      '2026-11-26t03:59:00z',
+      '2026-11-26T04:00:00.123456789Z',
+      '2026-11-26T03:59:30Z',
+    ],
+    [
+      '2026-11-27T00:59:00+07:00',
+      '2026-11-27T01:00:00+07:00',
+      '2026-11-26T17:59:30Z',
+    ],
+    [
+      '2027-01-01T01:59:00+02:00',
+      '2027-01-01T02:00:00+02:00',
+      '2026-12-31T23:59:30Z',
+    ],
+    ['2028-02-29T00:00:00Z', '2028-02-29T00:01:00Z', '2028-02-29T00:00:30Z'],
+  ])(
+    'accepts RFC 3339 issued/expiry pair %s / %s',
+    async (issuedAt, expiresAt, now) => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(now));
+      try {
+        await expect(
+          issuePlaybackSession(
+            origin,
+            token,
+            mapId,
+            cameraId,
+            new AbortController().signal,
+            vi.fn(async () =>
+              response({ ...session, issuedAt, expiresAt }),
+            ) as unknown as typeof fetch,
+          ),
+        ).resolves.toMatchObject({ endpoint: session.endpoint });
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
+
+  it.each([
+    ['issuedAt', '2026-11-26T03:59:00'],
+    ['expiresAt', '2026-11-26T04:00:00+0700'],
+    ['expiresAt', '2026-11-26T04:00:00+24:00'],
+    ['expiresAt', '2026-11-26T04:00:00+07:60'],
+    ['expiresAt', '2027-02-30T04:00:00+07:00'],
+    ['expiresAt', '2027-02-29T04:00:00Z'],
+    ['issuedAt', '2025-02-29T03:59:00Z'],
+    ['expiresAt', '2026-11-26T24:00:00Z'],
+    ['expiresAt', '2026-11-26T04:60:00Z'],
+    ['expiresAt', '2026-11-26T04:00:61Z'],
+    ['expiresAt', '2026-11-26T04:00:00Ztrail'],
+  ] as const)('rejects malformed RFC 3339 %s %s', async (field, value) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-26T03:59:30Z'));
+    try {
+      await expect(
+        issuePlaybackSession(
+          origin,
+          token,
+          mapId,
+          cameraId,
+          new AbortController().signal,
+          vi.fn(async () =>
+            response({
+              ...session,
+              issuedAt: '2026-11-26T03:59:00Z',
+              expiresAt: '2026-11-26T04:00:00Z',
+              [field]: value,
+            }),
+          ) as unknown as typeof fetch,
+        ),
+      ).rejects.toThrow('Playback request failed');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('rejects expired offset session but accepts exact TTL minimum', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-26T04:00:00Z'));
+    const fetcher = (expiresAt: string, expiresInSeconds: number) =>
+      vi.fn(async () =>
+        response({
+          ...session,
+          issuedAt: '2026-11-26T10:59:00+07:00',
+          expiresAt,
+          expiresInSeconds,
+        }),
+      ) as unknown as typeof fetch;
+    try {
+      await expect(
+        issuePlaybackSession(
+          origin,
+          token,
+          mapId,
+          cameraId,
+          new AbortController().signal,
+          fetcher('2026-11-26T11:00:00+07:00', 60),
+        ),
+      ).rejects.toThrow('Playback request failed');
+      await expect(
+        issuePlaybackSession(
+          origin,
+          token,
+          mapId,
+          cameraId,
+          new AbortController().signal,
+          fetcher('2026-11-26T04:00:00Z', 60),
+        ),
+      ).rejects.toThrow('Playback request failed');
+      await expect(
+        issuePlaybackSession(
+          origin,
+          token,
+          mapId,
+          cameraId,
+          new AbortController().signal,
+          fetcher('2026-11-26T11:00:15+07:00', 15),
+        ),
+      ).resolves.toMatchObject({ endpoint: session.endpoint });
+      await expect(
+        issuePlaybackSession(
+          origin,
+          token,
+          mapId,
+          cameraId,
+          new AbortController().signal,
+          fetcher('2026-11-26T11:00:15+07:00', 14),
+        ),
+      ).rejects.toThrow('Playback request failed');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('maps unavailable source and rejects bad Viewer token before network', async () => {
     await expect(
       issuePlaybackSession(

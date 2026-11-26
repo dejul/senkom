@@ -5,14 +5,42 @@ import { readBoundedText } from '../src/bounded-response';
 type Session = Awaited<ReturnType<ViewerBridge['issuePlayback']>>;
 
 function sessionTime(value: unknown): number {
+  if (typeof value !== 'string') return NaN;
+  const parts =
+    /^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?([Zz]|([+-])(\d{2}):(\d{2}))$/.exec(
+      value,
+    );
+  if (!parts) return NaN;
+  const [
+    ,
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+    zone,
+    sign,
+    zoneHour,
+    zoneMinute,
+  ] = parts;
   if (
-    typeof value !== 'string' ||
-    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z$/.test(value)
+    Number(hour) > 23 ||
+    Number(minute) > 59 ||
+    // ponytail: Existing parser rejects leap second :60; add announced-leap handling if API emits it.
+    Number(second) > 59 ||
+    (sign && (Number(zoneHour) > 23 || Number(zoneMinute) > 59))
   )
     return NaN;
   const time = Date.parse(value);
+  const offset =
+    zone?.toUpperCase() === 'Z'
+      ? 0
+      : (sign === '+' ? 1 : -1) * (Number(zoneHour) * 60 + Number(zoneMinute));
+  // ponytail: Date.parse keeps millisecond precision; add sub-ms parsing only if expiry decisions require it.
   return Number.isFinite(time) &&
-    new Date(time).toISOString().slice(0, 19) === value.slice(0, 19)
+    new Date(time + offset * 60_000).toISOString().slice(0, 19) ===
+      `${year}-${month}-${day}T${hour}:${minute}:${second}`
     ? time
     : NaN;
 }
