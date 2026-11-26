@@ -1,5 +1,15 @@
 # Checkpoint Phase 3
 
+## 3-03a-R1 correction and workflow reconciliation (2026-11-26)
+
+Status: **3-03a WIP — CORRECTIVE PR OWNER REVIEW, MERGE AND POSTMERGE VERIFICATION PENDING**. `fix/phase-3-03a-r1` starts at PR #81 merge on `origin/main` `084d2448ec71b653341f122f434b04cc48dae073`; PR #81 head/merge tree identical. [Exact-merge-SHA CI 45727571875](https://github.com/dejul/senkom/actions/runs/45727571875) passed 16/16 mandatory, zero skipped, Composer audit PASS. Owner authorized one-time **PR #81 only** postmerge workflow disposition; historical protected-path premerge owner review stays **UNCONFIRMED**. This is not retrospective approval or a waiver of technical gates. Corrective PR needs new owner protected-path review and manual merge under [Git workflow](git-workflow.md#trusted-auto-merge-v2). Older PR #81 pending wording below is historical.
+
+F1 expiry/TTL validation and F2 bounded 8 KiB JSON / 32 KiB SDP stream reads implemented. Focused 33/33 and full Vitest 230/230 PASS; policy 51/51, schema-focused 29/29, contracts, lint, typecheck, build, Electron smoke, PHP lint, Composer validate/audit, and npm production audit PASS. Fresh integrated synthetic lab exit 0: ten stages, two gateway runs of 16 PASS/one documented WARN each; actual Electron 1280×720, readyState 4, frames 3→78, two rendered callbacks, muted, WHEP DELETE 200. Gateway outage/disabled source isolated; map selectable. Owned resource cleanup PASS. PHPUnit and HTTP smoke results in [verification](phase-3-verification.md#3-03a-r1-corrective-implementation-and-pr-81-workflow-disposition-2026-11-26). Corrective PR exact-head CI, owner review, merge and postmerge CI PENDING. 3-03b NOT STARTED.
+
+PHPUnit 156 tests/4,394 assertions and HTTP/Desktop 2/2 PASS, zero skipped, against separate owned disposable MySQL databases; cleanup PASS. Full commands and acceptance matrix: [verification](phase-3-verification.md#3-03a-r1-corrective-implementation-and-pr-81-workflow-disposition-2026-11-26).
+
+**OPERATIONAL CCTV CONNECTIVITY — PENDING EXTERNAL UNIT COORDINATION.** Dynamic RTSP ingestion, operational CCTV, physical four-monitor UAT, active-session revocation, and production deployment NOT RUN; production prerequisites remain open.
+
 ## 3-03a single Electron CCTV player (2026-11-25)
 
 Status: **3-03a WIP — LOCAL ACCEPTANCE PASS; PR/CI/REVIEW PENDING**. Branch `feature/phase-3-03a` starts at `origin/main` `0d233fb95a3c5990f9c1810f4057a64997d432bf`. [PR #80](https://github.com/dejul/senkom/pull/80) merged at that SHA; [exact-merge-SHA CI 45625495275](https://github.com/dejul/senkom/actions/runs/45625495275) passed 16/16 mandatory, zero skipped, Composer audit PASS. **PARENT 3-02 VERIFIED — CLOSED.** Older closure-pending entries below are historical. 3-03b NOT STARTED.

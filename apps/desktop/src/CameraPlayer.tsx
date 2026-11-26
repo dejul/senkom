@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ViewerBridge } from '@senkom/shared-types/viewer';
+import { readBoundedText } from './bounded-response';
 
 export function CameraPlayer({
   bridge,
@@ -96,10 +97,14 @@ export function CameraPlayer({
             abort.signal.addEventListener('abort', finish, { once: true });
           });
         if (stopped) return;
+        const signal = AbortSignal.any([
+          abort.signal,
+          AbortSignal.timeout(15_000),
+        ]);
         const response = await fetch(session.endpoint, {
           method: 'POST',
           redirect: 'error',
-          signal: AbortSignal.any([abort.signal, AbortSignal.timeout(15_000)]),
+          signal,
           headers: {
             Authorization: authorization,
             'Content-Type': 'application/sdp',
@@ -114,8 +119,8 @@ export function CameraPlayer({
             throw new Error();
           resource = url.href;
         }
-        const answer = await response.text();
-        if (stopped || answer.length > 32_768) throw new Error();
+        const answer = await readBoundedText(response, 32_768, signal);
+        if (stopped) throw new Error();
         await peer.setRemoteDescription({ type: 'answer', sdp: answer });
       } catch (error) {
         if (stopped) return;
