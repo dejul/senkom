@@ -2279,9 +2279,15 @@ export interface operations {
               authUsername: 'senkom-viewer';
               /** @description Opaque short-lived credential; never persist, log, or cache. */
               accessToken: string;
-              /** Format: date-time */
+              /**
+               * Format: date-time
+               * @description RFC 3339 playback timestamp subset; leap-second values (:60) are excluded.
+               */
               issuedAt: string;
-              /** Format: date-time */
+              /**
+               * Format: date-time
+               * @description RFC 3339 playback timestamp subset; leap-second values (:60) are excluded.
+               */
               expiresAt: string;
               expiresInSeconds: number;
             };
