@@ -38,8 +38,11 @@ describe('desktop trust boundary', () => {
     expect(acceptsInfoRequest('https://example.invalid/', true, 0)).toBe(false);
     expect(acceptsInfoRequest(`${rendererUrl}other`, true, 0)).toBe(false);
   });
-  it('blocks network, inline scripts, eval, embedding, and forms', () => {
-    expect(contentSecurityPolicy).toContain("connect-src 'none'");
+  it('restricts network to loopback gateway and blocks inline scripts, eval, embedding, and forms', () => {
+    expect(contentSecurityPolicy).toContain(
+      'connect-src http://127.0.0.1:8889',
+    );
+    expect(contentSecurityPolicy).not.toContain('connect-src https:');
     expect(contentSecurityPolicy).toContain("frame-ancestors 'none'");
     expect(contentSecurityPolicy).toContain("form-action 'none'");
     expect(contentSecurityPolicy).not.toMatch(/unsafe-inline|unsafe-eval|\*/);

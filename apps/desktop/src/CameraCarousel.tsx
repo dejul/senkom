@@ -3,6 +3,7 @@ import type { Camera } from '@senkom/shared-types';
 import type { ViewProfile } from '@senkom/shared-types/viewer';
 import { cameraPage } from './map-model';
 import { Modal } from './Modal';
+import { CameraPlayer } from './CameraPlayer';
 
 export function CameraTile({
   camera,
@@ -32,9 +33,13 @@ export function CameraTile({
 export function CameraCarousel({
   cameras,
   profile,
+  mapId,
+  playback,
 }: {
   cameras: Camera[];
   profile: ViewProfile;
+  mapId: string | undefined;
+  playback: boolean;
 }) {
   const strip = useRef<HTMLDivElement>(null);
   const [slots, setSlots] = useState(1);
@@ -45,6 +50,8 @@ export function CameraCarousel({
   const [hidden, setHidden] = useState(document.hidden);
   const [focused, setFocused] = useState<Camera | null>(null);
   const visible = cameraPage(cameras, page, slots);
+  const playerCamera =
+    playback && mapId ? cameras.find((camera) => camera.enabled) : null;
   useEffect(() => {
     const element = strip.current;
     if (!element) return;
@@ -73,6 +80,7 @@ export function CameraCarousel({
       hover ||
       focusInside ||
       focused ||
+      playerCamera ||
       hidden ||
       visible.pages <= 1
     )
@@ -87,6 +95,7 @@ export function CameraCarousel({
     hover,
     focusInside,
     focused,
+    playerCamera,
     hidden,
     visible.pages,
     profile.carouselIntervalMs,
@@ -94,7 +103,7 @@ export function CameraCarousel({
   return (
     <section
       className="cctv-section"
-      aria-label="Carousel CCTV placeholder"
+      aria-label="Carousel CCTV"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onFocus={() => setFocusInside(true)}
@@ -104,7 +113,7 @@ export function CameraCarousel({
     >
       <div className="cctv-heading">
         <h2>
-          CCTV <span>PREVIEW DEMO</span>
+          CCTV <span>{playerCamera ? 'SATU STREAM' : 'PREVIEW DEMO'}</span>
         </h2>
         <div className="carousel-controls">
           <span aria-live="polite">
@@ -144,7 +153,15 @@ export function CameraCarousel({
             aria-label={`Fokus ${camera.code}`}
             onClick={() => setFocused(camera)}
           >
-            <CameraTile camera={camera} />
+            {playerCamera?.id === camera.id && mapId ? (
+              <CameraPlayer
+                bridge={window.senkomViewer}
+                mapId={mapId}
+                cameraId={camera.id}
+              />
+            ) : (
+              <CameraTile camera={camera} />
+            )}
           </button>
         ))}
         {!cameras.length && <p>Tidak ada kamera pada snapshot ini.</p>}
@@ -156,8 +173,9 @@ export function CameraCarousel({
         >
           <CameraTile camera={focused} focused />
           <p>
-            Belum terhubung ke media gateway. Tidak ada RTSP atau live video
-            pada Phase 1.
+            {playerCamera?.id === focused.id
+              ? 'Stream aktif pada panel CCTV.'
+              : 'Slot ini belum memiliki player.'}
           </p>
         </Modal>
       )}

@@ -890,6 +890,17 @@ try {
     status: 'PASS',
     metrics: webrtcMetrics,
   });
+  if (process.env.SENKOM_DESKTOP_PLAYBACK_E2E === '1') {
+    const desktop = await run(
+      process.execPath,
+      [resolve(root, 'scripts/phase3-electron-playback.mjs')],
+      90_000,
+    );
+    record('Electron Desktop rendered playback', {
+      status: 'PASS',
+      detail: desktop.stdout.trim(),
+    });
+  }
   const hlsSession = await issueSession('hls');
   record('HLS playback and segment retrieval', {
     status: 'PASS',

@@ -235,6 +235,14 @@ function App() {
         <CameraCarousel
           cameras={snapshot?.cameras ?? []}
           profile={bootstrap.profile}
+          mapId={
+            map?.source === 'published' && snapshot && 'mapId' in snapshot
+              ? snapshot.mapId
+              : undefined
+          }
+          playback={
+            map?.source === 'published' && current?.sync?.state === 'online'
+          }
         />
       ) : (
         <section className="cctv-section">

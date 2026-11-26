@@ -29,6 +29,7 @@ import { planDisplays } from './displays';
 import { loadPublishedCache, loadSnapshot } from './storage';
 import { AdminGate, readAdminCredential } from './admin';
 import { readApiOrigin } from './api-origin';
+import { issuePlaybackSession } from './playback-session';
 import {
   refreshPublishedSnapshot,
   restorePublishedSnapshot,
@@ -285,6 +286,50 @@ if (!app.requestSingleInstanceLock()) {
         }
       };
       handle('viewer:refresh-published', 0, refreshPublished);
+      const playbackRequests = new Map<string, AbortController>();
+      handle('viewer:issue-playback', 3, async (mapId, cameraId, requestId) => {
+        if (
+          !api.origin ||
+          sync?.state !== 'online' ||
+          map.source !== 'published' ||
+          !map.snapshot ||
+          !('mapId' in map.snapshot) ||
+          map.snapshot.mapId !== mapId ||
+          typeof cameraId !== 'string' ||
+          typeof requestId !== 'string' ||
+          !/^[a-f0-9-]{36}$/.test(requestId) ||
+          playbackRequests.has(requestId) ||
+          !map.snapshot.cameras.some(
+            (camera) => camera.id === cameraId && camera.enabled,
+          )
+        )
+          throw new Error('Playback unavailable');
+        const controller = new AbortController();
+        playbackRequests.set(requestId, controller);
+        try {
+          const token = await readViewerToken(directory, safeStorage);
+          if (!token || controller.signal.aborted)
+            throw new Error('Playback unavailable');
+          return await issuePlaybackSession(
+            api.origin,
+            token,
+            mapId,
+            cameraId,
+            controller.signal,
+          );
+        } finally {
+          playbackRequests.delete(requestId);
+        }
+      });
+      handle('viewer:cancel-playback', 1, (requestId) => {
+        if (typeof requestId !== 'string')
+          throw new Error('IPC request rejected');
+        playbackRequests.get(requestId)?.abort();
+      });
+      window.webContents.on('destroyed', () => {
+        for (const controller of playbackRequests.values()) controller.abort();
+        playbackRequests.clear();
+      });
       const stopSync = api.origin
         ? startPublishedSync(async () => {
             if (refreshing) return 'busy';

@@ -1,5 +1,13 @@
 # Checkpoint Phase 3
 
+## 3-03a single Electron CCTV player (2026-11-25)
+
+Status: **3-03a WIP — LOCAL ACCEPTANCE PASS; PR/CI/REVIEW PENDING**. Branch `feature/phase-3-03a` starts at `origin/main` `0d233fb95a3c5990f9c1810f4057a64997d432bf`. [PR #80](https://github.com/dejul/senkom/pull/80) merged at that SHA; [exact-merge-SHA CI 45625495275](https://github.com/dejul/senkom/actions/runs/45625495275) passed 16/16 mandatory, zero skipped, Composer audit PASS. **PARENT 3-02 VERIFIED — CLOSED.** Older closure-pending entries below are historical. 3-03b NOT STARTED.
+
+One WebRTC/WHEP player uses published camera metadata and existing Laravel playback session. Synthetic lab integrated E2E exit 0: two owned gateway runs, each 16 PASS/one documented WARN; actual Electron video 1280×720, readyState 4, frames 2→77, three rendered callbacks, muted, WHEP DELETE 200. Gateway outage and disabled source render no video with safe state and selectable map. Owned MySQL, gateway, publisher, browser, listeners, and temporary files cleaned. PHPUnit 156/4,394; frontend 204/204; policy 51/51; HTTP/Desktop 2/2; lint, build, smoke, Composer validate/audit, npm audit PASS. Final PR exact-head CI and owner review **NOT RUN**; no 3-03a VERIFIED claim. Details: [verification](phase-3-verification.md#3-03a-single-electron-cctv-playback-2026-11-25).
+
+**OPERATIONAL CCTV CONNECTIVITY — PENDING EXTERNAL UNIT COORDINATION.** Dynamic RTSP ingestion, physical four-monitor UAT, active-session revocation, and production deployment NOT RUN. 3-03b NOT STARTED.
+
 ## Parent 3-02 final acceptance and workflow reconciliation (2026-11-25)
 
 Closure evidence commit `9b8e4e61c6ee645e2335ea26882b01c05d90ee5e` on `fix/phase3-parent3-02-closure`; final PR head and CI remain to be verified.

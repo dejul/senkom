@@ -351,7 +351,7 @@ try {
     LARAVEL_STORAGE_PATH: join(directory, 'storage'),
     SENKOM_GATEWAY_PUBLISH_PASSWORD: randomBytes(24).toString('hex'),
     SENKOM_PLAYBACK_ALLOWED_ORIGINS:
-      'http://127.0.0.1:5174,http://127.0.0.1:8000',
+      'http://127.0.0.1:5174,http://127.0.0.1:8000,senkom://app',
   };
   sensitive.add(env.SENKOM_GATEWAY_PUBLISH_PASSWORD);
   env.SENKOM_PLAYBACK_PATHS = JSON.stringify({
@@ -529,8 +529,17 @@ try {
     SENKOM_GATEWAY_MAP_ID: credentials.mapId,
     SENKOM_GATEWAY_CAMERA_ID: target,
     SENKOM_GATEWAY_CAMERA_B_ID: secondary,
+    SENKOM_DESKTOP_PLAYBACK_E2E: '1',
   };
   await gateway(gatewayEnv);
+  await run(
+    process.execPath,
+    [join(root, 'scripts/phase3-electron-playback.mjs')],
+    root,
+    { ...gatewayEnv, SENKOM_DESKTOP_SCENARIO: 'gateway-offline' },
+    90_000,
+  );
+  stage('Electron gateway outage preserves map and shows safe error');
 
   const beforeDisable = await issue();
   assert.equal(beforeDisable.status, 200);
@@ -544,6 +553,14 @@ try {
   assert.ok((await fixture('disabled', env)).includes(`: ${sourceId}.`));
   assert.equal((await issue()).status, 404);
   assert.equal(await gatewayAuth(beforeDisable.data), 401);
+  await run(
+    process.execPath,
+    [join(root, 'scripts/phase3-electron-playback.mjs')],
+    root,
+    { ...gatewayEnv, SENKOM_DESKTOP_SCENARIO: 'unavailable' },
+    90_000,
+  );
+  stage('Electron denied source preserves map and renders no video');
   stage('Admin disable rejects new playback and gateway authorization');
 
   await enabled.check();
