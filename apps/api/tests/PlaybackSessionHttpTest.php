@@ -127,6 +127,21 @@ final class PlaybackSessionHttpTest extends TestCase
         $this->gateway('invalid-token')->assertUnauthorized();
     }
 
+    public function test_playback_timestamps_use_utc_non_leap_seconds_and_configured_ttl(): void
+    {
+        \Illuminate\Support\Carbon::setTestNow(\Illuminate\Support\Carbon::parse('2026-12-31 23:59:30', 'Asia/Jakarta'));
+        DB::table('viewer_tokens')->where('token_hash', hash('sha256', $this->viewer))->update(['expires_at' => now()->addHour()]);
+        $this->publish();
+        $data = $this->issue('webrtc')->assertOk()->json('data');
+
+        self::assertSame('2026-12-31T16:59:30.000000Z', $data['issuedAt']);
+        self::assertSame('2026-12-31T17:00:30.000000Z', $data['expiresAt']);
+        self::assertSame(60, $data['expiresInSeconds']);
+        foreach (['issuedAt', 'expiresAt'] as $field) {
+            self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:[0-5]\d\.\d+Z$/', $data[$field]);
+        }
+    }
+
     public function test_viewer_map_snapshot_source_and_token_must_all_remain_eligible(): void
     {
         $this->publish();
